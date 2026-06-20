@@ -659,7 +659,7 @@ export default class SlotScene extends Phaser.Scene {
             reel.y = -rowGap * 2;
             for (let row = -2; row < ROWS + 2; row++) {
               const code = row >= 0 && row < ROWS ? finalGrid[col][row].code : this.randomSpinCode();
-              reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap));
+              reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap, false));
             }
             this.tweens.add({
               targets: reel,
@@ -686,17 +686,19 @@ export default class SlotScene extends Phaser.Scene {
     maskShapes.forEach((mask) => mask.destroy());
   }
 
-  private createSpinSymbol(code: SymbolCode, x: number, y: number) {
+  private createSpinSymbol(code: SymbolCode, x: number, y: number, blurred = true) {
     const assetKey = code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[code];
     if (assetKey && this.textures.exists(assetKey)) {
       const image = this.add.image(0, 0, assetKey).setOrigin(0.5);
       const scale = this.getSymbolImageScale(image, code) * this.scaleFactor;
+      image.setScale(scale);
+      if (code[0] === "L") image.setAlpha(0.96);
+      if (!blurred) return this.add.container(x, y, [image]);
+
       const blurFarBehind = this.add.image(0, -24 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.16);
       const blurBehind = this.add.image(0, -12 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.3);
       const blurAhead = this.add.image(0, 12 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.3);
       const blurFarAhead = this.add.image(0, 24 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.16);
-      image.setScale(scale);
-      if (code[0] === "L") image.setAlpha(0.96);
       return this.add.container(x, y, [blurFarBehind, blurBehind, blurAhead, blurFarAhead, image]);
     }
     return this.add.text(x, y, code, {
