@@ -15,6 +15,7 @@ export type SymbolDefinition = {
 export type CellResult = {
   code: SymbolCode;
   wheelMultiplier?: number;
+  bonusTrigger?: boolean;
 };
 
 export type LineWin = {
@@ -42,6 +43,7 @@ export const DEFAULT_BET = 1;
 export const FREE_SPINS = 10;
 export const BUY_BONUS_PRICE_MULTIPLIER = 100;
 export const BASE_BONUS_CHANCE = 0.0123078;
+export const BONUS_TRIGGER_CELL_CHANCE = 1 - Math.pow(1 - BASE_BONUS_CHANCE, 1 / (3 * ROWS));
 export const WHEEL_EVENT_CHANCE = 0.084587;
 export const BONUS_MODE_HIT_ASSIST_CHANCE = 0.414;
 export const V1_PAY_SCALE = 5.4;
@@ -118,9 +120,20 @@ export function createGrid(random = Math.random, bonusMode = false): CellResult[
       let code = strip[(stop + row) % strip.length];
       const specialReel = col === 0 || col === 2 || col === 4;
       const overlayChance = bonusMode ? 0.022 : 0.0068;
-      if (specialReel && random() < overlayChance) code = "W1";
+      let bonusTrigger = false;
+      if (specialReel) {
+        const specialRoll = random();
+        if (!bonusMode && specialRoll < BONUS_TRIGGER_CELL_CHANCE) {
+          code = "W1";
+          bonusTrigger = true;
+        } else if (specialRoll < (bonusMode ? overlayChance : BONUS_TRIGGER_CELL_CHANCE + overlayChance)) {
+          code = "W1";
+        }
+      }
       const cell: CellResult = { code };
-      if (code === "W1") {
+      if (bonusTrigger) {
+        cell.bonusTrigger = true;
+      } else if (code === "W1") {
         cell.wheelMultiplier = weightedPick(BONUS_MULTIPLIERS, BONUS_MULTIPLIER_WEIGHTS, random);
       }
       column.push(cell);
@@ -168,12 +181,22 @@ export function collectWheelMultiplier(grid: CellResult[][], random = Math.rando
   return Math.max.apply(Math, multipliers);
 }
 
+export function countBonusTriggerSymbols(grid: CellResult[][]): number {
+  let count = 0;
+  for (let col = 0; col < COLS; col++) {
+    for (let row = 0; row < ROWS; row++) {
+      if (grid[col][row].code === "W1" && grid[col][row].bonusTrigger) count++;
+    }
+  }
+  return count;
+}
+
 export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResult {
   const grid = createGrid(random, false);
   const scored = scoreGrid(grid, bet);
   const wheelMultiplier = scored.baseWin > 0 ? collectWheelMultiplier(grid, random, false) : 0;
   const baseTotal = wheelMultiplier > 0 ? scored.baseWin * wheelMultiplier : scored.baseWin;
-  const bonusTriggered = random() < BASE_BONUS_CHANCE;
+  const bonusTriggered = countBonusTriggerSymbols(grid) > 0;
   let bonusWin = 0;
   let freeSpins: SpinResult[] | undefined;
   if (bonusTriggered) {
@@ -233,7 +256,11 @@ export function roundMoney(value: number) {
 }
 
 function forceSmallBonusWin(grid: CellResult[][]): CellResult[][] {
-  const next: CellResult[][] = grid.map((column) => column.map((cell) => ({ code: cell.code, wheelMultiplier: cell.wheelMultiplier })));
+  const next: CellResult[][] = grid.map((column) => column.map((cell) => ({
+    code: cell.code,
+    wheelMultiplier: cell.wheelMultiplier,
+    bonusTrigger: cell.bonusTrigger,
+  })));
   const symbol: SymbolCode = "L3";
   for (let col = 0; col < 3; col++) next[col][1] = { code: symbol };
   return next;

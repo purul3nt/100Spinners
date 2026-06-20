@@ -726,7 +726,7 @@ export default class SlotScene extends Phaser.Scene {
     }
 
     if (result.bonusTriggered && result.freeSpins) {
-      await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, "BONUS TRIGGERED");
+      await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, "SHURIKEN BONUS TRIGGERED");
     } else if (paidSpinWin > 0) {
       this.flashStatus(result.wheelMultiplier > 0 ? `Wheel boost ${result.wheelMultiplier}x` : `${result.lineWins.length} line win(s)`);
     } else {
@@ -887,7 +887,7 @@ export default class SlotScene extends Phaser.Scene {
       "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "The Shuriken Spinner can land on reels 1, 3, and 5. When it carries a multiplier, the wheel can boost the line win.\n\n" +
-      `Bonus trigger starts 10 automatic free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet and starts the same feature.\n\n` +
+      `Landing a BONUS Shuriken Spinner on reels 1, 3, or 5 starts ${FREE_SPINS} automatic free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet and starts the same feature.\n\n` +
       "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
@@ -1064,7 +1064,10 @@ export default class SlotScene extends Phaser.Scene {
     }
 
     let multiplier: Phaser.GameObjects.Text | Phaser.GameObjects.Container | undefined;
-    if (cell.wheelMultiplier) {
+    if (cell.bonusTrigger) {
+      multiplier = this.createWheelBonusLabels();
+      parts.push(multiplier);
+    } else if (cell.wheelMultiplier) {
       multiplier = cell.code === "W1" && image
         ? this.createWheelMultiplierLabels(cell.wheelMultiplier)
         : this.add.text(28, 30, `${cell.wheelMultiplier}x`, {
@@ -1098,6 +1101,28 @@ export default class SlotScene extends Phaser.Scene {
       align: "center",
     }).setOrigin(0.5).setAlpha(0.98));
     return this.add.container(0, 0, labels);
+  }
+
+  private createWheelBonusLabels() {
+    const badge = this.add.rectangle(0, 30, 78, 30, UI_PALETTE.redBrown, 0.94)
+      .setStrokeStyle(3, UI_PALETTE.peach, 1);
+    const text = this.add.text(0, 30, "BONUS", {
+      fontFamily: UI_FONT,
+      fontSize: "18px",
+      color: UI_HEX.parchment,
+      stroke: UI_HEX.ink,
+      strokeThickness: 4,
+      align: "center",
+    }).setOrigin(0.5);
+    const fs = this.add.text(0, -34, `${FREE_SPINS} FS`, {
+      fontFamily: UI_FONT,
+      fontSize: "16px",
+      color: UI_HEX.peach,
+      stroke: UI_HEX.ink,
+      strokeThickness: 4,
+      align: "center",
+    }).setOrigin(0.5);
+    return this.add.container(0, 0, [badge, text, fs]);
   }
 
   private scaleBackground(width: number, height: number) {
@@ -1514,27 +1539,28 @@ export default class SlotScene extends Phaser.Scene {
     this.drawPaylines([]);
   }
 
-  private async showLineWinCallout(win: LineWin, index: number, total: number) {
+  private async showLineWinCallout(win: LineWin, _index: number, _total: number) {
     const width = Number(this.scale.width) || 1280;
-    const y = Math.max(76, this.frameTop + this.frameH * 0.08);
-    const label = this.add.text(0, -1, `LINE ${win.lineIndex + 1} WIN  \u20AC${this.formatMoney(win.amount)}`, {
+    const height = Number(this.scale.height) || 720;
+    const portrait = height > width;
+    const footerH = portrait ? Math.max(142, height * 0.18) : Math.max(108, height * 0.11);
+    const footerTop = height - footerH;
+    const machineBottom = this.frameTop + this.frameH * 0.95;
+    const y = Phaser.Math.Clamp(
+      machineBottom + 18 * this.scaleFactor,
+      this.frameTop + this.frameH * 0.72,
+      footerTop - 24,
+    );
+    const label = this.add.text(0, -1, `\u20AC${this.formatMoney(win.amount)}`, {
       fontFamily: UI_FONT,
-      fontSize: `${Math.max(24, Math.min(42, width * 0.032))}px`,
+      fontSize: `${Math.max(26, Math.min(44, width * 0.034))}px`,
       color: UI_HEX.peach,
       stroke: UI_HEX.ink,
       strokeThickness: 6,
     }).setOrigin(0.5);
-    const progress = total > 1 ? this.add.text(0, label.height * 0.62, `${index}/${total}`, {
-      fontFamily: BODY_FONT,
-      fontSize: `${Math.max(12, Math.min(16, width * 0.012))}px`,
-      color: UI_HEX.parchment,
-    }).setOrigin(0.5) : undefined;
-    const bgH = label.height + (progress ? progress.height + 18 : 22);
-    const bg = this.add.rectangle(0, progress ? 5 : 0, label.width + 54, bgH, UI_PALETTE.ink, 0.86)
+    const bg = this.add.rectangle(0, 0, label.width + 48, label.height + 20, UI_PALETTE.ink, 0.78)
       .setStrokeStyle(3, UI_PALETTE.bronze, 0.94);
-    const pieces: Phaser.GameObjects.GameObject[] = [bg, label];
-    if (progress) pieces.push(progress);
-    const callout = this.add.container(width / 2, y, pieces).setDepth(130).setAlpha(0).setScale(0.92);
+    const callout = this.add.container(width / 2, y, [bg, label]).setDepth(130).setAlpha(0).setScale(0.92);
     await new Promise<void>((resolve) => {
       this.tweens.add({
         targets: callout,

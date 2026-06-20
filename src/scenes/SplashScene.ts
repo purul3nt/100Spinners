@@ -60,7 +60,7 @@ export default class SplashScene extends Phaser.Scene {
       lineSpacing: -6,
     }).setOrigin(0.5);
 
-    const subtitle = this.add.text(width / 2, height * 0.34, "4x5 payline prototype", {
+    const subtitle = this.add.text(width / 2, height * 0.34, "4x5 PAYLINE SLOT", {
       fontFamily: BODY_FONT,
       fontSize: Math.max(18, Math.min(30, width * 0.024)) + "px",
       color: UI_HEX.parchment,
