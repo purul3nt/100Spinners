@@ -730,7 +730,7 @@ export default class SlotScene extends Phaser.Scene {
     const top = cy - panelH / 2;
     const overlay = this.add.container(0, 0).setDepth(260);
     const blocker = this.add.rectangle(width / 2, height / 2, width, height, UI_PALETTE.ink, 0.72).setInteractive({ useHandCursor: false });
-    const panel = this.add.rectangle(cx, cy, panelW, panelH, UI_PALETTE.parchment, 0.98).setStrokeStyle(5, UI_PALETTE.bronze, 0.92).setInteractive({ useHandCursor: false });
+    const panel = this.add.rectangle(cx, cy, panelW, panelH, UI_PALETTE.parchment, 0.2).setStrokeStyle(5, UI_PALETTE.bronze, 0.92).setInteractive({ useHandCursor: false });
     panel.on("pointerdown", (_pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => event.stopPropagation());
     const title = this.add.text(left + 26, top + 18, "PAYTABLE & RULES", {
       fontFamily: UI_FONT,
