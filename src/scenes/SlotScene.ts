@@ -28,6 +28,49 @@ const REEL_CENTER_X = [184, 449, 704, 949, 1198].map((x) => x / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
 const CHERRY_BLOSSOM_PETAL_KEY = "generated_cherry_blossom_petal";
+const SAMURAI_FRAME_FILES = [
+  "001",
+  "002",
+  "003",
+  "004",
+  "005",
+  "006",
+  "007",
+  "008",
+  "011",
+  "012",
+  "013",
+  "014",
+  "015",
+  "016",
+  "017",
+  "018",
+  "019",
+  "020",
+  "021",
+  "022",
+  "023",
+  "024",
+  "025",
+  "026",
+  "027",
+  "028",
+  "029",
+  "030",
+];
+const SAMURAI_BASE_HEIGHT = 1440;
+const SAMURAI_MOOD_SCALE: Record<SamuraiMood, number> = {
+  idle: 1,
+  slash: 1,
+};
+const SAMURAI_MOOD_X_OFFSET: Record<SamuraiMood, number> = {
+  idle: 0,
+  slash: 0,
+};
+const SAMURAI_MOOD_Y_OFFSET: Record<SamuraiMood, number> = {
+  idle: 0,
+  slash: 0,
+};
 const SYMBOL_IMAGE_SCALE = 1.1;
 const LOW_PAY_IMAGE_SCALE = 1.2;
 const REEL_START_STAGGER_MS = 42;
@@ -54,6 +97,8 @@ type SymbolView = {
   image?: Phaser.GameObjects.Image;
   multiplier?: Phaser.GameObjects.Text | Phaser.GameObjects.Container;
 };
+
+type SamuraiMood = "idle" | "slash";
 
 export default class SlotScene extends Phaser.Scene {
   private balance = 5000;
@@ -105,6 +150,9 @@ export default class SlotScene extends Phaser.Scene {
   private backgroundClouds?: Phaser.GameObjects.TileSprite;
   private backgroundPetals?: Phaser.GameObjects.Particles.ParticleEmitterManager;
   private backgroundPetalEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
+  private samuraiFx?: Phaser.GameObjects.Sprite;
+  private samuraiMood: SamuraiMood = "idle";
+  private samuraiTransitionBits: Phaser.GameObjects.Arc[] = [];
   private frameLeft = 0;
   private frameTop = 0;
   private frameW = 0;
@@ -120,6 +168,7 @@ export default class SlotScene extends Phaser.Scene {
     this.createBackground();
     this.createHud();
     this.createBoard();
+    this.createSamuraiFx();
     this.layoutScene();
     this.scale.on("resize", this.layoutScene, this);
     this.newIdleGrid();
@@ -276,6 +325,125 @@ export default class SlotScene extends Phaser.Scene {
     this.lineGraphics = this.add.graphics().setDepth(12);
   }
 
+  private createSamuraiFx() {
+    const idleFrameKeys = SAMURAI_FRAME_FILES.map((frame) => ({ key: `samurai_idle_${frame}` }));
+    const slashFrameKeys = SAMURAI_FRAME_FILES.map((frame) => ({ key: `samurai_slash_${frame}` }));
+    if (!this.anims.exists("samurai_idle_loop")) {
+      this.anims.create({
+        key: "samurai_idle_loop",
+        frames: idleFrameKeys as any,
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists("samurai_slash_once")) {
+      this.anims.create({
+        key: "samurai_slash_once",
+        frames: slashFrameKeys as any,
+        frameRate: 15,
+        repeat: 0,
+      });
+    }
+    this.samuraiFx = this.add.sprite(0, 0, "samurai_idle_001")
+      .setOrigin(0.5, 1)
+      .setDepth(6.75)
+      .setVisible(false);
+    this.setSamuraiMood("idle", true);
+  }
+
+  private setSamuraiMood(mood: SamuraiMood, force = false) {
+    if (!this.samuraiFx) return;
+    if (!force && this.samuraiMood === mood) return;
+    const shouldTransition = !force && this.samuraiFx.visible;
+    this.samuraiMood = mood;
+    this.samuraiFx.play(mood === "slash" ? "samurai_slash_once" : "samurai_idle_loop", true);
+    this.refreshSamuraiLayout();
+    if (shouldTransition) this.playSamuraiMoodTransition();
+  }
+
+  private refreshSamuraiLayout() {
+    if (!this.samuraiFx) return;
+    const width = Number(this.scale.width) || 1280;
+    const height = Number(this.scale.height) || 720;
+    this.layoutSamuraiFx(width, height);
+  }
+
+  private layoutSamuraiFx(width: number, height: number) {
+    if (!this.samuraiFx) return;
+    const portrait = height > width * 1.05;
+    const boardRight = this.frameLeft + this.frameW;
+    const boardBottom = this.frameTop + this.frameH;
+    const footerTop = this.uiBar ? this.uiBar.y : height;
+    const availableRight = Math.max(0, width - boardRight);
+    const targetHeight = portrait
+      ? Math.min(height * 0.45, width * 0.82, this.frameH * 0.95)
+      : Math.min(this.frameH * 1.06, height * 0.72, Math.max(360, availableRight * 1.55));
+    const scale = (targetHeight / SAMURAI_BASE_HEIGHT) * SAMURAI_MOOD_SCALE[this.samuraiMood];
+    const x = portrait
+      ? this.frameLeft + this.frameW * 0.86
+      : (availableRight > 120 ? boardRight + Math.max(availableRight * 0.38, this.frameW * 0.055) : this.frameLeft + this.frameW * 0.92);
+    const y = portrait
+      ? Math.min(footerTop + targetHeight * 0.08, boardBottom + targetHeight * 0.14)
+      : Math.min(footerTop + targetHeight * 0.18, boardBottom + targetHeight * 0.18);
+    this.samuraiFx
+      .setVisible(true)
+      .setAlpha(0.86)
+      .setPosition(
+        x + this.frameW * 0.035 * SAMURAI_MOOD_X_OFFSET[this.samuraiMood],
+        y + this.frameH * 0.035 * SAMURAI_MOOD_Y_OFFSET[this.samuraiMood],
+      )
+      .setScale(scale);
+  }
+
+  private playSamuraiMoodTransition() {
+    if (!this.samuraiFx || !this.samuraiFx.visible) return;
+    this.tweens.killTweensOf(this.samuraiFx);
+    this.samuraiTransitionBits = this.samuraiTransitionBits.filter((bit) => bit.active);
+
+    const baseScaleX = this.samuraiFx.scaleX;
+    const baseScaleY = this.samuraiFx.scaleY;
+    this.samuraiFx.setAlpha(0.62).setScale(baseScaleX * 0.97, baseScaleY * 0.97);
+    this.tweens.add({
+      targets: this.samuraiFx,
+      alpha: 0.86,
+      scaleX: baseScaleX,
+      scaleY: baseScaleY,
+      duration: 220,
+      ease: "Sine.easeOut",
+    });
+
+    if (this.samuraiMood !== "slash") return;
+    const burstX = this.samuraiFx.x - this.samuraiFx.displayWidth * 0.08;
+    const burstY = this.samuraiFx.y - Math.max(70, this.samuraiFx.displayHeight * 0.48);
+    const colors = [0xffffff, 0xfacc15, 0x38bdf8, 0xf472b6];
+    for (let i = 0; i < 8; i++) {
+      const bit = this.add.circle(burstX, burstY, Phaser.Math.Between(2, 4), colors[i % colors.length], 0.78)
+        .setDepth(6.9)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      this.samuraiTransitionBits.push(bit);
+      this.tweens.add({
+        targets: bit,
+        x: burstX + Phaser.Math.Between(-48, 54),
+        y: burstY + Phaser.Math.Between(-38, 28),
+        alpha: 0,
+        scale: Phaser.Math.FloatBetween(0.22, 0.5),
+        duration: Phaser.Math.Between(280, 480),
+        ease: "Cubic.easeOut",
+        onComplete: () => {
+          bit.destroy();
+          this.samuraiTransitionBits = this.samuraiTransitionBits.filter((candidate) => candidate !== bit && candidate.active);
+        },
+      });
+    }
+  }
+
+  private async playSamuraiWinSlash() {
+    if (!this.samuraiFx) return;
+    this.setSamuraiMood("slash");
+    await this.wait(Math.ceil((SAMURAI_FRAME_FILES.length / 15) * 1000));
+    this.setSamuraiMood("idle");
+  }
+
   private layoutScene() {
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
@@ -306,6 +474,7 @@ export default class SlotScene extends Phaser.Scene {
 
     this.layoutBaboonFooter(width, height);
     this.layoutBonusCollectDisplay(width, height);
+    this.refreshSamuraiLayout();
 
     this.positionGridViews();
     this.drawPaylines([]);
@@ -1031,9 +1200,11 @@ export default class SlotScene extends Phaser.Scene {
 
   private async presentWins(wins: LineWin[]) {
     if (!wins.length) return;
+    const samuraiSlash = this.playSamuraiWinSlash();
     await this.animatePaylinesLeftToRight(wins);
     this.drawPaylines(wins);
     this.playWinningSymbolAnimations(wins);
+    await samuraiSlash;
   }
 
   private async animatePaylinesLeftToRight(wins: LineWin[]) {
