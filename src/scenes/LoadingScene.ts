@@ -2,6 +2,25 @@ import "phaser";
 
 const UI_FONT = "Impact, Haettenschweiler, 'Arial Black', sans-serif";
 const BODY_FONT = "'Trebuchet MS', Arial, sans-serif";
+const UI_PALETTE = {
+  parchment: 0xC1B39E,
+  beige: 0xBAAC97,
+  taupe: 0x9F9280,
+  ink: 0x211E1C,
+  darkBrown: 0x3D3430,
+  bronze: 0x8C6B53,
+  redBrown: 0x633733,
+  peach: 0xD8AF8E,
+};
+const UI_HEX = {
+  parchment: "#C1B39E",
+  beige: "#BAAC97",
+  ink: "#211E1C",
+  darkBrown: "#3D3430",
+  bronze: "#8C6B53",
+  redBrown: "#633733",
+  peach: "#D8AF8E",
+};
 const SYMBOL_KEYS = ["a", "k", "q", "j", "ten", "drummer", "bass", "guitar", "vocal"];
 const LAYERED_SYMBOL_KEYS = ["a", "k", "q", "j", "ten", "guitar", "drummer", "bass", "vocal"];
 const ROCKING_FRAME_PATH = "src/assets/baboon_bonus/baboon_rocking";
@@ -128,27 +147,27 @@ export default class LoadingScene extends Phaser.Scene {
 
   preload() {
     const { width, height } = this.scale;
-    this.cameras.main.setBackgroundColor("#000000");
+    this.cameras.main.setBackgroundColor(UI_HEX.ink);
 
     const title = this.add.text(width / 2, height * 0.28, "LOADING", {
       fontFamily: UI_FONT,
       fontSize: Math.max(42, Math.min(86, width * 0.058)) + "px",
-      color: "#facc15",
-      stroke: "#4c1d95",
+      color: UI_HEX.peach,
+      stroke: UI_HEX.ink,
       strokeThickness: 8,
     }).setOrigin(0.5).setAlpha(0.9);
 
     const barW = Math.min(width * 0.58, 620);
     const barH = Math.max(12, Math.min(22, height * 0.018));
-    this.add.rectangle(width / 2, height * 0.72, barW, barH, 0x000000, 0.92)
-      .setStrokeStyle(2, 0x38bdf8, 0.72);
-    this.barFill = this.add.rectangle(width / 2 - barW / 2, height * 0.72, 1, barH - 4, 0xfacc15, 1)
+    this.add.rectangle(width / 2, height * 0.72, barW, barH, UI_PALETTE.darkBrown, 0.94)
+      .setStrokeStyle(2, UI_PALETTE.bronze, 0.86);
+    this.barFill = this.add.rectangle(width / 2 - barW / 2, height * 0.72, 1, barH - 4, UI_PALETTE.peach, 1)
       .setOrigin(0, 0.5);
     this.percentText = this.add.text(width / 2, height * 0.76, "0%", {
       fontFamily: BODY_FONT,
       fontSize: Math.max(14, Math.min(22, width * 0.018)) + "px",
-      color: "#ffffff",
-      stroke: "#000000",
+      color: UI_HEX.parchment,
+      stroke: UI_HEX.ink,
       strokeThickness: 3,
     }).setOrigin(0.5);
 

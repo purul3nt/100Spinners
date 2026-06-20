@@ -897,7 +897,8 @@ export default class SlotScene extends Phaser.Scene {
     const cellW = Math.max(13, Math.min(18, (itemW - 44) / 5));
     const cellH = Math.max(8, Math.min(11, cellW * 0.62));
     const cellGap = 3;
-    const itemH = Math.max(46, cellH * 4 + 12);
+    const gridH = ROWS * cellH + (ROWS - 1) * cellGap;
+    const itemH = Math.max(portrait ? 58 : 68, gridH + (portrait ? 18 : 24));
     const startY = y + 60;
 
     PAYLINES.forEach((lineRows, index) => {
@@ -905,7 +906,7 @@ export default class SlotScene extends Phaser.Scene {
       const row = index % rowsPerColumn;
       const itemX = x + column * (itemW + columnGap);
       const itemY = startY + row * itemH;
-      const number = this.add.text(itemX, itemY + cellH * 2, `${index + 1}`, {
+      const number = this.add.text(itemX, itemY + gridH / 2, `${index + 1}`, {
         fontFamily: UI_FONT,
         fontSize: `${Math.max(13, cellH * 1.55)}px`,
         color: UI_HEX.ink,
@@ -1925,23 +1926,23 @@ export default class SlotScene extends Phaser.Scene {
     const title = this.add.text(width / 2, height / 2 - 54, titleText, {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(34, Math.min(62, width * 0.05))}px`,
-      color: UI_HEX.ink,
+      color: UI_HEX.redBrown,
       stroke: UI_HEX.peach,
-      strokeThickness: 8,
+      strokeThickness: 6,
     }).setOrigin(0.5);
     const spinCount = this.add.text(width / 2, height / 2 + 12, `${spins} FREE SPINS`, {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(30, Math.min(54, width * 0.043))}px`,
       color: UI_HEX.darkBrown,
       stroke: UI_HEX.peach,
-      strokeThickness: 8,
+      strokeThickness: 6,
     }).setOrigin(0.5);
     const auto = this.add.text(width / 2, height / 2 + 74, "AUTO PLAY", {
       fontFamily: BODY_FONT,
       fontSize: `${Math.max(16, Math.min(24, width * 0.018))}px`,
       color: UI_HEX.ink,
-      stroke: UI_HEX.peach,
-      strokeThickness: 4,
+      stroke: UI_HEX.beige,
+      strokeThickness: 3,
     }).setOrigin(0.5);
 
     const overlay = this.add.container(0, 0, [...parts, glow, title, spinCount, auto]).setDepth(50).setAlpha(0);
