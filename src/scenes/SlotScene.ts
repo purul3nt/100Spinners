@@ -73,6 +73,9 @@ const SAMURAI_MOOD_Y_OFFSET: Record<SamuraiMood, number> = {
 };
 const SYMBOL_IMAGE_SCALE = 1.1;
 const LOW_PAY_IMAGE_SCALE = 1.2;
+const TEN_SYMBOL_EXTRA_SCALE = 1.15;
+const TEN_SYMBOL_GREY_TINT = 0xd9d9d9;
+const TEN_SYMBOL_GREY_TEXTURE = "shogun_sym_low_05_grey_15";
 const REEL_START_STAGGER_MS = 42;
 const SLAM_STOP_REEL_STAGGER_MS = 55;
 const SLAM_STOP_MIN_SPIN_MS = 180;
@@ -837,10 +840,11 @@ export default class SlotScene extends Phaser.Scene {
     let label: Phaser.GameObjects.Text | undefined;
     let image: Phaser.GameObjects.Image | undefined;
 
-    const assetKey = cell.code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[cell.code];
+    const assetKey = this.getRenderableSymbolAssetKey(cell.code);
     if (assetKey && this.textures.exists(assetKey)) {
       image = this.add.image(0, 0, assetKey).setOrigin(0.5);
       image.setScale(this.getSymbolImageScale(image, cell.code));
+      this.applySymbolImageTint(image, cell.code);
       if (cell.code[0] === "L") image.setAlpha(0.96);
       parts.push(image);
     } else {
@@ -1184,11 +1188,12 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private createSpinSymbol(code: SymbolCode, x: number, y: number, blurred = true) {
-    const assetKey = code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[code];
+    const assetKey = this.getRenderableSymbolAssetKey(code);
     if (assetKey && this.textures.exists(assetKey)) {
       const image = this.add.image(0, 0, assetKey).setOrigin(0.5);
       const scale = this.getSymbolImageScale(image, code) * this.scaleFactor;
       image.setScale(scale);
+      this.applySymbolImageTint(image, code);
       if (code[0] === "L") image.setAlpha(0.96);
       if (!blurred) return this.add.container(x, y, [image]);
 
@@ -1197,6 +1202,7 @@ export default class SlotScene extends Phaser.Scene {
       const blurBehind = this.add.image(0, -17 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.38);
       const blurAhead = this.add.image(0, 17 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.38);
       const blurFarAhead = this.add.image(0, 34 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.2);
+      [blurFarBehind, blurBehind, blurAhead, blurFarAhead].forEach((trail) => this.applySymbolImageTint(trail, code));
       const blurWash = this.add.rectangle(0, 0, CELL * 0.78 * this.scaleFactor, CELL * 1.55 * this.scaleFactor, 0xffffff, 0.08)
         .setBlendMode(Phaser.BlendModes.ADD);
       return this.add.container(x, y, [blurFarBehind, blurBehind, blurWash, blurAhead, blurFarAhead, image]);
@@ -1212,9 +1218,40 @@ export default class SlotScene extends Phaser.Scene {
 
   private getSymbolImageScale(image: Phaser.GameObjects.Image, code: SymbolCode) {
     const lowPayScale = code[0] === "L" ? LOW_PAY_IMAGE_SCALE : 1;
-    const maxW = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.76 * lowPayScale : CELL * 0.86;
-    const maxH = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.70 * lowPayScale : CELL * 0.88;
+    const tenScale = code === "L5" ? TEN_SYMBOL_EXTRA_SCALE : 1;
+    const maxW = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.76 * lowPayScale * tenScale : CELL * 0.86;
+    const maxH = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.70 * lowPayScale * tenScale : CELL * 0.88;
     return Math.min(maxW / image.width, maxH / image.height) * SYMBOL_IMAGE_SCALE;
+  }
+
+  private getRenderableSymbolAssetKey(code: SymbolCode) {
+    const baseKey = code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[code];
+    if (code !== "L5" || !baseKey || !this.textures.exists(baseKey)) return baseKey;
+    return this.ensureTenSymbolGreyTexture(baseKey);
+  }
+
+  private ensureTenSymbolGreyTexture(sourceKey: string) {
+    if (this.textures.exists(TEN_SYMBOL_GREY_TEXTURE)) return TEN_SYMBOL_GREY_TEXTURE;
+    const source = this.textures.get(sourceKey).getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+    const width = source.width;
+    const height = source.height;
+    const texture = this.textures.createCanvas(TEN_SYMBOL_GREY_TEXTURE, width, height);
+    texture.draw(0, 0, source);
+    const imageData = texture.getData(0, 0, width, height);
+    const pixels = imageData.data;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const grey = pixels[index] * 0.299 + pixels[index + 1] * 0.587 + pixels[index + 2] * 0.114;
+      pixels[index] = pixels[index] * 0.85 + grey * 0.15;
+      pixels[index + 1] = pixels[index + 1] * 0.85 + grey * 0.15;
+      pixels[index + 2] = pixels[index + 2] * 0.85 + grey * 0.15;
+    }
+    texture.putData(imageData, 0, 0);
+    texture.refresh();
+    return TEN_SYMBOL_GREY_TEXTURE;
+  }
+
+  private applySymbolImageTint(image: Phaser.GameObjects.Image, code: SymbolCode) {
+    if (code === "L5" && image.texture.key !== TEN_SYMBOL_GREY_TEXTURE) image.setTint(TEN_SYMBOL_GREY_TINT);
   }
 
   private randomSpinCode() {
