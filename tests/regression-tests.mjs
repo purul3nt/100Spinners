@@ -44,6 +44,8 @@ assert.equal(math.PAYLINES.length, 14, "attached blueprint has 14 paylines");
 assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x bet");
 assert.equal(Math.max(...math.BONUS_MULTIPLIERS), 1000, "wheel max multiplier should be 1000x");
 assert.ok(math.BONUS_TRIGGER_CELL_CHANCE > 0, "visible bonus trigger cell chance should be configured");
+assert.equal(math.BASE_BONUS_CHANCE, 0.00365, "base-to-bonus hit frequency should be reduced for the 96x bonus average");
+assert.equal(math.BONUS_FEATURE_PAY_SCALE, 3.27, "bonus feature pay scale should target about 96x average bonus pay");
 
 const grid = [
   [{ code: "H1" }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
@@ -74,6 +76,24 @@ assert.equal(spin.grid[0].length, 4, "spin should return four rows per column");
 const buy = math.buyBonus(deterministic, 1);
 assert.equal(buy.cost, 100, "bonus buy cost should be 100x bet");
 assert.equal(buy.freeSpins.length, 10, "bonus buy should resolve 10 free spins");
+
+let bonusSampleSeed = 0x1000b0;
+const bonusSampleRandom = () => {
+  bonusSampleSeed ^= bonusSampleSeed << 13;
+  bonusSampleSeed ^= bonusSampleSeed >>> 17;
+  bonusSampleSeed ^= bonusSampleSeed << 5;
+  return (bonusSampleSeed >>> 0) / 4294967296;
+};
+const bonusSampleRounds = 20000;
+let bonusSampleTotal = 0;
+for (let i = 0; i < bonusSampleRounds; i++) {
+  bonusSampleTotal += math.buyBonus(bonusSampleRandom, 1).totalWin;
+}
+const bonusSampleAverage = bonusSampleTotal / bonusSampleRounds;
+assert.ok(
+  bonusSampleAverage >= 94 && bonusSampleAverage <= 98,
+  `bonus average should land near 96x; got ${bonusSampleAverage.toFixed(4)}x`,
+);
 
 const visibleBonusSpin = math.playPaidSpin(() => 0, 1);
 assert.equal(visibleBonusSpin.bonusTriggered, true, "visible BONUS spinner should trigger free spins");

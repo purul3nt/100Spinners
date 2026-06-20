@@ -42,10 +42,11 @@ export const ROWS = 4;
 export const DEFAULT_BET = 1;
 export const FREE_SPINS = 10;
 export const BUY_BONUS_PRICE_MULTIPLIER = 100;
-export const BASE_BONUS_CHANCE = 0.0123078;
+export const BASE_BONUS_CHANCE = 0.00365;
 export const BONUS_TRIGGER_CELL_CHANCE = 1 - Math.pow(1 - BASE_BONUS_CHANCE, 1 / (3 * ROWS));
 export const WHEEL_EVENT_CHANCE = 0.084587;
 export const BONUS_MODE_HIT_ASSIST_CHANCE = 0.414;
+export const BONUS_FEATURE_PAY_SCALE = 3.27;
 export const V1_PAY_SCALE = 5.4;
 
 export const SYMBOLS: SymbolDefinition[] = [
@@ -226,13 +227,15 @@ export function playBonusFeature(random = Math.random, bet = DEFAULT_BET): { tot
       grid = forceSmallBonusWin(grid);
       scored = scoreGrid(grid, bet);
     }
-    const wheelMultiplier = scored.baseWin > 0 ? collectWheelMultiplier(grid, random, true) : 0;
-    const spinTotal = roundMoney(wheelMultiplier > 0 ? scored.baseWin * wheelMultiplier : scored.baseWin);
+    const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * BONUS_FEATURE_PAY_SCALE) }));
+    const bonusBaseWin = roundMoney(scored.baseWin * BONUS_FEATURE_PAY_SCALE);
+    const wheelMultiplier = bonusBaseWin > 0 ? collectWheelMultiplier(grid, random, true) : 0;
+    const spinTotal = roundMoney(wheelMultiplier > 0 ? bonusBaseWin * wheelMultiplier : bonusBaseWin);
     totalWin = roundMoney(totalWin + spinTotal);
     freeSpins.push({
       grid,
-      lineWins: scored.lineWins,
-      baseWin: scored.baseWin,
+      lineWins: scaledLineWins,
+      baseWin: bonusBaseWin,
       wheelMultiplier,
       totalWin: spinTotal,
       bonusTriggered: false,
