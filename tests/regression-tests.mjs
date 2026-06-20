@@ -38,7 +38,7 @@ const math = loadTsCommonJs("src/sixsixsixMath.ts");
 assert.equal(math.COLS, 5, "1000 Shogun Spinners should use five reels");
 assert.equal(math.ROWS, 4, "1000 Shogun Spinners should use four visible rows");
 assert.equal(math.PAYLINES.length, 14, "attached blueprint has 14 paylines");
-assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 10, "only cheapest 10x bonus buy should be enabled");
+assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x bet");
 
 const grid = [
   [{ code: "H1" }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
@@ -52,6 +52,10 @@ const topLine = scored.lineWins.find((win) => win.lineIndex === 0);
 assert.ok(topLine, "top row should score an H1 3OAK line");
 assert.equal(topLine.symbol, "H1", "top line should pay H1");
 assert.equal(topLine.amount, 29.7, "H1 3OAK uses the scaled v1 pay");
+const h1 = math.SYMBOL_BY_CODE.H1;
+assert.equal(math.scaledSymbolPay(h1, 3), 29.7, "paytable helper should expose scaled H1 3OAK");
+assert.equal(math.scaledSymbolPay(h1, 4), 86.4, "paytable helper should expose scaled H1 4OAK");
+assert.equal(math.scaledSymbolPay(h1, 5), 270, "paytable helper should expose scaled H1 5OAK");
 
 let calls = 0;
 const deterministic = () => {
@@ -63,7 +67,7 @@ assert.equal(spin.grid.length, 5, "spin should return five columns");
 assert.equal(spin.grid[0].length, 4, "spin should return four rows per column");
 
 const buy = math.buyBonus(deterministic, 1);
-assert.equal(buy.cost, 10, "bonus buy cost should be 10x bet");
+assert.equal(buy.cost, 100, "bonus buy cost should be 100x bet");
 assert.equal(buy.freeSpins.length, 10, "bonus buy should resolve 10 free spins");
 
 console.log("1000 Shogun Spinners regression tests passed");

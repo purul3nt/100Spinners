@@ -14,6 +14,7 @@ import {
   SpinResult,
   buyBonus,
   playPaidSpin,
+  scaledSymbolPay,
 } from "../sixsixsixMath";
 
 const UI_FONT = "Impact, Haettenschweiler, 'Arial Black', sans-serif";
@@ -863,7 +864,7 @@ export default class SlotScene extends Phaser.Scene {
         stroke: UI_HEX.peach,
         strokeThickness: 2,
       }).setOrigin(0, 0.5);
-      const pays = this.add.text(payLeft + payW - 8, y + rowH / 2, `${symbol.pay3.toFixed(2)}   ${symbol.pay4.toFixed(2)}   ${symbol.pay5.toFixed(2)}x`, {
+      const pays = this.add.text(payLeft + payW - 8, y + rowH / 2, `${scaledSymbolPay(symbol, 3).toFixed(2)}   ${scaledSymbolPay(symbol, 4).toFixed(2)}   ${scaledSymbolPay(symbol, 5).toFixed(2)}x`, {
         fontFamily: BODY_FONT,
         fontSize: `${Math.max(12, rowH * 0.3)}px`,
         color: UI_HEX.darkBrown,
@@ -886,7 +887,7 @@ export default class SlotScene extends Phaser.Scene {
       "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "The Shuriken Spinner can land on reels 1, 3, and 5. When it carries a multiplier, the wheel can boost the line win.\n\n" +
-      "Bonus trigger starts 10 automatic free spins. Buy Bonus costs 10x the current bet and starts the same feature.\n\n" +
+      `Bonus trigger starts 10 automatic free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet and starts the same feature.\n\n` +
       "Wins are displayed as bet multipliers and balance updates after each resolved spin.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,

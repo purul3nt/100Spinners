@@ -74,7 +74,7 @@ export default class SplashScene extends Phaser.Scene {
     const cardW = Math.min(310, width * 0.36);
     const cardH = Math.min(170, height * 0.24);
     const cardA = this.card(left, centerY, cardW, cardH, "14 PAYLINES", "Left-to-right 3/4/5 matches.");
-    const cardB = this.card(right, centerY, cardW, cardH, "10x BUY", "Cheapest bonus buy only.");
+    const cardB = this.card(right, centerY, cardW, cardH, "100x BUY", "Bonus buy recalibrated.");
 
     const prompt = this.add.text(width / 2, height * 0.82, "CLICK TO PLAY", {
       fontFamily: UI_FONT,
