@@ -1342,9 +1342,7 @@ export default class SlotScene extends Phaser.Scene {
       const blurAhead = this.add.image(0, 17 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.38);
       const blurFarAhead = this.add.image(0, 34 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.2);
       [blurFarBehind, blurBehind, blurAhead, blurFarAhead].forEach((trail) => this.applySymbolImageTint(trail, code));
-      const blurWash = this.add.rectangle(0, 0, CELL * 0.78 * this.scaleFactor, CELL * 1.55 * this.scaleFactor, 0xffffff, 0.08)
-        .setBlendMode(Phaser.BlendModes.ADD);
-      return this.add.container(x, y, [blurFarBehind, blurBehind, blurWash, blurAhead, blurFarAhead, image]);
+      return this.add.container(x, y, [blurFarBehind, blurBehind, blurAhead, blurFarAhead, image]);
     }
     return this.add.text(x, y, code, {
       fontFamily: UI_FONT,
