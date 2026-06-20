@@ -59,6 +59,8 @@ export default class SlotScene extends Phaser.Scene {
   private spinning = false;
   private grid: CellResult[][] = [];
   private symbolViews: SymbolView[][] = [];
+  private reelMaskShapes: Phaser.GameObjects.Graphics[] = [];
+  private reelMasks: Phaser.Display.Masks.GeometryMask[] = [];
   private lineGraphics!: Phaser.GameObjects.Graphics;
   private boardFrame!: Phaser.GameObjects.Rectangle;
   private reelFrame!: Phaser.GameObjects.Image;
@@ -601,12 +603,37 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private positionGridViews() {
+    this.refreshReelMasks(CELL * this.scaleFactor);
     for (let col = 0; col < this.symbolViews.length; col++) {
       for (let row = 0; row < this.symbolViews[col].length; row++) {
         const view = this.symbolViews[col][row];
         if (!view) continue;
-        view.container.setPosition(this.cellX(col), this.cellY(row)).setScale(this.scaleFactor).setData("baseScale", this.scaleFactor);
+        view.container
+          .setPosition(this.cellX(col), this.cellY(row))
+          .setScale(this.scaleFactor)
+          .setData("baseScale", this.scaleFactor)
+          .setMask(this.reelMasks[col]);
       }
+    }
+  }
+
+  private refreshReelMasks(rowGap: number) {
+    for (let col = 0; col < COLS; col++) {
+      let maskShape = this.reelMaskShapes[col];
+      if (!maskShape) {
+        maskShape = this.add.graphics();
+        maskShape.setVisible(false);
+        this.reelMaskShapes[col] = maskShape;
+        this.reelMasks[col] = maskShape.createGeometryMask();
+      }
+      maskShape.clear();
+      maskShape.fillStyle(0xffffff, 1);
+      maskShape.fillRect(
+        this.cellX(col) - rowGap * 0.56,
+        this.frameTop + this.frameH * 0.08,
+        rowGap * 1.12,
+        this.frameH * 0.78 + 10,
+      );
     }
   }
 
@@ -620,21 +647,11 @@ export default class SlotScene extends Phaser.Scene {
     const topY = this.cellY(0);
     const reelPromises: Array<Promise<void>> = [];
     const reelOverlays: Phaser.GameObjects.Container[] = [];
-    const maskShapes: Phaser.GameObjects.Graphics[] = [];
+    this.refreshReelMasks(rowGap);
     for (let col = 0; col < COLS; col++) {
       const reel = this.add.container(0, 0).setDepth(24 + col);
       reelOverlays.push(reel);
-      const maskShape = this.add.graphics();
-      maskShape.fillStyle(0xffffff, 1);
-      maskShape.fillRect(
-        this.cellX(col) - rowGap * 0.56,
-        this.frameTop + this.frameH * 0.08,
-        rowGap * 1.12,
-        this.frameH * 0.78 + 10,
-      );
-      maskShape.setVisible(false);
-      maskShapes.push(maskShape);
-      reel.setMask(maskShape.createGeometryMask());
+      reel.setMask(this.reelMasks[col]);
 
       for (let row = -2; row < ROWS + 5; row++) {
         reel.add(this.createSpinSymbol(this.randomSpinCode(), this.cellX(col), topY + row * rowGap));
@@ -683,7 +700,6 @@ export default class SlotScene extends Phaser.Scene {
     }
     await Promise.all(reelPromises);
     reelOverlays.forEach((reel) => reel.destroy(true));
-    maskShapes.forEach((mask) => mask.destroy());
   }
 
   private createSpinSymbol(code: SymbolCode, x: number, y: number, blurred = true) {
