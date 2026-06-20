@@ -116,7 +116,10 @@ const SAMURAI_SLASH_FRAME_IDS = [
   "029",
   "030",
 ];
-const SAMURAI_BASE_HEIGHT = 1440;
+const SAMURAI_MOOD_BASE_HEIGHT: Record<SamuraiMood, number> = {
+  idle: 768,
+  slash: 1440,
+};
 const SAMURAI_MOOD_SCALE: Record<SamuraiMood, number> = {
   idle: 1,
   slash: 1,
@@ -445,7 +448,7 @@ export default class SlotScene extends Phaser.Scene {
     const targetHeight = portrait
       ? Math.min(height * 0.45, width * 0.82, this.frameH * 0.95)
       : Math.min(this.frameH * 1.06, height * 0.72, Math.max(360, availableRight * 1.55));
-    const scale = (targetHeight / SAMURAI_BASE_HEIGHT) * SAMURAI_MOOD_SCALE[this.samuraiMood];
+    const scale = (targetHeight / SAMURAI_MOOD_BASE_HEIGHT[this.samuraiMood]) * SAMURAI_MOOD_SCALE[this.samuraiMood];
     const x = portrait
       ? this.frameLeft + this.frameW * 0.86
       : (availableRight > 120 ? boardRight + Math.max(availableRight * 0.38, this.frameW * 0.055) : this.frameLeft + this.frameW * 0.92);
