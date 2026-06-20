@@ -25,7 +25,9 @@ const REEL_FRAME_BASE_W = REEL_FRAME_BASE_H * REEL_FRAME_ASPECT;
 const REEL_CENTER_X = [184, 449, 704, 949, 1198].map((x) => x / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
+const SYMBOL_IMAGE_SCALE = 1.1;
 const LOW_PAY_IMAGE_SCALE = 1.2;
+const REEL_START_STAGGER_MS = 42;
 const WHEEL_VALUES = [2, 3, 5, 8, 10, 15, 20, 50];
 const SPIN_SYMBOL_CODES: SymbolCode[] = ["H1", "H2", "H3", "H4", "H5", "L1", "L2", "L3", "L4", "L5", "W1"];
 const SYMBOL_IMAGE_KEYS: Partial<Record<SymbolCode, string>> = {
@@ -613,7 +615,6 @@ export default class SlotScene extends Phaser.Scene {
       return;
     }
     this.drawPaylines([]);
-    this.symbolViews.forEach((column) => column.forEach((view) => view?.container.setVisible(false)));
     const rowGap = CELL * this.scaleFactor;
     const topY = this.cellY(0);
     const reelPromises: Array<Promise<void>> = [];
@@ -628,7 +629,7 @@ export default class SlotScene extends Phaser.Scene {
         this.cellX(col) - rowGap * 0.56,
         this.frameTop + this.frameH * 0.08,
         rowGap * 1.12,
-        this.frameH * 0.84,
+        this.frameH * 0.78,
       );
       maskShape.setVisible(false);
       maskShapes.push(maskShape);
@@ -637,39 +638,44 @@ export default class SlotScene extends Phaser.Scene {
       for (let row = -2; row < ROWS + 5; row++) {
         reel.add(this.createSpinSymbol(this.randomSpinCode(), this.cellX(col), topY + row * rowGap));
       }
-
-      const loop = this.tweens.add({
-        targets: reel,
-        y: rowGap,
-        duration: 86,
-        ease: "Linear",
-        repeat: -1,
-      });
+      reel.setVisible(false);
 
       reelPromises.push(new Promise((resolve) => {
-        this.time.delayedCall(680 + col * 190, () => {
-          loop.stop();
-          reel.removeAll(true);
-          reel.y = -rowGap * 2;
-          for (let row = -2; row < ROWS + 2; row++) {
-            const code = row >= 0 && row < ROWS ? finalGrid[col][row].code : this.randomSpinCode();
-            reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap));
-          }
-          this.tweens.add({
+        this.time.delayedCall(col * REEL_START_STAGGER_MS, () => {
+          this.symbolViews[col]?.forEach((view) => view?.container.setVisible(false));
+          reel.setVisible(true);
+          const loop = this.tweens.add({
             targets: reel,
-            y: 0,
-            duration: 330,
-            ease: "Cubic.Out",
-            onComplete: () => {
-              this.tweens.add({
-                targets: reel,
-                y: rowGap * 0.055,
-                duration: 72,
-                ease: "Sine.InOut",
-                yoyo: true,
-                onComplete: () => resolve(),
-              });
-            },
+            y: rowGap,
+            duration: 86,
+            ease: "Linear",
+            repeat: -1,
+          });
+
+          this.time.delayedCall(680 + col * 190, () => {
+            loop.stop();
+            reel.removeAll(true);
+            reel.y = -rowGap * 2;
+            for (let row = -2; row < ROWS + 2; row++) {
+              const code = row >= 0 && row < ROWS ? finalGrid[col][row].code : this.randomSpinCode();
+              reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap));
+            }
+            this.tweens.add({
+              targets: reel,
+              y: 0,
+              duration: 330,
+              ease: "Cubic.Out",
+              onComplete: () => {
+                this.tweens.add({
+                  targets: reel,
+                  y: rowGap * 0.055,
+                  duration: 72,
+                  ease: "Sine.InOut",
+                  yoyo: true,
+                  onComplete: () => resolve(),
+                });
+              },
+            });
           });
         });
       }));
@@ -700,7 +706,7 @@ export default class SlotScene extends Phaser.Scene {
     const lowPayScale = code[0] === "L" ? LOW_PAY_IMAGE_SCALE : 1;
     const maxW = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.76 * lowPayScale : CELL * 0.86;
     const maxH = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.70 * lowPayScale : CELL * 0.88;
-    return Math.min(maxW / image.width, maxH / image.height);
+    return Math.min(maxW / image.width, maxH / image.height) * SYMBOL_IMAGE_SCALE;
   }
 
   private randomSpinCode() {
