@@ -27,6 +27,7 @@ const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
 const LOW_PAY_IMAGE_SCALE = 1.2;
 const WHEEL_VALUES = [2, 3, 5, 8, 10, 15, 20, 50];
+const SPIN_SYMBOL_CODES: SymbolCode[] = ["H1", "H2", "H3", "H4", "H5", "L1", "L2", "L3", "L4", "L5", "W1"];
 const SYMBOL_IMAGE_KEYS: Partial<Record<SymbolCode, string>> = {
   H1: "shogun_sym_high_01",
   H2: "shogun_sym_high_02",
@@ -357,9 +358,8 @@ export default class SlotScene extends Phaser.Scene {
     this.lastWin = 0;
     this.updateHud();
     this.flashStatus("Spinning...");
-    await this.animateSymbolSpin();
-
     const result = playPaidSpin(() => Math.random(), this.bet);
+    await this.animateReelSpin(result.grid);
     this.grid = result.grid;
     this.lastWin = result.totalWin;
     this.balance += result.totalWin;
@@ -407,11 +407,11 @@ export default class SlotScene extends Phaser.Scene {
     this.lastWin = 0;
     this.updateHud();
     this.flashStatus("Buying bonus...");
-    await this.animateSymbolSpin();
     const result = buyBonus(() => Math.random(), this.bet);
+    const lastSpin = result.freeSpins[result.freeSpins.length - 1];
+    await this.animateReelSpin(lastSpin.grid);
     this.balance += result.totalWin;
     this.lastWin = result.totalWin;
-    const lastSpin = result.freeSpins[result.freeSpins.length - 1];
     this.grid = lastSpin.grid;
     this.renderGrid(lastSpin.lineWins);
     this.drawPaylines(lastSpin.lineWins);
@@ -453,10 +453,7 @@ export default class SlotScene extends Phaser.Scene {
     const assetKey = cell.code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[cell.code];
     if (assetKey && this.textures.exists(assetKey)) {
       image = this.add.image(0, 0, assetKey).setOrigin(0.5);
-      const lowPayScale = cell.code[0] === "L" ? LOW_PAY_IMAGE_SCALE : 1;
-      const maxW = cell.code === "W1" ? CELL * 1.08 : cell.code[0] === "L" ? CELL * 0.76 * lowPayScale : CELL * 0.86;
-      const maxH = cell.code === "W1" ? CELL * 1.08 : cell.code[0] === "L" ? CELL * 0.70 * lowPayScale : CELL * 0.88;
-      image.setScale(Math.min(maxW / image.width, maxH / image.height));
+      image.setScale(this.getSymbolImageScale(image, cell.code));
       if (cell.code[0] === "L") image.setAlpha(0.96);
       parts.push(image);
     } else {
@@ -610,40 +607,104 @@ export default class SlotScene extends Phaser.Scene {
     }
   }
 
-  private async animateSymbolSpin() {
+  private async animateReelSpin(finalGrid: CellResult[][]) {
     if (!this.symbolViews.length) {
       await this.wait(260);
       return;
     }
     this.drawPaylines([]);
-    const animations: Array<Promise<void>> = [];
-    for (let col = 0; col < this.symbolViews.length; col++) {
-      for (let row = 0; row < this.symbolViews[col].length; row++) {
-        const view = this.symbolViews[col][row];
-        if (!view) continue;
-        const baseScale = Number(view.container.getData("baseScale")) || this.scaleFactor || 1;
-        const delay = col * 58 + row * 16;
-        animations.push(new Promise((resolve) => {
+    this.symbolViews.forEach((column) => column.forEach((view) => view?.container.setVisible(false)));
+    const rowGap = CELL * this.scaleFactor;
+    const topY = this.cellY(0);
+    const reelPromises: Array<Promise<void>> = [];
+    const reelOverlays: Phaser.GameObjects.Container[] = [];
+    const maskShapes: Phaser.GameObjects.Graphics[] = [];
+    for (let col = 0; col < COLS; col++) {
+      const reel = this.add.container(0, 0).setDepth(24 + col);
+      reelOverlays.push(reel);
+      const maskShape = this.add.graphics();
+      maskShape.fillStyle(0xffffff, 1);
+      maskShape.fillRect(
+        this.cellX(col) - rowGap * 0.56,
+        this.frameTop + this.frameH * 0.08,
+        rowGap * 1.12,
+        this.frameH * 0.84,
+      );
+      maskShape.setVisible(false);
+      maskShapes.push(maskShape);
+      reel.setMask(maskShape.createGeometryMask());
+
+      for (let row = -2; row < ROWS + 5; row++) {
+        reel.add(this.createSpinSymbol(this.randomSpinCode(), this.cellX(col), topY + row * rowGap));
+      }
+
+      const loop = this.tweens.add({
+        targets: reel,
+        y: rowGap,
+        duration: 86,
+        ease: "Linear",
+        repeat: -1,
+      });
+
+      reelPromises.push(new Promise((resolve) => {
+        this.time.delayedCall(680 + col * 190, () => {
+          loop.stop();
+          reel.removeAll(true);
+          reel.y = -rowGap * 2;
+          for (let row = -2; row < ROWS + 2; row++) {
+            const code = row >= 0 && row < ROWS ? finalGrid[col][row].code : this.randomSpinCode();
+            reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap));
+          }
           this.tweens.add({
-            targets: view.container,
-            scaleX: baseScale * 0.08,
-            scaleY: baseScale * 1.08,
-            angle: row % 2 === 0 ? 8 : -8,
-            alpha: 0.58,
-            duration: 74,
-            delay,
-            yoyo: true,
-            repeat: 3,
-            ease: "Sine.InOut",
+            targets: reel,
+            y: 0,
+            duration: 330,
+            ease: "Cubic.Out",
             onComplete: () => {
-              view.container.setScale(baseScale).setAngle(0).setAlpha(1);
-              resolve();
+              this.tweens.add({
+                targets: reel,
+                y: rowGap * 0.055,
+                duration: 72,
+                ease: "Sine.InOut",
+                yoyo: true,
+                onComplete: () => resolve(),
+              });
             },
           });
-        }));
-      }
+        });
+      }));
     }
-    await Promise.all(animations);
+    await Promise.all(reelPromises);
+    reelOverlays.forEach((reel) => reel.destroy(true));
+    maskShapes.forEach((mask) => mask.destroy());
+  }
+
+  private createSpinSymbol(code: SymbolCode, x: number, y: number) {
+    const assetKey = code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[code];
+    if (assetKey && this.textures.exists(assetKey)) {
+      const image = this.add.image(x, y, assetKey).setOrigin(0.5);
+      image.setScale(this.getSymbolImageScale(image, code) * this.scaleFactor);
+      if (code[0] === "L") image.setAlpha(0.96);
+      return image;
+    }
+    return this.add.text(x, y, code, {
+      fontFamily: UI_FONT,
+      fontSize: `${Math.max(22, CELL * this.scaleFactor * 0.26)}px`,
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 4,
+    }).setOrigin(0.5);
+  }
+
+  private getSymbolImageScale(image: Phaser.GameObjects.Image, code: SymbolCode) {
+    const lowPayScale = code[0] === "L" ? LOW_PAY_IMAGE_SCALE : 1;
+    const maxW = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.76 * lowPayScale : CELL * 0.86;
+    const maxH = code === "W1" ? CELL * 1.08 : code[0] === "L" ? CELL * 0.70 * lowPayScale : CELL * 0.88;
+    return Math.min(maxW / image.width, maxH / image.height);
+  }
+
+  private randomSpinCode() {
+    return SPIN_SYMBOL_CODES[Math.floor(Math.random() * SPIN_SYMBOL_CODES.length)];
   }
 
   private drawPaylines(wins: LineWin[]) {
