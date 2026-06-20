@@ -1,6 +1,6 @@
-# 1000 Shogun Spinners Prototype
+# 1000 Shogun Spinners
 
-First playable Phaser prototype built from the Baboon Bonanza project scaffold.
+Phaser slot game built from the Baboon Bonanza project scaffold.
 
 ## Commands
 

@@ -1,7 +1,7 @@
 {
-  "name": "1000-shogun-spinners-prototype",
+  "name": "1000-shogun-spinners",
   "version": "1.0.0",
-  "description": "1000 Shogun Spinners first playable Phaser prototype",
+  "description": "1000 Shogun Spinners Phaser slot game",
   "keywords": [
     "Phaser",
     "Phaser 3",
