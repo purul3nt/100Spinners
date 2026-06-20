@@ -52,6 +52,22 @@ const UI_HEX = {
   sage: "#7A8263",
   sakura: "#C86A5E",
 };
+const SHOGUN_PAYLINE_COLORS = [
+  UI_PALETTE.bronze,
+  UI_PALETTE.copper,
+  UI_PALETTE.sakura,
+  UI_PALETTE.peach,
+  UI_PALETTE.sage,
+  UI_PALETTE.beige,
+  UI_PALETTE.taupe,
+  UI_PALETTE.leather,
+  UI_PALETTE.redBrown,
+  UI_PALETTE.armour,
+  UI_PALETTE.parchment,
+  UI_PALETTE.green,
+  UI_PALETTE.copper,
+  UI_PALETTE.bronze,
+];
 const CELL = 118;
 const REEL_FRAME_W = 1376;
 const REEL_FRAME_H = 768;
@@ -956,7 +972,7 @@ export default class SlotScene extends Phaser.Scene {
       for (let reel = 0; reel < COLS; reel++) {
         for (let lineRow = 0; lineRow < ROWS; lineRow++) {
           const selected = lineRows[reel] === lineRow;
-          const fill = selected ? UI_PALETTE.redBrown : UI_PALETTE.beige;
+          const fill = selected ? SHOGUN_PAYLINE_COLORS[index % SHOGUN_PAYLINE_COLORS.length] : UI_PALETTE.beige;
           const alpha = selected ? 0.96 : 0.5;
           const cell = this.add.rectangle(
             gridX + reel * (cellW + cellGap),
@@ -1440,7 +1456,7 @@ export default class SlotScene extends Phaser.Scene {
     this.lineGraphics.clear();
     const visibleWins = wins.slice(0, 4);
     visibleWins.forEach((win, index) => {
-      const color = [0xfacc15, 0x38bdf8, 0xf472b6, 0x34d399][index % 4];
+      const color = SHOGUN_PAYLINE_COLORS[win.lineIndex % SHOGUN_PAYLINE_COLORS.length];
       this.lineGraphics.lineStyle(5, color, 0.9);
       this.lineGraphics.beginPath();
       win.cells.forEach((cell, cellIndex) => {
@@ -1533,7 +1549,7 @@ export default class SlotScene extends Phaser.Scene {
     const drawProgress = () => {
       this.lineGraphics.clear();
       visibleWins.forEach((win, index) => {
-        const color = [0xfacc15, 0x38bdf8, 0xf472b6, 0x34d399][index % 4];
+        const color = SHOGUN_PAYLINE_COLORS[win.lineIndex % SHOGUN_PAYLINE_COLORS.length];
         const points = win.cells.map((cell) => ({ x: this.cellX(cell.col), y: this.cellY(cell.row) }));
         const segmentCount = points.length - 1;
         if (segmentCount <= 0) return;
