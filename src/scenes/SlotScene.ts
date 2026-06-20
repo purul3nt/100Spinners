@@ -1417,11 +1417,73 @@ export default class SlotScene extends Phaser.Scene {
 
   private async presentWins(wins: LineWin[]) {
     if (!wins.length) return;
+    const orderedWins = wins.slice().sort((a, b) => a.lineIndex - b.lineIndex);
+    const totalWin = this.lastWin;
     const samuraiSlash = this.playSamuraiWinSlash();
-    await this.animatePaylinesLeftToRight(wins);
-    this.drawPaylines(wins);
-    this.playWinningSymbolAnimations(wins);
+    for (let index = 0; index < orderedWins.length; index++) {
+      const win = orderedWins[index];
+      this.renderGrid([win]);
+      this.lastWin = win.amount;
+      this.updateHud();
+      await this.animatePaylinesLeftToRight([win]);
+      this.drawPaylines([win]);
+      this.playWinningSymbolAnimations([win]);
+      await this.showLineWinCallout(win, index + 1, orderedWins.length);
+      await this.wait(160);
+    }
     await samuraiSlash;
+    this.lastWin = totalWin;
+    this.updateHud();
+    this.renderGrid(wins);
+    this.drawPaylines([]);
+  }
+
+  private async showLineWinCallout(win: LineWin, index: number, total: number) {
+    const width = Number(this.scale.width) || 1280;
+    const y = Math.max(76, this.frameTop + this.frameH * 0.08);
+    const label = this.add.text(0, -1, `LINE ${win.lineIndex + 1} WIN  \u20AC${this.formatMoney(win.amount)}`, {
+      fontFamily: UI_FONT,
+      fontSize: `${Math.max(24, Math.min(42, width * 0.032))}px`,
+      color: UI_HEX.peach,
+      stroke: UI_HEX.ink,
+      strokeThickness: 6,
+    }).setOrigin(0.5);
+    const progress = total > 1 ? this.add.text(0, label.height * 0.62, `${index}/${total}`, {
+      fontFamily: BODY_FONT,
+      fontSize: `${Math.max(12, Math.min(16, width * 0.012))}px`,
+      color: UI_HEX.parchment,
+    }).setOrigin(0.5) : undefined;
+    const bgH = label.height + (progress ? progress.height + 18 : 22);
+    const bg = this.add.rectangle(0, progress ? 5 : 0, label.width + 54, bgH, UI_PALETTE.ink, 0.86)
+      .setStrokeStyle(3, UI_PALETTE.bronze, 0.94);
+    const pieces: Phaser.GameObjects.GameObject[] = [bg, label];
+    if (progress) pieces.push(progress);
+    const callout = this.add.container(width / 2, y, pieces).setDepth(130).setAlpha(0).setScale(0.92);
+    await new Promise<void>((resolve) => {
+      this.tweens.add({
+        targets: callout,
+        alpha: 1,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 150,
+        ease: "Back.Out",
+        onComplete: () => resolve(),
+      });
+    });
+    await this.wait(520);
+    await new Promise<void>((resolve) => {
+      this.tweens.add({
+        targets: callout,
+        alpha: 0,
+        y: y - 12,
+        duration: 150,
+        ease: "Sine.In",
+        onComplete: () => {
+          callout.destroy(true);
+          resolve();
+        },
+      });
+    });
   }
 
   private async animatePaylinesLeftToRight(wins: LineWin[]) {
