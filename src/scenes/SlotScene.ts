@@ -1619,9 +1619,10 @@ export default class SlotScene extends Phaser.Scene {
     });
     const wheelParts: Phaser.GameObjects.GameObject[] = [wheel as Phaser.GameObjects.GameObject, ...labels];
     const wheelGroup = this.add.container(centerX, centerY, wheelParts).setScale(0.2).setAlpha(0);
-    const pointer = this.add.triangle(centerX, centerY - wheelSize * 0.55, 0, 0, -22, -40, 22, -40, UI_PALETTE.bronze, 1)
-      .setStrokeStyle(4, UI_PALETTE.ink, 1)
-      .setAngle(180);
+    const pointerSize = Math.max(44, Math.min(76, wheelSize * 0.16));
+    const pointer = this.add.image(centerX, centerY - wheelSize * 0.55, "shuriken_spin_pin")
+      .setOrigin(0.5)
+      .setDisplaySize(pointerSize, pointerSize);
     const title = this.add.text(centerX, centerY - wheelSize * 0.7, "SHURIKEN SPINNER", {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(34, Math.min(58, width * 0.045))}px`,
