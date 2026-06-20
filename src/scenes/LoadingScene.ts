@@ -129,7 +129,7 @@ export default class LoadingScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.load.image("llamaplay_logo", "src/assets/baboon_bonus/llamaplay_logo.png?v=llamaplay-1");
-    this.load.image("splash_transition", "src/assets/game/transition.jpg?v=shogun-splash-transition-1");
+    this.load.image("splash_transition", "src/assets/game/transition.jpg?v=shogun-splash-transition-2");
     this.load.image("splash_logo", "src/assets/baboon_bonus/logo_updated.png?v=splash-logo-1");
     this.load.image("splash_bonus_symbol", "src/assets/baboon_bonus/symbols_updated_cut/bonus.png?v=splash-symbols-1");
     this.load.image("splash_top_symbol", "src/assets/baboon_bonus/symbols_updated_cut/guitar.png?v=splash-symbols-1");
