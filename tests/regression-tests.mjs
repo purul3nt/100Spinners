@@ -112,5 +112,14 @@ assert.ok(
   slotSceneSource.includes("this.add.rectangle(-width / 2, -height / 2, width, height"),
   "buy bonus blocker should anchor to the viewport while inside the centered modal container",
 );
+assert.ok(!slotSceneSource.includes("BONUS WIN"), "bonus collect display should not use BONUS WIN label");
+assert.ok(
+  slotSceneSource.includes("`TOTAL WIN\\n\\u20AC${this.formatMoney(collected)}`"),
+  "bonus collect display should use TOTAL WIN label",
+);
+assert.ok(
+  slotSceneSource.includes('fontFamily: BODY_FONT') && slotSceneSource.includes('color: "#ffffff"') && slotSceneSource.includes('setShadow(2, 2, "rgba(0,0,0,0.85)"'),
+  "bonus collect display should match the balance HUD text style",
+);
 
 console.log("1000 Shogun Spinners regression tests passed");

@@ -1934,8 +1934,7 @@ export default class SlotScene extends Phaser.Scene {
     const portrait = height > width * 1.05;
     const panelW = portrait ? Math.min(width * 0.28, 126) : Math.min(220, width * 0.14);
     const panelH = portrait ? 45 : 58;
-    this.bonusCollectPanel = this.add.rectangle(0, 0, panelW, panelH, UI_PALETTE.darkBrown, portrait ? 0.74 : 0.82)
-      .setStrokeStyle(2, UI_PALETTE.bronze, portrait ? 0.6 : 0.72);
+    this.bonusCollectPanel = this.add.rectangle(0, 0, panelW, panelH, UI_PALETTE.darkBrown, 0).setVisible(false);
     this.bonusSpinText = this.add.text(0, 0, "", {
       fontFamily: BODY_FONT,
       fontSize: `${portrait ? 10 : 14}px`,
@@ -1944,14 +1943,14 @@ export default class SlotScene extends Phaser.Scene {
       strokeThickness: 3,
       align: "center",
     }).setOrigin(0.5).setVisible(false);
-    this.bonusCollectText = this.add.text(0, 0, `BONUS WIN\n\u20AC${this.formatMoney(collected)}`, {
-      fontFamily: UI_FONT,
-      fontSize: `${portrait ? 10 : 20}px`,
-      color: UI_HEX.parchment,
-      stroke: UI_HEX.ink,
-      strokeThickness: portrait ? 3 : 5,
-      align: "center",
-    }).setOrigin(0.5);
+    this.bonusCollectText = this.add.text(0, 0, `TOTAL WIN\n\u20AC${this.formatMoney(collected)}`, {
+      fontFamily: BODY_FONT,
+      fontSize: `${portrait ? 17 : 24}px`,
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 3,
+      align: "left",
+    }).setOrigin(0, 0.5).setShadow(2, 2, "rgba(0,0,0,0.85)", 2, true, true);
     this.bonusCollectDisplay = this.add.container(0, 0, [this.bonusCollectPanel, this.bonusSpinText, this.bonusCollectText])
       .setDepth(69)
       .setAlpha(0);
@@ -1964,7 +1963,7 @@ export default class SlotScene extends Phaser.Scene {
     this.bonusCurrentSpin = currentSpin;
     this.bonusTotalSpins = totalSpins;
     this.updateHud();
-    this.bonusCollectText.setText(`BONUS WIN\n\u20AC${this.formatMoney(collected)}`);
+    this.bonusCollectText.setText(`TOTAL WIN\n\u20AC${this.formatMoney(collected)}`);
     if (!pulse) return;
     this.tweens.add({
       targets: this.bonusCollectDisplay,
@@ -2004,7 +2003,7 @@ export default class SlotScene extends Phaser.Scene {
     const y = portrait ? height - 27 : midY + 2;
 
     this.bonusCollectDisplay.setPosition(x, y);
-    this.bonusCollectPanel.setSize(panelW, panelH).setFillStyle(UI_PALETTE.darkBrown, portrait ? 0.74 : 0.82);
+    this.bonusCollectPanel.setSize(panelW, panelH).setFillStyle(UI_PALETTE.darkBrown, 0).setVisible(false);
     this.bonusSpinText
       .setPosition(0, 0)
       .setFontSize(portrait ? 10 : 14)
@@ -2012,10 +2011,10 @@ export default class SlotScene extends Phaser.Scene {
       .setAlign("center")
       .setVisible(false);
     this.bonusCollectText
-      .setPosition(0, 0)
-      .setFontSize(portrait ? 10 : 20)
-      .setOrigin(0.5)
-      .setAlign("center");
+      .setPosition(-panelW / 2, 0)
+      .setFontSize(portrait ? 17 : 24)
+      .setOrigin(0, 0.5)
+      .setAlign("left");
   }
 
   private async showBonusTransition(titleText: string, spins: number) {
