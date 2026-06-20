@@ -210,6 +210,7 @@ export default class LoadingScene extends Phaser.Scene {
     SHOGUN_HIGH_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_high/${key}.png?v=shogun-symbols-4`));
     SHOGUN_LOW_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_low/${key}.png?v=shogun-low-round-restore-1`));
     this.load.image("shogun_wheel", "src/assets/game/symbols_special/shuriken_wheel.png?v=shogun-wheel-1");
+    this.load.image("shuriken_spin_pin", "src/assets/game/shuriken_spin_pin.png?v=gold-triangle-1");
     SAMURAI_IDLE_FRAME_FILES.forEach((file) => {
       const frame = file.match(/(\d+)\.png$/)?.[1] || file;
       this.load.image(`samurai_idle_${frame}`, `${SAMURAI_IDLE_FRAME_PATH}/${file}?v=samurai-idle-1`);
