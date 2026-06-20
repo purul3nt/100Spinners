@@ -97,7 +97,7 @@ export const REEL_STRIPS: SymbolCode[][] = [
   ["H1", "H3", "L3", "L4", "H3", "L2", "L2", "H3", "L2", "L2", "H4", "H2", "L4", "L5", "L1", "H4", "H4", "L4", "L3", "L1", "L2", "H5", "L3", "L5", "L1", "H2", "L1", "H5", "H5", "L2", "L1", "L2", "H3", "H1", "L4", "L5", "H4", "L1", "H1", "L1", "L1", "L1", "H1", "L5", "H2", "L2", "L3", "H3", "L3", "L3", "L5", "L4", "H3", "H3", "H5", "H5", "L5", "H2", "L2", "L2", "H3", "L1", "L2", "L1", "H1", "H1", "H4", "H4", "H3", "H2", "L2", "L1", "L3", "L3", "H1", "H3", "L3"],
 ];
 
-const BONUS_MULTIPLIERS = [2, 3, 4, 5, 8, 10, 15, 20, 50, 100, 1000];
+export const BONUS_MULTIPLIERS = [2, 3, 4, 5, 8, 10, 15, 20, 50, 100, 1000];
 const BONUS_MULTIPLIER_WEIGHTS = [42, 28, 18, 12, 7, 5, 2.5, 1.2, 0.18, 0.06, 0.001];
 
 export function weightedPick<T>(items: T[], weights: number[], random = Math.random): T {

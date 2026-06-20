@@ -42,6 +42,7 @@ assert.equal(math.COLS, 5, "1000 Shogun Spinners should use five reels");
 assert.equal(math.ROWS, 4, "1000 Shogun Spinners should use four visible rows");
 assert.equal(math.PAYLINES.length, 14, "attached blueprint has 14 paylines");
 assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x bet");
+assert.equal(Math.max(...math.BONUS_MULTIPLIERS), 1000, "wheel max multiplier should be 1000x");
 assert.ok(math.BONUS_TRIGGER_CELL_CHANCE > 0, "visible bonus trigger cell chance should be configured");
 
 const grid = [
@@ -99,6 +100,22 @@ assert.ok(
 assert.ok(
   !/prototype/i.test(`${slotSceneSource}\n${splashSceneSource}`),
   "user-facing scene UI should not mention prototype",
+);
+assert.ok(
+  splashSceneSource.includes('"shogun_logo"'),
+  "splash screen should use the game logo",
+);
+assert.ok(
+  splashSceneSource.includes('"MULTIPLIER WHEEL"') && splashSceneSource.includes("MAX_WHEEL_MULTIPLIER"),
+  "splash screen should showcase the multiplier wheel feature",
+);
+assert.ok(
+  splashSceneSource.includes("`${MAX_WHEEL_MULTIPLIER}x`"),
+  "splash wheel preview should show the max multiplier on the wheel",
+);
+assert.ok(
+  splashSceneSource.includes('"BUY BONUS"') && splashSceneSource.includes("BUY_BONUS_PRICE_MULTIPLIER"),
+  "splash screen should showcase buy bonus as the second feature",
 );
 assert.ok(
   !slotSceneSource.includes("LINE ${win.lineIndex + 1} WIN"),
