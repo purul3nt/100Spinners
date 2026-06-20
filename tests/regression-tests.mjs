@@ -36,6 +36,7 @@ function loadTsCommonJs(relativePath) {
 const math = loadTsCommonJs("src/sixsixsixMath.ts");
 const mathSource = fs.readFileSync(path.join(root, "src/sixsixsixMath.ts"), "utf8");
 const slotSceneSource = fs.readFileSync(path.join(root, "src/scenes/SlotScene.ts"), "utf8");
+const splashSceneSource = fs.readFileSync(path.join(root, "src/scenes/SplashScene.ts"), "utf8");
 
 assert.equal(math.COLS, 5, "1000 Shogun Spinners should use five reels");
 assert.equal(math.ROWS, 4, "1000 Shogun Spinners should use four visible rows");
@@ -94,6 +95,10 @@ assert.ok(bonusBalanceCreditIndex > bonusSummaryIndex, "bonus balance credit sho
 assert.ok(
   slotSceneSource.includes("after the TOTAL WIN reveal"),
   "rules should describe post-summary bonus balance credit timing",
+);
+assert.ok(
+  !/prototype/i.test(`${slotSceneSource}\n${splashSceneSource}`),
+  "user-facing scene UI should not mention prototype",
 );
 
 console.log("1000 Shogun Spinners regression tests passed");
