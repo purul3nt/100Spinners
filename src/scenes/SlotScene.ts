@@ -69,7 +69,6 @@ export default class SlotScene extends Phaser.Scene {
   private reelBackingTint!: Phaser.GameObjects.Graphics;
   private reelFrame!: Phaser.GameObjects.Image;
   private titleText!: Phaser.GameObjects.Text;
-  private statusText!: Phaser.GameObjects.Text;
   private balanceText!: Phaser.GameObjects.Text;
   private betText!: Phaser.GameObjects.Text;
   private winText!: Phaser.GameObjects.Text;
@@ -96,8 +95,11 @@ export default class SlotScene extends Phaser.Scene {
   private maxBetButton!: Phaser.GameObjects.Image;
   private bonusPanel?: Phaser.GameObjects.Container;
   private bonusCollectDisplay?: Phaser.GameObjects.Container;
+  private bonusCollectPanel?: Phaser.GameObjects.Rectangle;
   private bonusCollectText?: Phaser.GameObjects.Text;
   private bonusSpinText?: Phaser.GameObjects.Text;
+  private bonusCurrentSpin = 0;
+  private bonusTotalSpins = 0;
   private wheelOverlay?: Phaser.GameObjects.Container;
   private rulesOverlay?: Phaser.GameObjects.Container;
   private backgroundClouds?: Phaser.GameObjects.TileSprite;
@@ -153,14 +155,6 @@ export default class SlotScene extends Phaser.Scene {
     this.betPanel = this.add.rectangle(0, 0, 1, 1, 0x181818, 0.96)
       .setDepth(58)
       .setStrokeStyle(3, 0x050505, 1);
-
-    this.statusText = this.add.text(0, 0, "GOOD LUCK", {
-      fontFamily: BODY_FONT,
-      fontSize: "18px",
-      color: "#ffffff",
-      stroke: "#000000",
-      strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(66);
 
     this.balanceText = this.createHudText("BALANCE 0.00");
     this.betText = this.createHudText("BET 1.00");
@@ -300,7 +294,6 @@ export default class SlotScene extends Phaser.Scene {
         .setPosition(Math.max(12, width * 0.014), Math.max(10, height * 0.018))
         .setDisplaySize(logoW, logoH);
     }
-    this.statusText.setPosition(width / 2, this.titleText.y + 45).setFontSize(Math.max(14, Math.min(21, width * 0.017)));
     this.boardFrame
       .setPosition(this.frameLeft + this.frameW * 0.035, this.frameTop + this.frameH * 0.05)
       .setSize(this.frameW * 0.93, this.frameH * 0.88);
@@ -312,6 +305,7 @@ export default class SlotScene extends Phaser.Scene {
     this.drawReelBackingTint();
 
     this.layoutBaboonFooter(width, height);
+    this.layoutBonusCollectDisplay(width, height);
 
     this.positionGridViews();
     this.drawPaylines([]);
@@ -340,7 +334,7 @@ export default class SlotScene extends Phaser.Scene {
     this.spinHitZone.setInteractive(new Phaser.Geom.Rectangle(0, 0, spinSize, spinSize), Phaser.Geom.Rectangle.Contains);
 
     const betTextX = panelX - panelW * 0.37;
-    this.betText.setPosition(betTextX, panelY).setFontSize(portrait ? 18 : 22).setOrigin(0, 0.5);
+    this.betText.setPosition(betTextX, panelY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 14 : 19) : (portrait ? 18 : 22)).setOrigin(0, 0.5);
     const arrowX = panelX - panelW * 0.03;
     this.betUpText.setPosition(arrowX, panelY - panelH * 0.24).setFontSize(portrait ? 24 : 28);
     this.betDownText.setPosition(arrowX, panelY + panelH * 0.24).setFontSize(portrait ? 24 : 28);
@@ -365,7 +359,6 @@ export default class SlotScene extends Phaser.Scene {
 
     this.balanceText.setPosition(buyX + buySize * 2.15, leftY).setFontSize(portrait ? 17 : 24).setOrigin(0, 0.5);
     this.winText.setVisible(false);
-    this.statusText.setPosition(width / 2, barTop - Math.max(46, height * 0.07)).setFontSize(portrait ? 15 : 18);
   }
 
   private newIdleGrid() {
@@ -377,10 +370,10 @@ export default class SlotScene extends Phaser.Scene {
 
   private drawReelBackingTint() {
     if (!this.reelBackingTint) return;
-    const left = this.frameLeft + this.frameW * 0.063;
-    const top = this.frameTop + this.frameH * 0.085;
-    const width = this.frameW * 0.874;
-    const height = this.frameH * 0.775;
+    const left = this.frameLeft + this.frameW * 0.035;
+    const top = this.frameTop + this.frameH * 0.05;
+    const width = this.frameW * 0.93;
+    const height = this.frameH * 0.88;
     this.reelBackingTint.clear();
     this.reelBackingTint.fillStyle(0x2c2f35, 0.34);
     this.reelBackingTint.fillRoundedRect(left, top, width, height, Math.max(18, 26 * this.scaleFactor));
@@ -389,7 +382,7 @@ export default class SlotScene extends Phaser.Scene {
     this.reelBackingTint.lineStyle(Math.max(2, 3 * this.scaleFactor), 0x1f2329, 0.18);
     for (let col = 1; col < COLS; col++) {
       const x = Phaser.Math.Linear(this.cellX(col - 1), this.cellX(col), 0.5);
-      this.reelBackingTint.lineBetween(x, top + height * 0.04, x, top + height * 0.96);
+      this.reelBackingTint.lineBetween(x, top + height * 0.035, x, top + height * 0.965);
     }
   }
 
@@ -989,11 +982,14 @@ export default class SlotScene extends Phaser.Scene {
       if (code[0] === "L") image.setAlpha(0.96);
       if (!blurred) return this.add.container(x, y, [image]);
 
-      const blurFarBehind = this.add.image(0, -24 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.16);
-      const blurBehind = this.add.image(0, -12 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.3);
-      const blurAhead = this.add.image(0, 12 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.3);
-      const blurFarAhead = this.add.image(0, 24 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.16);
-      return this.add.container(x, y, [blurFarBehind, blurBehind, blurAhead, blurFarAhead, image]);
+      const trailScaleY = 1.24;
+      const blurFarBehind = this.add.image(0, -34 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.2);
+      const blurBehind = this.add.image(0, -17 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.38);
+      const blurAhead = this.add.image(0, 17 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.38);
+      const blurFarAhead = this.add.image(0, 34 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale, scale * trailScaleY).setAlpha(0.2);
+      const blurWash = this.add.rectangle(0, 0, CELL * 0.78 * this.scaleFactor, CELL * 1.55 * this.scaleFactor, 0xffffff, 0.08)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      return this.add.container(x, y, [blurFarBehind, blurBehind, blurWash, blurAhead, blurFarAhead, image]);
     }
     return this.add.text(x, y, code, {
       fontFamily: UI_FONT,
@@ -1101,7 +1097,9 @@ export default class SlotScene extends Phaser.Scene {
 
   private updateHud() {
     this.balanceText.setText(`BALANCE\n\u20AC${this.formatMoney(this.balance)}`);
-    this.betText.setText(`BET\n\u20AC${this.bet.toFixed(2)}`);
+    this.betText
+      .setText(this.bonusTotalSpins > 0 ? `FREE\nSPINS ${this.bonusCurrentSpin}/${this.bonusTotalSpins}` : `BET\n\u20AC${this.bet.toFixed(2)}`)
+      .setFontSize(this.bonusTotalSpins > 0 ? 19 : 22);
     this.winText.setText(`WIN ${this.lastWin.toFixed(2)}`);
     this.spinButton?.setAlpha(this.spinning ? 0.55 : 1);
   }
@@ -1110,9 +1108,8 @@ export default class SlotScene extends Phaser.Scene {
     return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  private flashStatus(text: string) {
-    this.statusText.setText(text);
-    this.tweens.add({ targets: this.statusText, alpha: 0.55, duration: 130, yoyo: true, repeat: 1 });
+  private flashStatus(_text: string) {
+    // Status messaging intentionally has no visible standalone label.
   }
 
   private adjustBet(direction: number) {
@@ -1358,39 +1355,45 @@ export default class SlotScene extends Phaser.Scene {
 
   private showBonusCollectDisplay(collected: number, currentSpin: number, totalSpins: number) {
     this.hideBonusCollectDisplay();
+    this.bonusCurrentSpin = currentSpin;
+    this.bonusTotalSpins = totalSpins;
+    this.updateHud();
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
     const portrait = height > width * 1.05;
-    const panelW = portrait ? Math.min(width * 0.58, 290) : 310;
-    const panelH = portrait ? 74 : 82;
-    const x = portrait ? width / 2 : this.frameLeft + this.frameW * 0.82;
-    const y = Math.max(78, this.frameTop + this.frameH * 0.015);
-    const panel = this.add.rectangle(0, 0, panelW, panelH, 0x09090f, 0.84)
-      .setStrokeStyle(3, 0xfacc15, 0.92);
-    this.bonusSpinText = this.add.text(0, -panelH * 0.23, `FREE SPIN ${currentSpin}/${totalSpins}`, {
+    const panelW = portrait ? Math.min(width * 0.28, 126) : Math.min(220, width * 0.14);
+    const panelH = portrait ? 45 : 58;
+    this.bonusCollectPanel = this.add.rectangle(0, 0, panelW, panelH, 0x050505, portrait ? 0.2 : 0.18)
+      .setStrokeStyle(0, 0x000000, 0);
+    this.bonusSpinText = this.add.text(0, 0, "", {
       fontFamily: BODY_FONT,
-      fontSize: `${portrait ? 13 : 15}px`,
+      fontSize: `${portrait ? 10 : 14}px`,
       color: "#fef3c7",
       stroke: "#000000",
       strokeThickness: 3,
-    }).setOrigin(0.5);
-    this.bonusCollectText = this.add.text(0, panelH * 0.16, `BONUS COLLECTED  \u20AC${this.formatMoney(collected)}`, {
+      align: "center",
+    }).setOrigin(0.5).setVisible(false);
+    this.bonusCollectText = this.add.text(0, 0, `BONUS WIN\n\u20AC${this.formatMoney(collected)}`, {
       fontFamily: UI_FONT,
-      fontSize: `${portrait ? 18 : 24}px`,
+      fontSize: `${portrait ? 10 : 20}px`,
       color: "#ffffff",
       stroke: "#000000",
-      strokeThickness: 5,
+      strokeThickness: portrait ? 3 : 5,
+      align: "center",
     }).setOrigin(0.5);
-    this.bonusCollectDisplay = this.add.container(x, y, [panel, this.bonusSpinText, this.bonusCollectText])
-      .setDepth(44)
+    this.bonusCollectDisplay = this.add.container(0, 0, [this.bonusCollectPanel, this.bonusSpinText, this.bonusCollectText])
+      .setDepth(69)
       .setAlpha(0);
+    this.layoutBonusCollectDisplay(width, height);
     this.tweens.add({ targets: this.bonusCollectDisplay, alpha: 1, duration: 180, ease: "Sine.Out" });
   }
 
   private updateBonusCollectDisplay(collected: number, currentSpin: number, totalSpins: number, pulse = false) {
     if (!this.bonusCollectDisplay || !this.bonusCollectText || !this.bonusSpinText) return;
-    this.bonusSpinText.setText(`FREE SPIN ${currentSpin}/${totalSpins}`);
-    this.bonusCollectText.setText(`BONUS COLLECTED  \u20AC${this.formatMoney(collected)}`);
+    this.bonusCurrentSpin = currentSpin;
+    this.bonusTotalSpins = totalSpins;
+    this.updateHud();
+    this.bonusCollectText.setText(`BONUS WIN\n\u20AC${this.formatMoney(collected)}`);
     if (!pulse) return;
     this.tweens.add({
       targets: this.bonusCollectDisplay,
@@ -1406,8 +1409,42 @@ export default class SlotScene extends Phaser.Scene {
     if (!this.bonusCollectDisplay) return;
     this.bonusCollectDisplay.destroy(true);
     this.bonusCollectDisplay = undefined;
+    this.bonusCollectPanel = undefined;
     this.bonusCollectText = undefined;
     this.bonusSpinText = undefined;
+    this.bonusCurrentSpin = 0;
+    this.bonusTotalSpins = 0;
+    this.updateHud();
+  }
+
+  private layoutBonusCollectDisplay(width: number, height: number) {
+    if (!this.bonusCollectDisplay || !this.bonusCollectPanel || !this.bonusCollectText || !this.bonusSpinText) return;
+    const portrait = height > width * 1.05;
+    const barH = portrait ? Math.max(142, height * 0.18) : Math.max(108, height * 0.11);
+    const barTop = height - barH;
+    const buySize = portrait ? Math.min(62, width * 0.13) : Math.min(68, height * 0.064);
+    const clusterLeft = portrait ? Math.max(24, width * 0.08) : Math.max(276, width * 0.152);
+    const buyX = clusterLeft + buySize / 2;
+    const menuX = buyX + buySize * 1.22;
+    const midY = barTop + barH * 0.52;
+    const panelW = portrait ? Math.min(width * 0.28, 126) : Math.min(220, width * 0.14);
+    const panelH = portrait ? 45 : Math.min(64, barH * 0.62);
+    const x = portrait ? width * 0.365 : menuX + Math.min(270, width * 0.18);
+    const y = portrait ? height - 27 : midY + 2;
+
+    this.bonusCollectDisplay.setPosition(x, y);
+    this.bonusCollectPanel.setSize(panelW, panelH).setFillStyle(0x050505, portrait ? 0.2 : 0.18);
+    this.bonusSpinText
+      .setPosition(0, 0)
+      .setFontSize(portrait ? 10 : 14)
+      .setOrigin(0.5)
+      .setAlign("center")
+      .setVisible(false);
+    this.bonusCollectText
+      .setPosition(0, 0)
+      .setFontSize(portrait ? 10 : 20)
+      .setOrigin(0.5)
+      .setAlign("center");
   }
 
   private async showBonusTransition(titleText: string, spins: number) {
