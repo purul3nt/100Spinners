@@ -759,7 +759,7 @@ export default class SlotScene extends Phaser.Scene {
     const cost = this.bet * BUY_BONUS_PRICE_MULTIPLIER;
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
-    const blocker = this.add.rectangle(0, 0, width, height, UI_PALETTE.ink, 0.62).setOrigin(0).setInteractive({ useHandCursor: false });
+    const blocker = this.add.rectangle(-width / 2, -height / 2, width, height, UI_PALETTE.ink, 0.62).setOrigin(0).setInteractive({ useHandCursor: false });
     const panel = this.add.rectangle(0, 0, 390, 230, UI_PALETTE.parchment, 0.98).setStrokeStyle(5, UI_PALETTE.bronze, 1);
     const title = this.add.text(0, -78, "BUY BONUS", { fontFamily: UI_FONT, fontSize: "42px", color: UI_HEX.ink, stroke: UI_HEX.peach, strokeThickness: 3 }).setOrigin(0.5);
     const copy = this.add.text(0, -20, `${FREE_SPINS} free spins\nCost: ${cost.toFixed(2)}`, { fontFamily: BODY_FONT, fontSize: "22px", color: UI_HEX.darkBrown, align: "center" }).setOrigin(0.5);

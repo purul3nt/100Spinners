@@ -108,5 +108,9 @@ assert.ok(
   slotSceneSource.includes("machineBottom + 18 * this.scaleFactor"),
   "line win callout should sit under the machine",
 );
+assert.ok(
+  slotSceneSource.includes("this.add.rectangle(-width / 2, -height / 2, width, height"),
+  "buy bonus blocker should anchor to the viewport while inside the centered modal container",
+);
 
 console.log("1000 Shogun Spinners regression tests passed");
