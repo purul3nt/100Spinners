@@ -74,6 +74,8 @@ const SAMURAI_MOOD_Y_OFFSET: Record<SamuraiMood, number> = {
 const SYMBOL_IMAGE_SCALE = 1.1;
 const LOW_PAY_IMAGE_SCALE = 1.2;
 const REEL_START_STAGGER_MS = 42;
+const SLAM_STOP_REEL_STAGGER_MS = 55;
+const SLAM_STOP_MIN_SPIN_MS = 180;
 const STOPPED_SYMBOL_Y_OFFSET = -5;
 const WHEEL_VALUES = [2, 3, 5, 8, 10, 15, 20, 50];
 const SPIN_SYMBOL_CODES: SymbolCode[] = ["H1", "H2", "H3", "H4", "H5", "L1", "L2", "L3", "L4", "L5", "W1"];
@@ -105,6 +107,9 @@ export default class SlotScene extends Phaser.Scene {
   private bet = DEFAULT_BET;
   private lastWin = 0;
   private spinning = false;
+  private slamStopAvailable = false;
+  private slamStopRequested = false;
+  private activeReelStops: Array<(() => void) | undefined> = [];
   private grid: CellResult[][] = [];
   private symbolViews: SymbolView[][] = [];
   private reelMaskShapes: Phaser.GameObjects.Graphics[] = [];
@@ -284,7 +289,7 @@ export default class SlotScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.spinButton = this.add.container(0, 0, [this.spinButtonBg, this.spinButtonText]).setDepth(76);
     this.spinHitZone = this.add.zone(0, 0, 1, 1).setOrigin(0, 0).setDepth(112).setInteractive({ useHandCursor: true });
-    this.spinHitZone.on("pointerdown", () => this.spin());
+    this.spinHitZone.on("pointerdown", () => this.handleSpinButton());
     this.spinHitZone.on("pointerover", () => this.spinButton.setScale(1.05));
     this.spinHitZone.on("pointerout", () => this.spinButton.setScale(1));
     this.updateHud();
@@ -590,6 +595,24 @@ export default class SlotScene extends Phaser.Scene {
     }
     this.spinning = false;
     this.updateHud();
+  }
+
+  private handleSpinButton() {
+    if (this.slamStopAvailable) {
+      this.requestSlamStop();
+      return;
+    }
+    this.spin();
+  }
+
+  private requestSlamStop() {
+    if (!this.slamStopAvailable || this.slamStopRequested) return;
+    this.slamStopRequested = true;
+    this.updateHud();
+    this.activeReelStops.forEach((stopReel, col) => {
+      if (!stopReel) return;
+      this.time.delayedCall(col * SLAM_STOP_REEL_STAGGER_MS, stopReel);
+    });
   }
 
   private openBuyBonus() {
@@ -1048,6 +1071,10 @@ export default class SlotScene extends Phaser.Scene {
       return;
     }
     this.drawPaylines([]);
+    this.slamStopRequested = false;
+    this.slamStopAvailable = true;
+    this.activeReelStops = [];
+    this.updateHud();
     const rowGap = CELL * this.scaleFactor;
     const topY = this.cellY(0);
     const reelPromises: Array<Promise<void>> = [];
@@ -1066,6 +1093,7 @@ export default class SlotScene extends Phaser.Scene {
         this.time.delayedCall(col * REEL_START_STAGGER_MS, () => {
           this.symbolViews[col]?.forEach((view) => view?.container.setVisible(false));
           reel.setVisible(true);
+          let stopped = false;
           const loop = this.tweens.add({
             targets: reel,
             y: rowGap,
@@ -1078,7 +1106,11 @@ export default class SlotScene extends Phaser.Scene {
             },
           });
 
-          this.time.delayedCall(680 + col * 190, () => {
+          const landReel = () => {
+            if (stopped) return;
+            stopped = true;
+            landingTimer.remove(false);
+            this.activeReelStops[col] = undefined;
             loop.stop();
             reel.y = -rowGap * 2;
             this.populateLandingReel(reel, col, topY, rowGap, finalGrid);
@@ -1098,11 +1130,20 @@ export default class SlotScene extends Phaser.Scene {
                 });
               },
             });
-          });
+          };
+          this.activeReelStops[col] = landReel;
+          const landingTimer = this.time.delayedCall(680 + col * 190, landReel);
+          if (this.slamStopRequested) {
+            this.time.delayedCall(SLAM_STOP_MIN_SPIN_MS, landReel);
+          }
         });
       }));
     }
     await Promise.all(reelPromises);
+    this.slamStopAvailable = false;
+    this.slamStopRequested = false;
+    this.activeReelStops = [];
+    this.updateHud();
     reelOverlays.forEach((reel) => reel.destroy(true));
   }
 
@@ -1272,7 +1313,15 @@ export default class SlotScene extends Phaser.Scene {
       .setText(this.bonusTotalSpins > 0 ? `FREE\nSPINS ${this.bonusCurrentSpin}/${this.bonusTotalSpins}` : `BET\n\u20AC${this.bet.toFixed(2)}`)
       .setFontSize(this.bonusTotalSpins > 0 ? 19 : 22);
     this.winText.setText(`WIN ${this.lastWin.toFixed(2)}`);
-    this.spinButton?.setAlpha(this.spinning ? 0.55 : 1);
+    if (this.spinButtonText) {
+      const canSlam = this.slamStopAvailable && this.spinning;
+      const spinRadius = Math.max(38, this.spinButtonBg.displayWidth / 2);
+      this.spinButtonText
+        .setText(canSlam ? "\u25A0" : "\u21BB")
+        .setFontSize(canSlam ? spinRadius * 0.86 : spinRadius * 1.14);
+      this.spinButtonBg?.setFillStyle(canSlam ? 0x8b1f1f : 0x242424, canSlam ? 1 : 0.98);
+      this.spinButton?.setAlpha(this.spinning && !canSlam ? 0.55 : 1);
+    }
   }
 
   private formatMoney(value: number) {
