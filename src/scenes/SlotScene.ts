@@ -1873,7 +1873,7 @@ export default class SlotScene extends Phaser.Scene {
 
   private async playFreeSpinSequence(freeSpins: SpinResult[], totalWin: number, titleText: string) {
     if (!freeSpins.length) {
-      await this.showBonusSummary(totalWin, 0, titleText);
+      await this.showBonusSummary(totalWin, titleText);
       this.balance += totalWin;
       this.lastWin = totalWin;
       this.updateHud();
@@ -1913,7 +1913,7 @@ export default class SlotScene extends Phaser.Scene {
       this.lastWin = collected;
       this.updateBonusCollectDisplay(collected, freeSpins.length, freeSpins.length, collected > 0);
       this.updateHud();
-      await this.showBonusSummary(totalWin, freeSpins.length, "TOTAL WIN");
+      await this.showBonusSummary(totalWin, "TOTAL WIN");
     } finally {
       this.hideBonusCollectDisplay();
       this.setBonusGameBackground(false);
@@ -2069,15 +2069,14 @@ export default class SlotScene extends Phaser.Scene {
     overlay.destroy(true);
   }
 
-  private async showBonusSummary(value: number, spins: number, titleText: string) {
+  private async showBonusSummary(value: number, titleText: string) {
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
     const overlay = this.add.container(width / 2, height / 2).setDepth(50).setAlpha(0);
     const panel = this.add.rectangle(0, 0, 460, 220, UI_PALETTE.parchment, 0.97).setStrokeStyle(6, UI_PALETTE.bronze, 1);
     const title = this.add.text(0, -62, titleText, { fontFamily: UI_FONT, fontSize: "40px", color: UI_HEX.ink, stroke: UI_HEX.peach, strokeThickness: 3 }).setOrigin(0.5);
     const amount = this.add.text(0, 8, "0.00x", { fontFamily: UI_FONT, fontSize: "58px", color: UI_HEX.redBrown, stroke: UI_HEX.peach, strokeThickness: 4 }).setOrigin(0.5);
-    const copy = this.add.text(0, 72, `${spins} free spins resolved`, { fontFamily: BODY_FONT, fontSize: "20px", color: UI_HEX.darkBrown }).setOrigin(0.5);
-    overlay.add([panel, title, amount, copy]);
+    overlay.add([panel, title, amount]);
     const counter = { value: 0 };
     this.tweens.add({ targets: overlay, alpha: 1, scaleX: 1.04, scaleY: 1.04, duration: 280, ease: "Back.Out" });
     this.tweens.add({

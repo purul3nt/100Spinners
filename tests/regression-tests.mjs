@@ -89,10 +89,14 @@ assert.ok(
 );
 
 assert.ok(!slotSceneSource.includes("this.balance += spin.totalWin"), "bonus wins should not credit balance per free spin");
-const bonusSummaryIndex = slotSceneSource.indexOf('await this.showBonusSummary(totalWin, freeSpins.length, "TOTAL WIN");');
+const bonusSummaryIndex = slotSceneSource.indexOf('await this.showBonusSummary(totalWin, "TOTAL WIN");');
 const bonusBalanceCreditIndex = slotSceneSource.indexOf("this.balance += totalWin;", bonusSummaryIndex);
 assert.ok(bonusSummaryIndex > 0, "bonus sequence should show TOTAL WIN summary");
 assert.ok(bonusBalanceCreditIndex > bonusSummaryIndex, "bonus balance credit should happen after TOTAL WIN reveal");
+assert.ok(
+  !slotSceneSource.includes("free spins resolved"),
+  "bonus summary should not show a free-spins-resolved subtitle",
+);
 assert.ok(
   slotSceneSource.includes("after the TOTAL WIN reveal"),
   "rules should describe post-summary bonus balance credit timing",
