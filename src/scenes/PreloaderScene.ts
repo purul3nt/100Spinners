@@ -14,6 +14,12 @@ let LINES = shared.LINES;
 let LINE_POS = shared.LINE_POS;
 let BET = BETS[BET_POS];
 let GAME_CODE;
+const LOADER_COLORS = {
+  ink: '#211E1C',
+  parchment: '#C1B39E',
+  peach: '#D8AF8E',
+  bronze: '#8C6B53',
+};
 
 export default class PreloaderScene extends Phaser.Scene {
   timedEvent: Phaser.Time.TimerEvent;
@@ -51,8 +57,10 @@ export default class PreloaderScene extends Phaser.Scene {
       y: height / 2 - 50,
       text: 'Loading...',
       style: {
-        font: '20px monospace',
-        fill: '#ffffff'
+        font: 'bold 22px monospace',
+        fill: LOADER_COLORS.peach,
+        stroke: LOADER_COLORS.ink,
+        strokeThickness: 5
       }
     });
     loadingText.setOrigin(0.5, 0.5);
@@ -63,7 +71,9 @@ export default class PreloaderScene extends Phaser.Scene {
       text: '0%',
       style: {
         font: '18px monospace',
-        fill: '#ffffff'
+        fill: LOADER_COLORS.parchment,
+        stroke: LOADER_COLORS.ink,
+        strokeThickness: 4
       }
     });
     percentText.setOrigin(0.5, 0.5);
@@ -73,8 +83,10 @@ export default class PreloaderScene extends Phaser.Scene {
       y: height / 2 + 50,
       text: '',
       style: {
-        font: '18px monospace',
-        fill: '#ffffff'
+        font: '16px monospace',
+        fill: LOADER_COLORS.parchment,
+        stroke: LOADER_COLORS.ink,
+        strokeThickness: 4
       }
     });
 
@@ -83,7 +95,7 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.on('progress', function(value) {
       //percentText.setText(parseInt(value * 100) + '%');
       progressBar.clear();
-      progressBar.fillStyle(0xF3F3F3, 1);
+      progressBar.fillStyle(0x8C6B53, 1);
       //  progressBar.fillRect(this.cameras.main.width / 2 - 190 , this.cameras.main.height / 2 + 110, 380 * value, 30);
     });
 

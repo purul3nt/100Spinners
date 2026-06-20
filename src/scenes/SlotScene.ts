@@ -6,6 +6,7 @@ import {
   DEFAULT_BET,
   FREE_SPINS,
   LineWin,
+  PAYLINES,
   ROWS,
   SYMBOL_BY_CODE,
   SYMBOLS,
@@ -17,6 +18,40 @@ import {
 
 const UI_FONT = "Impact, Haettenschweiler, 'Arial Black', sans-serif";
 const BODY_FONT = "'Trebuchet MS', Arial, sans-serif";
+const UI_PALETTE = {
+  parchment: 0xC1B39E,
+  beige: 0xBAAC97,
+  taupe: 0x9F9280,
+  armour: 0x645D57,
+  charcoal: 0x302A26,
+  ink: 0x211E1C,
+  darkBrown: 0x3D3430,
+  leather: 0x715744,
+  bronze: 0x8C6B53,
+  redBrown: 0x633733,
+  copper: 0xAA8068,
+  peach: 0xD8AF8E,
+  green: 0x394531,
+  sage: 0x7A8263,
+  sakura: 0xC86A5E,
+};
+const UI_HEX = {
+  parchment: "#C1B39E",
+  beige: "#BAAC97",
+  taupe: "#9F9280",
+  armour: "#645D57",
+  charcoal: "#302A26",
+  ink: "#211E1C",
+  darkBrown: "#3D3430",
+  leather: "#715744",
+  bronze: "#8C6B53",
+  redBrown: "#633733",
+  copper: "#AA8068",
+  peach: "#D8AF8E",
+  green: "#394531",
+  sage: "#7A8263",
+  sakura: "#C86A5E",
+};
 const CELL = 118;
 const REEL_FRAME_W = 1376;
 const REEL_FRAME_H = 768;
@@ -309,12 +344,12 @@ export default class SlotScene extends Phaser.Scene {
 
   private createModalButton(text: string, color: number, callback: () => void) {
     const bg = this.add.rectangle(0, 0, 142, 48, color, 1)
-      .setStrokeStyle(4, 0x0f172a, 1)
+      .setStrokeStyle(4, UI_PALETTE.ink, 1)
       .setInteractive({ useHandCursor: true });
     const label = this.add.text(0, -1, text, {
       fontFamily: UI_FONT,
       fontSize: "25px",
-      color: "#111827",
+      color: UI_HEX.ink,
     }).setOrigin(0.5);
     const container = this.add.container(0, 0, [bg, label]);
     bg.on("pointerdown", callback);
@@ -622,13 +657,13 @@ export default class SlotScene extends Phaser.Scene {
     const cost = this.bet * BUY_BONUS_PRICE_MULTIPLIER;
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
-    const blocker = this.add.rectangle(0, 0, width, height, 0x000000, 0.55).setOrigin(0).setInteractive({ useHandCursor: false });
-    const panel = this.add.rectangle(0, 0, 390, 230, 0x151827, 0.98).setStrokeStyle(5, 0xfacc15, 1);
-    const title = this.add.text(0, -78, "BUY BONUS", { fontFamily: UI_FONT, fontSize: "42px", color: "#facc15", stroke: "#000000", strokeThickness: 6 }).setOrigin(0.5);
-    const copy = this.add.text(0, -20, `${FREE_SPINS} free spins\nCost: ${cost.toFixed(2)}`, { fontFamily: BODY_FONT, fontSize: "22px", color: "#ffffff", align: "center" }).setOrigin(0.5);
-    const confirm = this.createModalButton(this.balance >= cost ? "BUY" : "NO BALANCE", this.balance >= cost ? 0xfacc15 : 0x71717a, () => this.executeBuyBonus(cost));
+    const blocker = this.add.rectangle(0, 0, width, height, UI_PALETTE.ink, 0.62).setOrigin(0).setInteractive({ useHandCursor: false });
+    const panel = this.add.rectangle(0, 0, 390, 230, UI_PALETTE.parchment, 0.98).setStrokeStyle(5, UI_PALETTE.bronze, 1);
+    const title = this.add.text(0, -78, "BUY BONUS", { fontFamily: UI_FONT, fontSize: "42px", color: UI_HEX.ink, stroke: UI_HEX.peach, strokeThickness: 3 }).setOrigin(0.5);
+    const copy = this.add.text(0, -20, `${FREE_SPINS} free spins\nCost: ${cost.toFixed(2)}`, { fontFamily: BODY_FONT, fontSize: "22px", color: UI_HEX.darkBrown, align: "center" }).setOrigin(0.5);
+    const confirm = this.createModalButton(this.balance >= cost ? "BUY" : "NO BALANCE", this.balance >= cost ? UI_PALETTE.bronze : UI_PALETTE.taupe, () => this.executeBuyBonus(cost));
     confirm.setPosition(-78, 72);
-    const close = this.createModalButton("CLOSE", 0x38bdf8, () => this.closeBonusPanel());
+    const close = this.createModalButton("CLOSE", UI_PALETTE.sage, () => this.closeBonusPanel());
     close.setPosition(82, 72);
     this.bonusPanel = this.add.container(width / 2, height / 2, [blocker, panel, title, copy, confirm, close]).setDepth(40).setAlpha(0);
     this.tweens.add({ targets: this.bonusPanel, alpha: 1, duration: 150 });
@@ -666,18 +701,18 @@ export default class SlotScene extends Phaser.Scene {
     const left = cx - panelW / 2;
     const top = cy - panelH / 2;
     const overlay = this.add.container(0, 0).setDepth(260);
-    const blocker = this.add.rectangle(width / 2, height / 2, width, height, 0x02030a, 0.72).setInteractive({ useHandCursor: false });
-    const panel = this.add.rectangle(cx, cy, panelW, panelH, 0x121322, 0.96).setStrokeStyle(5, 0xfacc15, 0.86).setInteractive({ useHandCursor: false });
+    const blocker = this.add.rectangle(width / 2, height / 2, width, height, UI_PALETTE.ink, 0.72).setInteractive({ useHandCursor: false });
+    const panel = this.add.rectangle(cx, cy, panelW, panelH, UI_PALETTE.parchment, 0.98).setStrokeStyle(5, UI_PALETTE.bronze, 0.92).setInteractive({ useHandCursor: false });
     panel.on("pointerdown", (_pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => event.stopPropagation());
     const title = this.add.text(left + 26, top + 18, "PAYTABLE & RULES", {
       fontFamily: UI_FONT,
       fontSize: `${portrait ? 28 : 36}px`,
-      color: "#facc15",
-      stroke: "#111111",
-      strokeThickness: 6,
+      color: UI_HEX.ink,
+      stroke: UI_HEX.peach,
+      strokeThickness: 3,
     }).setOrigin(0, 0);
-    const closeBg = this.add.circle(left + panelW - 34, top + 34, 22, 0x181818, 1).setStrokeStyle(3, 0xffffff, 0.9).setInteractive({ useHandCursor: true });
-    const closeText = this.add.text(closeBg.x, closeBg.y - 1, "X", { fontFamily: "Arial Black, Arial, sans-serif", fontSize: "24px", color: "#ffffff" }).setOrigin(0.5);
+    const closeBg = this.add.circle(left + panelW - 34, top + 34, 22, UI_PALETTE.darkBrown, 1).setStrokeStyle(3, UI_PALETTE.peach, 0.9).setInteractive({ useHandCursor: true });
+    const closeText = this.add.text(closeBg.x, closeBg.y - 1, "X", { fontFamily: "Arial Black, Arial, sans-serif", fontSize: "24px", color: UI_HEX.peach }).setOrigin(0.5);
     closeBg.on("pointerdown", () => this.hideRulesMenu());
     blocker.on("pointerdown", () => this.hideRulesMenu());
     overlay.add([blocker, panel, title, closeBg, closeText]);
@@ -700,37 +735,37 @@ export default class SlotScene extends Phaser.Scene {
     const payHeader = this.add.text(payLeft, payTop - 30, "SYMBOL PAYS", {
       fontFamily: UI_FONT,
       fontSize: `${portrait ? 22 : 26}px`,
-      color: "#38bdf8",
-      stroke: "#111111",
-      strokeThickness: 4,
+      color: UI_HEX.darkBrown,
+      stroke: UI_HEX.peach,
+      strokeThickness: 2,
     }).setOrigin(0, 0);
     const payColumns = this.add.text(payLeft + payW - 8, payTop - 24, "3    4    5", {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(13, rowH * 0.34)}px`,
-      color: "#fef3c7",
-      stroke: "#111111",
-      strokeThickness: 3,
+      color: UI_HEX.ink,
+      stroke: UI_HEX.beige,
+      strokeThickness: 2,
     }).setOrigin(1, 0);
     content.add([payHeader, payColumns]);
 
     paySymbols.forEach((symbol, index) => {
       const y = payTop + index * rowH;
-      const rowBg = this.add.rectangle(payLeft + payW / 2, y + rowH / 2, payW, rowH - 4, index % 2 === 0 ? 0x1e2234 : 0x171a2a, 0.86).setStrokeStyle(1, 0x405074, 0.55);
+      const rowBg = this.add.rectangle(payLeft + payW / 2, y + rowH / 2, payW, rowH - 4, index % 2 === 0 ? UI_PALETTE.beige : UI_PALETTE.taupe, 0.86).setStrokeStyle(1, UI_PALETTE.leather, 0.55);
       const assetKey = SYMBOL_IMAGE_KEYS[symbol.code];
       const icon = assetKey && this.textures.exists(assetKey)
         ? this.add.image(payLeft + rowH * 0.52, y + rowH / 2, assetKey).setDisplaySize(rowH * 0.82, rowH * 0.82).setOrigin(0.5)
-        : this.add.text(payLeft + rowH * 0.52, y + rowH / 2, symbol.code, { fontFamily: UI_FONT, fontSize: `${Math.max(16, rowH * 0.42)}px`, color: "#ffffff", stroke: "#000000", strokeThickness: 4 }).setOrigin(0.5);
+        : this.add.text(payLeft + rowH * 0.52, y + rowH / 2, symbol.code, { fontFamily: UI_FONT, fontSize: `${Math.max(16, rowH * 0.42)}px`, color: UI_HEX.ink, stroke: UI_HEX.peach, strokeThickness: 2 }).setOrigin(0.5);
       const name = this.add.text(payLeft + rowH + 12, y + rowH / 2, symbol.label.toUpperCase(), {
         fontFamily: UI_FONT,
         fontSize: `${Math.max(13, rowH * 0.34)}px`,
-        color: "#ffffff",
-        stroke: "#111111",
-        strokeThickness: 3,
+        color: UI_HEX.ink,
+        stroke: UI_HEX.peach,
+        strokeThickness: 2,
       }).setOrigin(0, 0.5);
       const pays = this.add.text(payLeft + payW - 8, y + rowH / 2, `${symbol.pay3.toFixed(2)}   ${symbol.pay4.toFixed(2)}   ${symbol.pay5.toFixed(2)}x`, {
         fontFamily: BODY_FONT,
         fontSize: `${Math.max(12, rowH * 0.3)}px`,
-        color: "#fef3c7",
+        color: UI_HEX.darkBrown,
         fontStyle: "bold",
       }).setOrigin(1, 0.5);
       content.add([rowBg, icon, name, pays]);
@@ -742,9 +777,9 @@ export default class SlotScene extends Phaser.Scene {
     const rulesTitle = this.add.text(rulesLeft, rulesTop - 30, "RULES", {
       fontFamily: UI_FONT,
       fontSize: `${portrait ? 22 : 26}px`,
-      color: "#ec4899",
-      stroke: "#111111",
-      strokeThickness: 4,
+      color: UI_HEX.redBrown,
+      stroke: UI_HEX.peach,
+      strokeThickness: 2,
     }).setOrigin(0, 0);
     const rulesBody = "5 reel, 4 row line-pay slot with 14 fixed paylines.\n\n" +
       "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
@@ -755,26 +790,32 @@ export default class SlotScene extends Phaser.Scene {
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
       fontSize: `${portrait ? 14 : 16}px`,
-      color: "#ffffff",
+      color: UI_HEX.ink,
       lineSpacing: portrait ? 4 : 6,
       wordWrap: { width: rulesW },
     }).setOrigin(0, 0);
     const wheelTitle = this.add.text(rulesLeft, rulesTop + rulesText.height + 30, "SHURIKEN MULTIPLIERS", {
       fontFamily: UI_FONT,
       fontSize: `${portrait ? 20 : 24}px`,
-      color: "#38bdf8",
-      stroke: "#111111",
-      strokeThickness: 4,
+      color: UI_HEX.green,
+      stroke: UI_HEX.peach,
+      strokeThickness: 2,
     }).setOrigin(0, 0);
     const wheelText = this.add.text(rulesLeft, wheelTitle.y + 34, "Possible wheel values: 2x, 3x, 5x, 8x, 10x, 15x, 20x, 50x.", {
       fontFamily: BODY_FONT,
       fontSize: `${portrait ? 14 : 15}px`,
-      color: "#fef3c7",
+      color: UI_HEX.ink,
       wordWrap: { width: rulesW },
     }).setOrigin(0, 0);
     content.add([rulesTitle, rulesText, wheelTitle, wheelText]);
 
-    const contentBottom = Math.max(payTop + paySymbols.length * rowH, wheelText.y + wheelText.height);
+    const paylinesLeft = portrait ? rulesLeft : left + 30;
+    const paylinesTop = portrait
+      ? wheelText.y + wheelText.height + 34
+      : Math.max(payTop + paySymbols.length * rowH, wheelText.y + wheelText.height) + 34;
+    const paylinesW = portrait ? rulesW : panelW - 60;
+    const paylinesBottom = this.addPaylineRules(content, paylinesLeft, paylinesTop, paylinesW, portrait);
+    const contentBottom = Math.max(payTop + paySymbols.length * rowH, paylinesBottom);
     const minScroll = Math.min(0, viewportBottom - contentBottom - 18);
     let scrollY = 0;
     let dragging = false;
@@ -806,6 +847,66 @@ export default class SlotScene extends Phaser.Scene {
     this.input.on("wheel", wheelHandler);
     overlay.once("destroy", () => this.input.off("wheel", wheelHandler));
     this.rulesOverlay = overlay;
+  }
+
+  private addPaylineRules(content: Phaser.GameObjects.Container, x: number, y: number, width: number, portrait: boolean) {
+    const title = this.add.text(x, y, "PAYLINES", {
+      fontFamily: UI_FONT,
+      fontSize: `${portrait ? 20 : 24}px`,
+      color: UI_HEX.redBrown,
+      stroke: UI_HEX.peach,
+      strokeThickness: 2,
+    }).setOrigin(0, 0);
+    const note = this.add.text(x, y + 30, "Rows shown top to bottom. Wins pay left to right on these fixed paths.", {
+      fontFamily: BODY_FONT,
+      fontSize: `${portrait ? 13 : 14}px`,
+      color: UI_HEX.darkBrown,
+      wordWrap: { width },
+    }).setOrigin(0, 0);
+    content.add([title, note]);
+
+    const columns = portrait && width < 360 ? 1 : 2;
+    const columnGap = portrait ? 12 : 18;
+    const itemW = (width - columnGap * (columns - 1)) / columns;
+    const rowsPerColumn = Math.ceil(PAYLINES.length / columns);
+    const cellW = Math.max(13, Math.min(18, (itemW - 44) / 5));
+    const cellH = Math.max(8, Math.min(11, cellW * 0.62));
+    const cellGap = 3;
+    const itemH = Math.max(46, cellH * 4 + 12);
+    const startY = y + 60;
+
+    PAYLINES.forEach((lineRows, index) => {
+      const column = Math.floor(index / rowsPerColumn);
+      const row = index % rowsPerColumn;
+      const itemX = x + column * (itemW + columnGap);
+      const itemY = startY + row * itemH;
+      const number = this.add.text(itemX, itemY + cellH * 2, `${index + 1}`, {
+        fontFamily: UI_FONT,
+        fontSize: `${Math.max(13, cellH * 1.55)}px`,
+        color: UI_HEX.ink,
+      }).setOrigin(0, 0.5);
+      content.add(number);
+
+      const gridX = itemX + 30;
+      for (let reel = 0; reel < COLS; reel++) {
+        for (let lineRow = 0; lineRow < ROWS; lineRow++) {
+          const selected = lineRows[reel] === lineRow;
+          const fill = selected ? UI_PALETTE.redBrown : UI_PALETTE.beige;
+          const alpha = selected ? 0.96 : 0.5;
+          const cell = this.add.rectangle(
+            gridX + reel * (cellW + cellGap),
+            itemY + lineRow * (cellH + cellGap),
+            cellW,
+            cellH,
+            fill,
+            alpha,
+          ).setOrigin(0, 0).setStrokeStyle(1, selected ? UI_PALETTE.ink : UI_PALETTE.taupe, selected ? 0.85 : 0.45);
+          content.add(cell);
+        }
+      }
+    });
+
+    return startY + rowsPerColumn * itemH;
   }
 
   private hideRulesMenu() {
@@ -1396,17 +1497,17 @@ export default class SlotScene extends Phaser.Scene {
     const labelRadius = wheelSize * 0.28;
     const labelFont = Math.max(18, Math.min(31, wheelSize * 0.068));
 
-    const blocker = this.add.rectangle(0, 0, width, height, 0x020617, 0.62).setOrigin(0).setInteractive({ useHandCursor: false });
-    const glow = this.add.circle(centerX, centerY, wheelSize * 0.58, 0xfacc15, 0.14);
-    const ring = this.add.circle(centerX, centerY, wheelSize * 0.51, 0x070711, 0.82).setStrokeStyle(5, 0xfacc15, 0.95);
+    const blocker = this.add.rectangle(0, 0, width, height, UI_PALETTE.ink, 0.64).setOrigin(0).setInteractive({ useHandCursor: false });
+    const glow = this.add.circle(centerX, centerY, wheelSize * 0.58, UI_PALETTE.bronze, 0.16);
+    const ring = this.add.circle(centerX, centerY, wheelSize * 0.51, UI_PALETTE.darkBrown, 0.84).setStrokeStyle(5, UI_PALETTE.bronze, 0.95);
     const wheel = this.add.image(0, 0, "shogun_wheel").setDisplaySize(wheelSize, wheelSize);
     const labels = values.map((multiplier, index) => {
       const angle = -Math.PI / 2 + (Math.PI * 2 * index) / values.length;
       const label = this.add.text(Math.cos(angle) * labelRadius, Math.sin(angle) * labelRadius, `${multiplier}x`, {
         fontFamily: UI_FONT,
         fontSize: `${labelFont}px`,
-        color: multiplier === value ? "#ffffff" : "#ffe08a",
-        stroke: "#030303",
+        color: multiplier === value ? UI_HEX.peach : UI_HEX.parchment,
+        stroke: UI_HEX.ink,
         strokeThickness: Math.max(5, Math.round(labelFont * 0.22)),
         align: "center",
       }).setOrigin(0.5);
@@ -1415,28 +1516,28 @@ export default class SlotScene extends Phaser.Scene {
     });
     const wheelParts: Phaser.GameObjects.GameObject[] = [wheel as Phaser.GameObjects.GameObject, ...labels];
     const wheelGroup = this.add.container(centerX, centerY, wheelParts).setScale(0.2).setAlpha(0);
-    const pointer = this.add.triangle(centerX, centerY - wheelSize * 0.55, 0, 0, -22, -40, 22, -40, 0xfacc15, 1)
-      .setStrokeStyle(4, 0x030303, 1)
+    const pointer = this.add.triangle(centerX, centerY - wheelSize * 0.55, 0, 0, -22, -40, 22, -40, UI_PALETTE.bronze, 1)
+      .setStrokeStyle(4, UI_PALETTE.ink, 1)
       .setAngle(180);
     const title = this.add.text(centerX, centerY - wheelSize * 0.7, "SHURIKEN SPINNER", {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(34, Math.min(58, width * 0.045))}px`,
-      color: "#facc15",
-      stroke: "#000000",
+      color: UI_HEX.peach,
+      stroke: UI_HEX.ink,
       strokeThickness: 8,
     }).setOrigin(0.5);
     const resultText = this.add.text(centerX, centerY + wheelSize * 0.66, "SPINNING...", {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(26, Math.min(42, width * 0.033))}px`,
-      color: "#ffffff",
-      stroke: "#000000",
+      color: UI_HEX.parchment,
+      stroke: UI_HEX.ink,
       strokeThickness: 7,
     }).setOrigin(0.5);
     const mathText = this.add.text(centerX, centerY + wheelSize * 0.77, `${baseWin.toFixed(2)} x ${value} = ${totalWin.toFixed(2)}`, {
       fontFamily: BODY_FONT,
       fontSize: `${Math.max(15, Math.min(22, width * 0.017))}px`,
-      color: "#fde68a",
-      stroke: "#000000",
+      color: UI_HEX.peach,
+      stroke: UI_HEX.ink,
       strokeThickness: 4,
     }).setOrigin(0.5).setAlpha(0);
 
@@ -1497,29 +1598,29 @@ export default class SlotScene extends Phaser.Scene {
     const beforeText = this.add.text(centerX - wheelSize * 0.24, amountY, baseWin.toFixed(2), {
       fontFamily: UI_FONT,
       fontSize: `${amountFont}px`,
-      color: "#cbd5e1",
-      stroke: "#000000",
+      color: UI_HEX.beige,
+      stroke: UI_HEX.ink,
       strokeThickness: 7,
     }).setOrigin(0.5).setAlpha(0);
     const arrowText = this.add.text(centerX, amountY, "\u2192", {
       fontFamily: UI_FONT,
       fontSize: `${amountFont * 0.9}px`,
-      color: "#facc15",
-      stroke: "#000000",
+      color: UI_HEX.bronze,
+      stroke: UI_HEX.ink,
       strokeThickness: 6,
     }).setOrigin(0.5).setAlpha(0);
     const afterText = this.add.text(centerX + wheelSize * 0.25, amountY, baseWin.toFixed(2), {
       fontFamily: UI_FONT,
       fontSize: `${amountFont}px`,
-      color: "#ffffff",
-      stroke: "#000000",
+      color: UI_HEX.parchment,
+      stroke: UI_HEX.ink,
       strokeThickness: 8,
     }).setOrigin(0.5).setAlpha(0);
     const badge = this.add.text(centerX, centerY - wheelSize * 0.02, `${value}x`, {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(30, amountFont * 1.18)}px`,
-      color: "#facc15",
-      stroke: "#000000",
+      color: UI_HEX.peach,
+      stroke: UI_HEX.ink,
       strokeThickness: 8,
     }).setOrigin(0.5).setAlpha(0).setScale(0.55);
 
@@ -1555,7 +1656,7 @@ export default class SlotScene extends Phaser.Scene {
         duration: 520,
         ease: "Cubic.InOut",
         onComplete: () => {
-          afterText.setText(totalWin.toFixed(2)).setColor("#fef08a");
+          afterText.setText(totalWin.toFixed(2)).setColor(UI_HEX.peach);
           mathText.setText(`${baseWin.toFixed(2)} x ${value} = ${totalWin.toFixed(2)}`);
           this.tweens.add({ targets: [afterText, mathText], scaleX: 1.12, scaleY: 1.12, duration: 180, yoyo: true, ease: "Sine.Out" });
           this.tweens.add({ targets: badge, alpha: 0, scaleX: 1.45, scaleY: 1.45, duration: 210, ease: "Sine.In" });
@@ -1619,21 +1720,21 @@ export default class SlotScene extends Phaser.Scene {
     const portrait = height > width * 1.05;
     const panelW = portrait ? Math.min(width * 0.28, 126) : Math.min(220, width * 0.14);
     const panelH = portrait ? 45 : 58;
-    this.bonusCollectPanel = this.add.rectangle(0, 0, panelW, panelH, 0x050505, portrait ? 0.2 : 0.18)
-      .setStrokeStyle(0, 0x000000, 0);
+    this.bonusCollectPanel = this.add.rectangle(0, 0, panelW, panelH, UI_PALETTE.darkBrown, portrait ? 0.74 : 0.82)
+      .setStrokeStyle(2, UI_PALETTE.bronze, portrait ? 0.6 : 0.72);
     this.bonusSpinText = this.add.text(0, 0, "", {
       fontFamily: BODY_FONT,
       fontSize: `${portrait ? 10 : 14}px`,
-      color: "#fef3c7",
-      stroke: "#000000",
+      color: UI_HEX.peach,
+      stroke: UI_HEX.ink,
       strokeThickness: 3,
       align: "center",
     }).setOrigin(0.5).setVisible(false);
     this.bonusCollectText = this.add.text(0, 0, `BONUS WIN\n\u20AC${this.formatMoney(collected)}`, {
       fontFamily: UI_FONT,
       fontSize: `${portrait ? 10 : 20}px`,
-      color: "#ffffff",
-      stroke: "#000000",
+      color: UI_HEX.parchment,
+      stroke: UI_HEX.ink,
       strokeThickness: portrait ? 3 : 5,
       align: "center",
     }).setOrigin(0.5);
@@ -1689,7 +1790,7 @@ export default class SlotScene extends Phaser.Scene {
     const y = portrait ? height - 27 : midY + 2;
 
     this.bonusCollectDisplay.setPosition(x, y);
-    this.bonusCollectPanel.setSize(panelW, panelH).setFillStyle(0x050505, portrait ? 0.2 : 0.18);
+    this.bonusCollectPanel.setSize(panelW, panelH).setFillStyle(UI_PALETTE.darkBrown, portrait ? 0.74 : 0.82);
     this.bonusSpinText
       .setPosition(0, 0)
       .setFontSize(portrait ? 10 : 14)
@@ -1706,7 +1807,7 @@ export default class SlotScene extends Phaser.Scene {
   private async showBonusTransition(titleText: string, spins: number) {
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
-    const blocker = this.add.rectangle(0, 0, width, height, 0x020617, 0.72).setOrigin(0).setInteractive({ useHandCursor: false });
+    const blocker = this.add.rectangle(0, 0, width, height, UI_PALETTE.ink, 0.72).setOrigin(0).setInteractive({ useHandCursor: false });
     const parts: Phaser.GameObjects.GameObject[] = [blocker];
 
     if (this.textures.exists("bonus_transition")) {
@@ -1715,27 +1816,27 @@ export default class SlotScene extends Phaser.Scene {
       parts.push(image);
     }
 
-    const glow = this.add.rectangle(width / 2, height / 2, Math.min(560, width * 0.76), Math.min(230, height * 0.34), 0x09090f, 0.7)
-      .setStrokeStyle(5, 0xfacc15, 0.95);
+    const glow = this.add.rectangle(width / 2, height / 2, Math.min(560, width * 0.76), Math.min(230, height * 0.34), UI_PALETTE.parchment, 0.82)
+      .setStrokeStyle(5, UI_PALETTE.bronze, 0.95);
     const title = this.add.text(width / 2, height / 2 - 54, titleText, {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(34, Math.min(62, width * 0.05))}px`,
-      color: "#facc15",
-      stroke: "#000000",
+      color: UI_HEX.ink,
+      stroke: UI_HEX.peach,
       strokeThickness: 8,
     }).setOrigin(0.5);
     const spinCount = this.add.text(width / 2, height / 2 + 12, `${spins} FREE SPINS`, {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(30, Math.min(54, width * 0.043))}px`,
-      color: "#ffffff",
-      stroke: "#000000",
+      color: UI_HEX.darkBrown,
+      stroke: UI_HEX.peach,
       strokeThickness: 8,
     }).setOrigin(0.5);
     const auto = this.add.text(width / 2, height / 2 + 74, "AUTO PLAY", {
       fontFamily: BODY_FONT,
       fontSize: `${Math.max(16, Math.min(24, width * 0.018))}px`,
-      color: "#fde68a",
-      stroke: "#000000",
+      color: UI_HEX.ink,
+      stroke: UI_HEX.peach,
       strokeThickness: 4,
     }).setOrigin(0.5);
 
@@ -1759,10 +1860,10 @@ export default class SlotScene extends Phaser.Scene {
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
     const overlay = this.add.container(width / 2, height / 2).setDepth(50).setAlpha(0);
-    const panel = this.add.rectangle(0, 0, 460, 220, 0x111827, 0.97).setStrokeStyle(6, 0xfacc15, 1);
-    const title = this.add.text(0, -62, titleText, { fontFamily: UI_FONT, fontSize: "40px", color: "#facc15", stroke: "#000000", strokeThickness: 6 }).setOrigin(0.5);
-    const amount = this.add.text(0, 8, "0.00x", { fontFamily: UI_FONT, fontSize: "58px", color: "#ffffff", stroke: "#000000", strokeThickness: 8 }).setOrigin(0.5);
-    const copy = this.add.text(0, 72, `${spins} free spins resolved`, { fontFamily: BODY_FONT, fontSize: "20px", color: "#cbd5e1" }).setOrigin(0.5);
+    const panel = this.add.rectangle(0, 0, 460, 220, UI_PALETTE.parchment, 0.97).setStrokeStyle(6, UI_PALETTE.bronze, 1);
+    const title = this.add.text(0, -62, titleText, { fontFamily: UI_FONT, fontSize: "40px", color: UI_HEX.ink, stroke: UI_HEX.peach, strokeThickness: 3 }).setOrigin(0.5);
+    const amount = this.add.text(0, 8, "0.00x", { fontFamily: UI_FONT, fontSize: "58px", color: UI_HEX.redBrown, stroke: UI_HEX.peach, strokeThickness: 4 }).setOrigin(0.5);
+    const copy = this.add.text(0, 72, `${spins} free spins resolved`, { fontFamily: BODY_FONT, fontSize: "20px", color: UI_HEX.darkBrown }).setOrigin(0.5);
     overlay.add([panel, title, amount, copy]);
     const counter = { value: 0 };
     this.tweens.add({ targets: overlay, alpha: 1, scaleX: 1.04, scaleY: 1.04, duration: 280, ease: "Back.Out" });
