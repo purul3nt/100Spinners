@@ -627,7 +627,7 @@ export default class SlotScene extends Phaser.Scene {
       maskShape.fillStyle(0xffffff, 1);
       maskShape.fillRect(
         this.cellX(col) - rowGap * 0.56,
-        this.frameTop + this.frameH * 0.08,
+        this.frameTop + this.frameH * 0.08 + 10,
         rowGap * 1.12,
         this.frameH * 0.78,
       );
