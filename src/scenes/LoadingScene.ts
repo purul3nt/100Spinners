@@ -162,7 +162,7 @@ export default class LoadingScene extends Phaser.Scene {
     this.load.image("shogun_reel_frame", "src/assets/game/shogun_reel_frame.png?v=shogun-art-1");
     this.load.image("shogun_logo", "src/assets/game/1000_spinners_logo.png?v=shogun-logo-1");
     this.load.image("logo_main", "src/assets/baboon_bonus/logo_updated.png");
-    this.load.image("bonus_transition", "src/assets/baboon_bonus/transition.jpg?v=bonus-transition-1");
+    this.load.image("bonus_transition", "src/assets/game/bonus_background.jpg?v=shogun-bonus-background-1");
     SHOGUN_HIGH_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_high/${key}.png?v=shogun-symbols-4`));
     SHOGUN_LOW_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_low/${key}.png?v=shogun-low-round-restore-1`));
     this.load.image("shogun_wheel", "src/assets/game/symbols_special/shuriken_wheel.png?v=shogun-wheel-1");

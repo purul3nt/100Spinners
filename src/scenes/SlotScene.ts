@@ -6,7 +6,6 @@ import {
   DEFAULT_BET,
   FREE_SPINS,
   LineWin,
-  PAYLINES,
   ROWS,
   SYMBOL_BY_CODE,
   SYMBOLS,
@@ -1265,13 +1264,13 @@ export default class SlotScene extends Phaser.Scene {
     visibleWins.forEach((win, index) => {
       const color = [0xfacc15, 0x38bdf8, 0xf472b6, 0x34d399][index % 4];
       this.lineGraphics.lineStyle(5, color, 0.9);
-      const rows = PAYLINES[win.lineIndex];
-      for (let col = 0; col < COLS; col++) {
-        const x = this.cellX(col);
-        const y = this.cellY(rows[col]);
-        if (col === 0) this.lineGraphics.moveTo(x, y);
+      this.lineGraphics.beginPath();
+      win.cells.forEach((cell, cellIndex) => {
+        const x = this.cellX(cell.col);
+        const y = this.cellY(cell.row);
+        if (cellIndex === 0) this.lineGraphics.moveTo(x, y);
         else this.lineGraphics.lineTo(x, y);
-      }
+      });
       this.lineGraphics.strokePath();
     });
   }
@@ -1295,9 +1294,9 @@ export default class SlotScene extends Phaser.Scene {
       this.lineGraphics.clear();
       visibleWins.forEach((win, index) => {
         const color = [0xfacc15, 0x38bdf8, 0xf472b6, 0x34d399][index % 4];
-        const rows = PAYLINES[win.lineIndex];
-        const points = rows.map((row, col) => ({ x: this.cellX(col), y: this.cellY(row) }));
+        const points = win.cells.map((cell) => ({ x: this.cellX(cell.col), y: this.cellY(cell.row) }));
         const segmentCount = points.length - 1;
+        if (segmentCount <= 0) return;
         const scaledProgress = Phaser.Math.Clamp(state.progress, 0, 1) * segmentCount;
         const fullSegments = Math.floor(scaledProgress);
         const remainder = scaledProgress - fullSegments;
