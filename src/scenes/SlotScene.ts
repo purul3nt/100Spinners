@@ -203,6 +203,7 @@ export default class SlotScene extends Phaser.Scene {
   private betText!: Phaser.GameObjects.Text;
   private winText!: Phaser.GameObjects.Text;
   private logoImage!: Phaser.GameObjects.Image;
+  private clockText!: Phaser.GameObjects.Text;
   private logoGlowLayers: Array<{
     image: Phaser.GameObjects.Image;
     offsetX: number;
@@ -307,6 +308,15 @@ export default class SlotScene extends Phaser.Scene {
       scale: layer.scale,
     }));
     this.logoImage = this.add.image(0, 0, "shogun_logo").setOrigin(0, 0).setDepth(30);
+    this.clockText = this.add.text(5, 3, "", {
+      fontFamily: "Arial, Helvetica, sans-serif",
+      fontSize: "13px",
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 3,
+    }).setOrigin(0, 0).setDepth(220);
+    this.updateClock();
+    this.time.addEvent({ delay: 30000, loop: true, callback: () => this.updateClock() });
 
     this.uiBar = this.add.rectangle(0, 0, 1, 1, 0x050505, 0.74)
       .setOrigin(0, 0)
@@ -424,6 +434,14 @@ export default class SlotScene extends Phaser.Scene {
     bg.on("pointerover", () => container.setScale(1.04));
     bg.on("pointerout", () => container.setScale(1));
     return container;
+  }
+
+  private updateClock() {
+    if (!this.clockText) return;
+    const now = new Date();
+    const hours = ("0" + now.getHours()).slice(-2);
+    const minutes = ("0" + now.getMinutes()).slice(-2);
+    this.clockText.setText(`${hours}:${minutes} | 1000 SHOGUN SPINNERS`);
   }
 
   private createBoard() {
@@ -569,7 +587,7 @@ export default class SlotScene extends Phaser.Scene {
       const logoW = Math.min(width * 0.17, height * 0.28, 220);
       const logoH = logoW * (this.logoImage.height / this.logoImage.width);
       const logoX = Math.max(12, width * 0.014);
-      const logoY = Math.max(10, height * 0.018);
+      const logoY = Math.max(22, height * 0.03);
       this.logoGlowLayers.forEach((layer) => {
         const glowW = logoW * layer.scale;
         const glowH = logoH * layer.scale;
@@ -583,6 +601,9 @@ export default class SlotScene extends Phaser.Scene {
       this.logoImage
         .setPosition(logoX, logoY)
         .setDisplaySize(logoW, logoH);
+    }
+    if (this.clockText) {
+      this.clockText.setPosition(5, 3).setFontSize(height > width ? 10 : 13);
     }
     this.boardFrame
       .setPosition(this.frameLeft + this.frameW * 0.035, this.frameTop + this.frameH * 0.05)
