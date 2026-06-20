@@ -25,6 +25,7 @@ const REEL_FRAME_BASE_W = REEL_FRAME_BASE_H * REEL_FRAME_ASPECT;
 const REEL_CENTER_X = [184, 449, 704, 949, 1198].map((x) => x / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
+const LOW_PAY_IMAGE_SCALE = 1.2;
 const WHEEL_VALUES = [2, 3, 5, 8, 10, 15, 20, 50];
 const SYMBOL_IMAGE_KEYS: Partial<Record<SymbolCode, string>> = {
   H1: "shogun_sym_high_01",
@@ -356,7 +357,7 @@ export default class SlotScene extends Phaser.Scene {
     this.lastWin = 0;
     this.updateHud();
     this.flashStatus("Spinning...");
-    await this.wait(260);
+    await this.animateSymbolSpin();
 
     const result = playPaidSpin(() => Math.random(), this.bet);
     this.grid = result.grid;
@@ -406,7 +407,7 @@ export default class SlotScene extends Phaser.Scene {
     this.lastWin = 0;
     this.updateHud();
     this.flashStatus("Buying bonus...");
-    await this.wait(260);
+    await this.animateSymbolSpin();
     const result = buyBonus(() => Math.random(), this.bet);
     this.balance += result.totalWin;
     this.lastWin = result.totalWin;
@@ -452,8 +453,9 @@ export default class SlotScene extends Phaser.Scene {
     const assetKey = cell.code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[cell.code];
     if (assetKey && this.textures.exists(assetKey)) {
       image = this.add.image(0, 0, assetKey).setOrigin(0.5);
-      const maxW = cell.code === "W1" ? CELL * 1.08 : cell.code[0] === "L" ? CELL * 0.76 : CELL * 0.86;
-      const maxH = cell.code === "W1" ? CELL * 1.08 : cell.code[0] === "L" ? CELL * 0.70 : CELL * 0.88;
+      const lowPayScale = cell.code[0] === "L" ? LOW_PAY_IMAGE_SCALE : 1;
+      const maxW = cell.code === "W1" ? CELL * 1.08 : cell.code[0] === "L" ? CELL * 0.76 * lowPayScale : CELL * 0.86;
+      const maxH = cell.code === "W1" ? CELL * 1.08 : cell.code[0] === "L" ? CELL * 0.70 * lowPayScale : CELL * 0.88;
       image.setScale(Math.min(maxW / image.width, maxH / image.height));
       if (cell.code[0] === "L") image.setAlpha(0.96);
       parts.push(image);
@@ -603,9 +605,45 @@ export default class SlotScene extends Phaser.Scene {
       for (let row = 0; row < this.symbolViews[col].length; row++) {
         const view = this.symbolViews[col][row];
         if (!view) continue;
-        view.container.setPosition(this.cellX(col), this.cellY(row)).setScale(this.scaleFactor);
+        view.container.setPosition(this.cellX(col), this.cellY(row)).setScale(this.scaleFactor).setData("baseScale", this.scaleFactor);
       }
     }
+  }
+
+  private async animateSymbolSpin() {
+    if (!this.symbolViews.length) {
+      await this.wait(260);
+      return;
+    }
+    this.drawPaylines([]);
+    const animations: Array<Promise<void>> = [];
+    for (let col = 0; col < this.symbolViews.length; col++) {
+      for (let row = 0; row < this.symbolViews[col].length; row++) {
+        const view = this.symbolViews[col][row];
+        if (!view) continue;
+        const baseScale = Number(view.container.getData("baseScale")) || this.scaleFactor || 1;
+        const delay = col * 58 + row * 16;
+        animations.push(new Promise((resolve) => {
+          this.tweens.add({
+            targets: view.container,
+            scaleX: baseScale * 0.08,
+            scaleY: baseScale * 1.08,
+            angle: row % 2 === 0 ? 8 : -8,
+            alpha: 0.58,
+            duration: 74,
+            delay,
+            yoyo: true,
+            repeat: 3,
+            ease: "Sine.InOut",
+            onComplete: () => {
+              view.container.setScale(baseScale).setAngle(0).setAlpha(1);
+              resolve();
+            },
+          });
+        }));
+      }
+    }
+    await Promise.all(animations);
   }
 
   private drawPaylines(wins: LineWin[]) {
