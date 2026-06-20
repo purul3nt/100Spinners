@@ -1539,27 +1539,28 @@ export default class SlotScene extends Phaser.Scene {
     this.drawPaylines([]);
   }
 
-  private async showLineWinCallout(win: LineWin, index: number, total: number) {
+  private async showLineWinCallout(win: LineWin, _index: number, _total: number) {
     const width = Number(this.scale.width) || 1280;
-    const y = Math.max(76, this.frameTop + this.frameH * 0.08);
-    const label = this.add.text(0, -1, `LINE ${win.lineIndex + 1} WIN  \u20AC${this.formatMoney(win.amount)}`, {
+    const height = Number(this.scale.height) || 720;
+    const portrait = height > width;
+    const footerH = portrait ? Math.max(142, height * 0.18) : Math.max(108, height * 0.11);
+    const footerTop = height - footerH;
+    const machineBottom = this.frameTop + this.frameH * 0.95;
+    const y = Phaser.Math.Clamp(
+      machineBottom + 18 * this.scaleFactor,
+      this.frameTop + this.frameH * 0.72,
+      footerTop - 24,
+    );
+    const label = this.add.text(0, -1, `\u20AC${this.formatMoney(win.amount)}`, {
       fontFamily: UI_FONT,
-      fontSize: `${Math.max(24, Math.min(42, width * 0.032))}px`,
+      fontSize: `${Math.max(26, Math.min(44, width * 0.034))}px`,
       color: UI_HEX.peach,
       stroke: UI_HEX.ink,
       strokeThickness: 6,
     }).setOrigin(0.5);
-    const progress = total > 1 ? this.add.text(0, label.height * 0.62, `${index}/${total}`, {
-      fontFamily: BODY_FONT,
-      fontSize: `${Math.max(12, Math.min(16, width * 0.012))}px`,
-      color: UI_HEX.parchment,
-    }).setOrigin(0.5) : undefined;
-    const bgH = label.height + (progress ? progress.height + 18 : 22);
-    const bg = this.add.rectangle(0, progress ? 5 : 0, label.width + 54, bgH, UI_PALETTE.ink, 0.86)
+    const bg = this.add.rectangle(0, 0, label.width + 48, label.height + 20, UI_PALETTE.ink, 0.78)
       .setStrokeStyle(3, UI_PALETTE.bronze, 0.94);
-    const pieces: Phaser.GameObjects.GameObject[] = [bg, label];
-    if (progress) pieces.push(progress);
-    const callout = this.add.container(width / 2, y, pieces).setDepth(130).setAlpha(0).setScale(0.92);
+    const callout = this.add.container(width / 2, y, [bg, label]).setDepth(130).setAlpha(0).setScale(0.92);
     await new Promise<void>((resolve) => {
       this.tweens.add({
         targets: callout,

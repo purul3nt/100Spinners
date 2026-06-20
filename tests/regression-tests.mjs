@@ -100,5 +100,13 @@ assert.ok(
   !/prototype/i.test(`${slotSceneSource}\n${splashSceneSource}`),
   "user-facing scene UI should not mention prototype",
 );
+assert.ok(
+  !slotSceneSource.includes("LINE ${win.lineIndex + 1} WIN"),
+  "line win callout should show amount only",
+);
+assert.ok(
+  slotSceneSource.includes("machineBottom + 18 * this.scaleFactor"),
+  "line win callout should sit under the machine",
+);
 
 console.log("1000 Shogun Spinners regression tests passed");
