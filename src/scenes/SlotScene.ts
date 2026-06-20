@@ -435,7 +435,9 @@ export default class SlotScene extends Phaser.Scene {
       this.symbolViews[col] = [];
       for (let row = 0; row < ROWS; row++) {
         const cell = this.grid[col][row];
-        const view = this.createSymbolView(cell, winningCells.has(`${col}:${row}`));
+        const isWinningCell = winningCells.has(`${col}:${row}`);
+        const view = this.createSymbolView(cell, isWinningCell);
+        if (wins.length > 0 && !isWinningCell) view.container.setAlpha(0.32);
         this.symbolViews[col][row] = view;
       }
     }
