@@ -12,10 +12,30 @@ export type SymbolDefinition = {
   pay5: number;
 };
 
+export type WheelColor = "blue" | "red";
+export type WheelOutcomeKind = "add" | "multiply" | "bonus";
+export type WheelOutcome = {
+  kind: WheelOutcomeKind;
+  value?: number;
+};
+
+export type WheelEvent = {
+  col: number;
+  row: number;
+  color: WheelColor;
+  outcome: WheelOutcome;
+  meterBefore: number;
+  meterAfter: number;
+  applied: boolean;
+};
+
+export type BonusTier = 0 | 1 | 2 | 3;
+
 export type CellResult = {
   code: SymbolCode;
-  wheelMultiplier?: number;
-  bonusTrigger?: boolean;
+  shuriken?: boolean;
+  wheelColor?: WheelColor;
+  wheelOutcome?: WheelOutcome;
 };
 
 export type LineWin = {
@@ -31,6 +51,9 @@ export type SpinResult = {
   lineWins: LineWin[];
   baseWin: number;
   wheelMultiplier: number;
+  multiplierMeter: number;
+  wheelEvents: WheelEvent[];
+  bonusTier: BonusTier;
   totalWin: number;
   bonusTriggered: boolean;
   bonusWin: number;
@@ -42,12 +65,30 @@ export const ROWS = 4;
 export const DEFAULT_BET = 1;
 export const FREE_SPINS = 10;
 export const BUY_BONUS_PRICE_MULTIPLIER = 100;
-export const BASE_BONUS_CHANCE = 0.00365;
-export const BONUS_TRIGGER_CELL_CHANCE = 1 - Math.pow(1 - BASE_BONUS_CHANCE, 1 / (3 * ROWS));
-export const WHEEL_EVENT_CHANCE = 0.084587;
+export const SHURIKEN_REELS = [0, 2, 4];
+export const BASE_SHURIKEN_CELL_CHANCE = 0.00625;
+export const BONUS_TIER_1_BLUE_CELL_CHANCE = 0.011;
+export const BONUS_TIER_1_RED_CELL_CHANCE = 0.006;
+export const BONUS_TIER_2_RED_CELL_CHANCE = 0.018;
+export const BONUS_TIER_3_RED_CELL_CHANCE = 1 / (SHURIKEN_REELS.length * ROWS);
 export const BONUS_MODE_HIT_ASSIST_CHANCE = 0.414;
-export const BONUS_FEATURE_PAY_SCALE = 3.27;
+export const BONUS_FEATURE_PAY_SCALE = 0.215;
 export const V1_PAY_SCALE = 5.4;
+
+export const BLUE_WHEEL_ADD_VALUES = [5, 10, 15, 20, 25, 50, 75, 100];
+const BLUE_WHEEL_ADD_WEIGHTS = [28, 24, 18, 13, 8, 4, 1.2, 0.45];
+export const BLUE_WHEEL_MULTIPLY_VALUES = [2, 3, 5, 8, 10];
+const BLUE_WHEEL_MULTIPLY_WEIGHTS = [38, 22, 8, 2, 0.7];
+const BLUE_WHEEL_KIND_VALUES: WheelOutcomeKind[] = ["add", "multiply", "bonus"];
+const BLUE_WHEEL_KIND_WEIGHTS = [74, 19, 7];
+
+export const RED_WHEEL_ADD_VALUES = [10, 20, 50, 100, 250, 500, 1000];
+const RED_WHEEL_ADD_WEIGHTS = [34, 26, 16, 7, 1.7, 0.32, 0.045];
+export const RED_WHEEL_MULTIPLY_VALUES = [3, 5, 10, 15, 20];
+const RED_WHEEL_MULTIPLY_WEIGHTS = [35, 16, 4, 0.8, 0.18];
+const RED_WHEEL_KIND_VALUES: WheelOutcomeKind[] = ["add", "multiply"];
+const RED_WHEEL_KIND_WEIGHTS = [78, 22];
+export const BONUS_MULTIPLIERS = RED_WHEEL_ADD_VALUES;
 
 export const SYMBOLS: SymbolDefinition[] = [
   { code: "H1", label: "Crown", tier: "high", color: 0xfacc15, stroke: 0x7c2d12, shape: "hex", pay3: 5.5, pay4: 16, pay5: 50 },
@@ -60,7 +101,7 @@ export const SYMBOLS: SymbolDefinition[] = [
   { code: "L3", label: "Capsule", tier: "low", color: 0xfbbf24, stroke: 0x78350f, shape: "pill", pay3: 0.3, pay4: 1.2, pay5: 3.2 },
   { code: "L4", label: "Burst", tier: "low", color: 0x22d3ee, stroke: 0x164e63, shape: "burst", pay3: 0.3, pay4: 1.2, pay5: 3.2 },
   { code: "L5", label: "Rune", tier: "low", color: 0xf97316, stroke: 0x7c2d12, shape: "rune", pay3: 0.3, pay4: 1.2, pay5: 3.2 },
-  { code: "W1", label: "Wheel", tier: "special", color: 0xffffff, stroke: 0x111827, shape: "wheel", pay3: 0, pay4: 0, pay5: 0 },
+  { code: "W1", label: "Shuriken", tier: "special", color: 0xffffff, stroke: 0x111827, shape: "wheel", pay3: 0, pay4: 0, pay5: 0 },
 ];
 
 export const SYMBOL_BY_CODE = SYMBOLS.reduce((map, symbol) => {
@@ -98,9 +139,6 @@ export const REEL_STRIPS: SymbolCode[][] = [
   ["H1", "H3", "L3", "L4", "H3", "L2", "L2", "H3", "L2", "L2", "H4", "H2", "L4", "L5", "L1", "H4", "H4", "L4", "L3", "L1", "L2", "H5", "L3", "L5", "L1", "H2", "L1", "H5", "H5", "L2", "L1", "L2", "H3", "H1", "L4", "L5", "H4", "L1", "H1", "L1", "L1", "L1", "H1", "L5", "H2", "L2", "L3", "H3", "L3", "L3", "L5", "L4", "H3", "H3", "H5", "H5", "L5", "H2", "L2", "L2", "H3", "L1", "L2", "L1", "H1", "H1", "H4", "H4", "H3", "H2", "L2", "L1", "L3", "L3", "H1", "H3", "L3"],
 ];
 
-export const BONUS_MULTIPLIERS = [2, 3, 4, 5, 8, 10, 15, 20, 50, 100, 1000];
-const BONUS_MULTIPLIER_WEIGHTS = [42, 28, 18, 12, 7, 5, 2.5, 1.2, 0.18, 0.06, 0.001];
-
 export function weightedPick<T>(items: T[], weights: number[], random = Math.random): T {
   const total = weights.reduce((sum, weight) => sum + weight, 0);
   let roll = random() * total;
@@ -111,37 +149,67 @@ export function weightedPick<T>(items: T[], weights: number[], random = Math.ran
   return items[items.length - 1];
 }
 
-export function createGrid(random = Math.random, bonusMode = false): CellResult[][] {
+export function createGrid(random = Math.random, bonusTier: BonusTier = 0): CellResult[][] {
   const grid: CellResult[][] = [];
   for (let col = 0; col < COLS; col++) {
     const strip = REEL_STRIPS[col];
     const stop = Math.floor(random() * strip.length);
     const column: CellResult[] = [];
     for (let row = 0; row < ROWS; row++) {
-      let code = strip[(stop + row) % strip.length];
-      const specialReel = col === 0 || col === 2 || col === 4;
-      const overlayChance = bonusMode ? 0.022 : 0.0068;
-      let bonusTrigger = false;
-      if (specialReel) {
-        const specialRoll = random();
-        if (!bonusMode && specialRoll < BONUS_TRIGGER_CELL_CHANCE) {
-          code = "W1";
-          bonusTrigger = true;
-        } else if (specialRoll < (bonusMode ? overlayChance : BONUS_TRIGGER_CELL_CHANCE + overlayChance)) {
-          code = "W1";
-        }
-      }
-      const cell: CellResult = { code };
-      if (bonusTrigger) {
-        cell.bonusTrigger = true;
-      } else if (code === "W1") {
-        cell.wheelMultiplier = weightedPick(BONUS_MULTIPLIERS, BONUS_MULTIPLIER_WEIGHTS, random);
-      }
+      const cell: CellResult = { code: strip[(stop + row) % strip.length] };
+      if (SHURIKEN_REELS.includes(col)) maybePlaceShuriken(cell, col, random, bonusTier);
       column.push(cell);
     }
     grid.push(column);
   }
+  if (bonusTier === 3 && !grid.some((column) => column.some((cell) => cell.shuriken && cell.wheelColor === "red"))) {
+    const col = SHURIKEN_REELS[Math.floor(random() * SHURIKEN_REELS.length)];
+    const row = Math.floor(random() * ROWS);
+    grid[col][row] = makeWheelCell("red", random, false);
+  }
   return grid;
+}
+
+function maybePlaceShuriken(cell: CellResult, _col: number, random: () => number, bonusTier: BonusTier) {
+  if (bonusTier === 0) {
+    if (random() < BASE_SHURIKEN_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, true));
+    return;
+  }
+  if (bonusTier === 1) {
+    const roll = random();
+    if (roll < BONUS_TIER_1_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
+    else if (roll < BONUS_TIER_1_RED_CELL_CHANCE + BONUS_TIER_1_BLUE_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, false));
+    return;
+  }
+  if (bonusTier === 2) {
+    if (random() < BONUS_TIER_2_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
+    return;
+  }
+  if (random() < BONUS_TIER_3_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
+}
+
+function makeWheelCell(color: WheelColor, random: () => number, allowBonus: boolean): CellResult {
+  return {
+    code: "W1",
+    shuriken: true,
+    wheelColor: color,
+    wheelOutcome: color === "blue" ? pickBlueWheelOutcome(random, allowBonus) : pickRedWheelOutcome(random),
+  };
+}
+
+export function pickBlueWheelOutcome(random = Math.random, allowBonus = true): WheelOutcome {
+  const kind = allowBonus
+    ? weightedPick(BLUE_WHEEL_KIND_VALUES, BLUE_WHEEL_KIND_WEIGHTS, random)
+    : weightedPick(BLUE_WHEEL_KIND_VALUES.slice(0, 2), BLUE_WHEEL_KIND_WEIGHTS.slice(0, 2), random);
+  if (kind === "bonus") return { kind };
+  if (kind === "multiply") return { kind, value: weightedPick(BLUE_WHEEL_MULTIPLY_VALUES, BLUE_WHEEL_MULTIPLY_WEIGHTS, random) };
+  return { kind, value: weightedPick(BLUE_WHEEL_ADD_VALUES, BLUE_WHEEL_ADD_WEIGHTS, random) };
+}
+
+export function pickRedWheelOutcome(random = Math.random): WheelOutcome {
+  const kind = weightedPick(RED_WHEEL_KIND_VALUES, RED_WHEEL_KIND_WEIGHTS, random);
+  if (kind === "multiply") return { kind, value: weightedPick(RED_WHEEL_MULTIPLY_VALUES, RED_WHEEL_MULTIPLY_WEIGHTS, random) };
+  return { kind, value: weightedPick(RED_WHEEL_ADD_VALUES, RED_WHEEL_ADD_WEIGHTS, random) };
 }
 
 export function scoreGrid(grid: CellResult[][], bet = DEFAULT_BET): { lineWins: LineWin[]; baseWin: number } {
@@ -168,40 +236,60 @@ export function scoreGrid(grid: CellResult[][], bet = DEFAULT_BET): { lineWins: 
   return { lineWins, baseWin };
 }
 
-export function collectWheelMultiplier(grid: CellResult[][], random = Math.random, bonusMode = false): number {
-  const multipliers: number[] = [];
+export function resolveWheelEvents(grid: CellResult[][], startingMeter = 0): { meter: number; events: WheelEvent[]; bonusShurikens: number } {
+  let meter = startingMeter;
+  let bonusShurikens = 0;
+  const events: WheelEvent[] = [];
+  const wheelCells: Array<{ col: number; row: number; cell: CellResult }> = [];
   for (let col = 0; col < COLS; col++) {
     for (let row = 0; row < ROWS; row++) {
       const cell = grid[col][row];
-      if (cell.code === "W1" && cell.wheelMultiplier) multipliers.push(cell.wheelMultiplier);
+      if (cell.shuriken && cell.wheelColor && cell.wheelOutcome) wheelCells.push({ col, row, cell });
     }
   }
-  if (multipliers.length === 0) return 0;
-  if (bonusMode) return multipliers.reduce((sum, value) => sum + value, 0);
-  if (random() > WHEEL_EVENT_CHANCE) return 0;
-  return Math.max.apply(Math, multipliers);
+  wheelCells.sort((a, b) => a.col - b.col || a.row - b.row);
+  for (const { col, row, cell } of wheelCells) {
+    const meterBefore = meter;
+    let applied = false;
+    const outcome = cell.wheelOutcome as WheelOutcome;
+    if (outcome.kind === "add" && outcome.value) {
+      meter += outcome.value;
+      applied = true;
+    } else if (outcome.kind === "multiply" && outcome.value && meter > 0) {
+      meter *= outcome.value;
+      applied = true;
+    } else if (outcome.kind === "bonus") {
+      bonusShurikens++;
+      applied = true;
+    }
+    meter = Math.max(0, Math.round(meter * 10000) / 10000);
+    events.push({
+      col,
+      row,
+      color: cell.wheelColor as WheelColor,
+      outcome,
+      meterBefore,
+      meterAfter: meter,
+      applied,
+    });
+  }
+  return { meter, events, bonusShurikens };
 }
 
-export function countBonusTriggerSymbols(grid: CellResult[][]): number {
-  let count = 0;
-  for (let col = 0; col < COLS; col++) {
-    for (let row = 0; row < ROWS; row++) {
-      if (grid[col][row].code === "W1" && grid[col][row].bonusTrigger) count++;
-    }
-  }
-  return count;
+export function countBonusShurikenOutcomes(grid: CellResult[][]): number {
+  return resolveWheelEvents(grid, 0).bonusShurikens;
 }
 
 export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResult {
-  const grid = createGrid(random, false);
+  const grid = createGrid(random, 0);
   const scored = scoreGrid(grid, bet);
-  const wheelMultiplier = scored.baseWin > 0 ? collectWheelMultiplier(grid, random, false) : 0;
-  const baseTotal = wheelMultiplier > 0 ? scored.baseWin * wheelMultiplier : scored.baseWin;
-  const bonusTriggered = countBonusTriggerSymbols(grid) > 0;
+  const resolved = resolveWheelEvents(grid, 0);
+  const paidSpinWin = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : scored.baseWin;
+  const bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
   let bonusWin = 0;
   let freeSpins: SpinResult[] | undefined;
-  if (bonusTriggered) {
-    const feature = playBonusFeature(random, bet);
+  if (bonusTier > 0) {
+    const feature = playBonusFeature(random, bet, bonusTier);
     bonusWin = feature.totalWin;
     freeSpins = feature.freeSpins;
   }
@@ -209,48 +297,57 @@ export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResul
     grid,
     lineWins: scored.lineWins,
     baseWin: scored.baseWin,
-    wheelMultiplier,
-    totalWin: roundMoney(baseTotal + bonusWin),
-    bonusTriggered,
+    wheelMultiplier: resolved.meter,
+    multiplierMeter: resolved.meter,
+    wheelEvents: resolved.events,
+    bonusTier,
+    totalWin: roundMoney(paidSpinWin + bonusWin),
+    bonusTriggered: bonusTier > 0,
     bonusWin: roundMoney(bonusWin),
     freeSpins,
   };
 }
 
-export function playBonusFeature(random = Math.random, bet = DEFAULT_BET): { totalWin: number; freeSpins: SpinResult[] } {
+export function playBonusFeature(random = Math.random, bet = DEFAULT_BET, tier: BonusTier = 1): { totalWin: number; freeSpins: SpinResult[]; bonusTier: BonusTier } {
   const freeSpins: SpinResult[] = [];
   let totalWin = 0;
+  let meter = 0;
   for (let i = 0; i < FREE_SPINS; i++) {
-    let grid = createGrid(random, true);
+    let grid = createGrid(random, tier);
     let scored = scoreGrid(grid, bet);
     if (scored.baseWin <= 0 && random() < BONUS_MODE_HIT_ASSIST_CHANCE) {
       grid = forceSmallBonusWin(grid);
       scored = scoreGrid(grid, bet);
     }
+    const resolved = resolveWheelEvents(grid, meter);
+    meter = resolved.meter;
     const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * BONUS_FEATURE_PAY_SCALE) }));
     const bonusBaseWin = roundMoney(scored.baseWin * BONUS_FEATURE_PAY_SCALE);
-    const wheelMultiplier = bonusBaseWin > 0 ? collectWheelMultiplier(grid, random, true) : 0;
-    const spinTotal = roundMoney(wheelMultiplier > 0 ? bonusBaseWin * wheelMultiplier : bonusBaseWin);
+    const spinTotal = roundMoney(bonusBaseWin > 0 && meter > 0 ? bonusBaseWin * meter : bonusBaseWin);
     totalWin = roundMoney(totalWin + spinTotal);
     freeSpins.push({
       grid,
       lineWins: scaledLineWins,
       baseWin: bonusBaseWin,
-      wheelMultiplier,
+      wheelMultiplier: meter,
+      multiplierMeter: meter,
+      wheelEvents: resolved.events,
+      bonusTier: tier,
       totalWin: spinTotal,
       bonusTriggered: false,
       bonusWin: 0,
     });
   }
-  return { totalWin, freeSpins };
+  return { totalWin, freeSpins, bonusTier: tier };
 }
 
-export function buyBonus(random = Math.random, bet = DEFAULT_BET): { cost: number; totalWin: number; freeSpins: SpinResult[] } {
-  const feature = playBonusFeature(random, bet);
+export function buyBonus(random = Math.random, bet = DEFAULT_BET, tier: BonusTier = 1): { cost: number; totalWin: number; freeSpins: SpinResult[]; bonusTier: BonusTier } {
+  const feature = playBonusFeature(random, bet, tier);
   return {
     cost: roundMoney(bet * BUY_BONUS_PRICE_MULTIPLIER),
     totalWin: feature.totalWin,
     freeSpins: feature.freeSpins,
+    bonusTier: feature.bonusTier,
   };
 }
 
@@ -261,8 +358,9 @@ export function roundMoney(value: number) {
 function forceSmallBonusWin(grid: CellResult[][]): CellResult[][] {
   const next: CellResult[][] = grid.map((column) => column.map((cell) => ({
     code: cell.code,
-    wheelMultiplier: cell.wheelMultiplier,
-    bonusTrigger: cell.bonusTrigger,
+    shuriken: cell.shuriken,
+    wheelColor: cell.wheelColor,
+    wheelOutcome: cell.wheelOutcome ? { ...cell.wheelOutcome } : undefined,
   })));
   const symbol: SymbolCode = "L3";
   for (let col = 0; col < 3; col++) next[col][1] = { code: symbol };

@@ -43,9 +43,9 @@ assert.equal(math.ROWS, 4, "1000 Shogun Spinners should use four visible rows");
 assert.equal(math.PAYLINES.length, 14, "attached blueprint has 14 paylines");
 assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x bet");
 assert.equal(Math.max(...math.BONUS_MULTIPLIERS), 1000, "wheel max multiplier should be 1000x");
-assert.ok(math.BONUS_TRIGGER_CELL_CHANCE > 0, "visible bonus trigger cell chance should be configured");
-assert.equal(math.BASE_BONUS_CHANCE, 0.00365, "base-to-bonus hit frequency should be reduced for the 96x bonus average");
-assert.equal(math.BONUS_FEATURE_PAY_SCALE, 3.27, "bonus feature pay scale should target about 96x average bonus pay");
+assert.ok(math.BASE_SHURIKEN_CELL_CHANCE > 0, "base Shuriken landing chance should be configured");
+assert.ok(!("WHEEL_EVENT_CHANCE" in math), "wheel spins should not use a random wheel-event gate");
+assert.ok(math.BONUS_FEATURE_PAY_SCALE > 0, "bonus feature pay scale should be configured");
 
 const grid = [
   [{ code: "H1" }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
@@ -76,6 +76,7 @@ assert.equal(spin.grid[0].length, 4, "spin should return four rows per column");
 const buy = math.buyBonus(deterministic, 1);
 assert.equal(buy.cost, 100, "bonus buy cost should be 100x bet");
 assert.equal(buy.freeSpins.length, 10, "bonus buy should resolve 10 free spins");
+assert.equal(buy.bonusTier, 1, "bonus buy should start the Tier 1 feature by default");
 
 let bonusSampleSeed = 0x1000b0;
 const bonusSampleRandom = () => {
@@ -95,17 +96,27 @@ assert.ok(
   `bonus average should land near 96x; got ${bonusSampleAverage.toFixed(4)}x`,
 );
 
-const visibleBonusSpin = math.playPaidSpin(() => 0, 1);
-assert.equal(visibleBonusSpin.bonusTriggered, true, "visible BONUS spinner should trigger free spins");
-assert.ok(visibleBonusSpin.freeSpins, "visible BONUS spinner trigger should resolve free spins");
-assert.ok(
-  math.countBonusTriggerSymbols(visibleBonusSpin.grid) > 0,
-  "bonus trigger should be tied to visible BONUS spinner symbols",
+const wheelGrid = [
+  [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "add", value: 10 } }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
+  [{ code: "H1" }, { code: "L2" }, { code: "L3" }, { code: "L4" }],
+  [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "multiply", value: 5 } }, { code: "L3" }, { code: "L4" }, { code: "L5" }],
+  [{ code: "L5" }, { code: "L4" }, { code: "L3" }, { code: "L2" }],
+  [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "bonus" } }, { code: "L5" }, { code: "L2" }, { code: "L1" }],
+];
+const wheelResolved = math.resolveWheelEvents(wheelGrid, 0);
+assert.equal(wheelResolved.meter, 50, "wheel outcomes should collect left-to-right into a running multiplier meter");
+assert.equal(wheelResolved.bonusShurikens, 1, "Blue Wheel bonus outcome should count toward bonus tier");
+assert.equal(
+  JSON.stringify(wheelResolved.events.map((event) => event.col)),
+  JSON.stringify([0, 2, 4]),
+  "multiple activated wheels should resolve left to right",
 );
-assert.ok(!mathSource.includes("random() < BASE_BONUS_CHANCE"), "bonus trigger should not use an invisible random gate");
+assert.ok(!mathSource.includes("WHEEL_EVENT_CHANCE"), "wheel spins should not use the removed random gate");
 assert.ok(
-  slotSceneSource.includes("BONUS Shuriken Spinner"),
-  "rules should describe visible BONUS spinner trigger symbols",
+  slotSceneSource.includes("Blue Wicked Wheels appear in the base game") &&
+    slotSceneSource.includes("Red Wicked Wheels appear in free spins") &&
+    slotSceneSource.includes("persistent multiplier meter"),
+  "rules should describe Blue/Red Wicked Wheels and the persistent multiplier meter",
 );
 
 assert.ok(!slotSceneSource.includes("this.balance += spin.totalWin"), "bonus wins should not credit balance per free spin");
@@ -116,6 +127,10 @@ assert.ok(bonusBalanceCreditIndex > bonusSummaryIndex, "bonus balance credit sho
 assert.ok(
   !slotSceneSource.includes("free spins resolved"),
   "bonus summary should not show a free-spins-resolved subtitle",
+);
+assert.ok(
+  !slotSceneSource.includes("10 free spins resolve"),
+  "bonus transition should not include the requested removed line",
 );
 assert.ok(
   slotSceneSource.includes("after the TOTAL WIN reveal"),

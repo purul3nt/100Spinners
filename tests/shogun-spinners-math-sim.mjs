@@ -8,7 +8,7 @@ import ts from "typescript";
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const spins = Number(process.argv[2] || 100000);
-const seedInput = Number(process.argv[3] || 0x6662026);
+const seedInput = Number(process.argv[3] || 0x10002026);
 
 function loadTsCommonJs(relativePath) {
   const filename = path.join(root, relativePath);
@@ -63,6 +63,8 @@ let featureWin = 0;
 let totalWin = 0;
 let hits = 0;
 let bonusTriggers = 0;
+const bonusTierCounts = [0, 0, 0, 0];
+const bonusTierTotals = [0, 0, 0, 0];
 let maxWin = 0;
 let sumSquares = 0;
 
@@ -73,7 +75,11 @@ for (let i = 0; i < spins; i++) {
   totalWin += result.totalWin;
   sumSquares += result.totalWin * result.totalWin;
   if (result.totalWin > 0) hits++;
-  if (result.bonusTriggered) bonusTriggers++;
+  if (result.bonusTriggered) {
+    bonusTriggers++;
+    bonusTierCounts[result.bonusTier]++;
+    bonusTierTotals[result.bonusTier] += result.bonusWin;
+  }
   if (result.totalWin > maxWin) maxWin = result.totalWin;
   for (let j = 0; j < bands.length; j++) {
     const [low, high] = bands[j];
@@ -96,6 +102,12 @@ const summary = {
   hitFrequency: hits ? `1 in ${round(spins / hits)}` : "not observed",
   bonusTriggerRate: round(bonusTriggers / spins),
   bonusTriggerFrequency: bonusTriggers ? `1 in ${round(spins / bonusTriggers)}` : "not observed",
+  bonusTiers: [1, 2, 3].map((tier) => ({
+    tier,
+    count: bonusTierCounts[tier],
+    frequency: bonusTierCounts[tier] ? `1 in ${round(spins / bonusTierCounts[tier])}` : "not observed",
+    averageFeatureWin: bonusTierCounts[tier] ? round(bonusTierTotals[tier] / bonusTierCounts[tier]) : 0,
+  })),
   maxWin: round(maxWin),
   variance: round(variance),
   stdDev: round(Math.sqrt(Math.max(0, variance))),
