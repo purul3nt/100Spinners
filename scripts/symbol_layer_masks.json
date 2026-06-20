@@ -1,0 +1,230 @@
+{
+  "outputSuffixes": {
+    "background": "_bg",
+    "foreground": "_fg"
+  },
+  "symbols": {
+    "a": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/a.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/a_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/a_fg.png",
+      "bgDilate": 4,
+      "diffusionIterations": 850,
+      "shapes": [
+        { "op": "add", "type": "polygon", "points": [[62, 214], [93, 54], [143, 54], [198, 214], [156, 214], [145, 180], [94, 180], [84, 214]] },
+        { "op": "add", "type": "polygon", "points": [[104, 141], [122, 83], [139, 141]] },
+        { "op": "subtract", "type": "polygon", "points": [[108, 142], [123, 94], [136, 142]] }
+      ]
+    },
+    "k": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/k.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/k_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/k_fg.png",
+      "bgDilate": 4,
+      "diffusionIterations": 850,
+      "shapes": [
+        { "op": "add", "type": "rect", "box": [65, 48, 108, 208] },
+        { "op": "add", "type": "polygon", "points": [[103, 132], [169, 48], [213, 48], [144, 134], [215, 208], [169, 208]] },
+        { "op": "add", "type": "polygon", "points": [[103, 113], [155, 48], [188, 48], [128, 126]] },
+        { "op": "subtract", "type": "polygon", "points": [[116, 125], [168, 65], [181, 65], [131, 130], [184, 194], [169, 194]] }
+      ]
+    },
+    "q": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/q.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/q_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/q_fg.png",
+      "bgDilate": 3,
+      "diffusionIterations": 900,
+      "shapes": [
+        { "op": "add", "type": "rounded_rect", "box": [67, 43, 188, 199], "radius": 19 },
+        { "op": "subtract", "type": "rect", "box": [92, 73, 148, 174] },
+        { "op": "subtract", "type": "rounded_rect", "box": [103, 82, 136, 160], "radius": 8 },
+        { "op": "add", "type": "polygon", "points": [[139, 157], [193, 207], [172, 224], [128, 172]] },
+        { "op": "add", "type": "rect", "box": [150, 166, 185, 201] }
+      ]
+    },
+    "j": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/j.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/j_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/j_fg.png",
+      "bgDilate": 4,
+      "diffusionIterations": 850,
+      "shapes": [
+        { "op": "add", "type": "rect", "box": [87, 46, 171, 88] },
+        { "op": "add", "type": "rect", "box": [125, 72, 171, 175] },
+        { "op": "add", "type": "polygon", "points": [[64, 147], [109, 147], [109, 177], [126, 186], [149, 176], [171, 191], [144, 220], [99, 220], [64, 197]] },
+        { "op": "subtract", "type": "rect", "box": [86, 88, 122, 142] }
+      ]
+    },
+    "ten": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/ten.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/ten_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/ten_fg.png",
+      "bgDilate": 4,
+      "diffusionIterations": 850,
+      "shapes": [
+        { "op": "add", "type": "rect", "box": [42, 55, 83, 204] },
+        { "op": "add", "type": "polygon", "points": [[31, 82], [83, 53], [83, 95], [45, 112]] },
+        { "op": "add", "type": "rounded_rect", "box": [104, 50, 213, 207], "radius": 22 },
+        { "op": "subtract", "type": "rounded_rect", "box": [132, 86, 184, 171], "radius": 12 }
+      ]
+    },
+    "guitar": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/guitar.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/guitar_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/guitar_fg.png",
+      "bgDilate": 5,
+      "fillMode": "radial",
+      "diffusionIterations": 950,
+      "shapes": [
+        { "op": "add", "type": "polygon", "points": [[87, 79], [94, 43], [112, 16], [148, 9], [172, 36], [166, 66], [145, 84], [110, 88]] },
+        { "op": "add", "type": "ellipse", "box": [91, 51, 157, 118] },
+        { "op": "add", "type": "polygon", "points": [[62, 93], [112, 73], [165, 90], [190, 145], [170, 209], [91, 207], [47, 152]] },
+        { "op": "add", "type": "polygon", "points": [[48, 111], [78, 101], [113, 158], [91, 179], [51, 145]] },
+        { "op": "add", "type": "polygon", "points": [[158, 113], [209, 114], [221, 141], [180, 154]] },
+        { "op": "add", "type": "ellipse", "box": [43, 136, 128, 221] },
+        { "op": "add", "type": "polygon", "points": [[78, 142], [143, 121], [225, 108], [255, 119], [235, 138], [153, 160], [96, 186]] },
+        { "op": "add", "type": "polygon", "points": [[79, 172], [119, 166], [98, 218], [62, 224]] },
+        { "op": "add", "type": "polygon", "points": [[142, 171], [183, 169], [214, 235], [171, 237]] },
+        { "op": "subtract", "type": "polygon", "points": [[23, 24], [68, 79], [51, 102], [20, 72]] },
+        { "op": "subtract", "type": "polygon", "points": [[190, 33], [235, 18], [239, 82], [210, 83]] },
+        { "op": "subtract", "type": "polygon", "points": [[202, 171], [235, 184], [235, 225], [218, 235]] }
+      ],
+      "forceForeground": [
+        { "op": "add", "type": "polygon", "points": [[87, 78], [99, 39], [116, 12], [151, 8], [173, 34], [164, 63], [142, 84], [111, 88]] },
+        { "op": "add", "type": "polygon", "points": [[82, 145], [141, 122], [226, 108], [255, 118], [235, 138], [151, 160], [96, 187]] },
+        { "op": "add", "type": "polygon", "points": [[170, 114], [246, 112], [255, 126], [229, 140], [180, 150], [161, 136]] },
+        { "op": "add", "type": "ellipse", "box": [44, 136, 127, 221] },
+        { "op": "add", "type": "ellipse", "box": [92, 51, 157, 116] },
+        { "op": "add", "type": "polygon", "points": [[165, 115], [210, 114], [221, 139], [181, 153]] },
+        { "op": "add", "type": "polygon", "points": [[141, 170], [184, 166], [209, 229], [167, 233], [151, 206]] },
+        { "op": "add", "type": "polygon", "points": [[70, 170], [119, 164], [99, 221], [58, 223]] }
+      ],
+      "rejectForeground": [
+        { "op": "add", "type": "polygon", "points": [[149, 10], [183, 30], [167, 69], [153, 48]] },
+        { "op": "add", "type": "polygon", "points": [[159, 86], [207, 101], [179, 123], [146, 105]] },
+        { "op": "add", "type": "polygon", "points": [[149, 92], [228, 100], [190, 128], [141, 116]] },
+        { "op": "add", "type": "polygon", "points": [[151, 101], [209, 103], [190, 116], [155, 115]] },
+        { "op": "add", "type": "polygon", "points": [[184, 144], [220, 151], [218, 177], [196, 178]] },
+        { "op": "add", "type": "polygon", "points": [[229, 131], [256, 139], [256, 157], [224, 148]] }
+      ],
+      "rejectColorRegions": [
+        {
+          "shapes": [
+            { "op": "add", "type": "polygon", "points": [[145, 6], [190, 24], [169, 80], [150, 55]] }
+          ],
+          "colors": [
+            { "hue": [28, 68], "saturation": [0.35, 1.0], "value": [0.42, 1.0] },
+            { "hue": [258, 332], "saturation": [0.22, 1.0], "value": [0.24, 1.0] }
+          ]
+        },
+        {
+          "shapes": [
+            { "op": "add", "type": "polygon", "points": [[146, 86], [248, 96], [256, 123], [178, 131], [136, 114]] }
+          ],
+          "colors": [
+            { "hue": [28, 68], "saturation": [0.36, 1.0], "value": [0.42, 1.0] },
+            { "hue": [258, 332], "saturation": [0.24, 1.0], "value": [0.22, 1.0] }
+          ]
+        },
+        {
+          "shapes": [
+            { "op": "add", "type": "polygon", "points": [[185, 138], [235, 148], [231, 194], [199, 185]] },
+            { "op": "add", "type": "polygon", "points": [[190, 208], [230, 218], [226, 250], [205, 246]] }
+          ],
+          "colors": [
+            { "hue": [258, 332], "saturation": [0.24, 1.0], "value": [0.22, 1.0] },
+            { "hue": [28, 68], "saturation": [0.36, 1.0], "value": [0.42, 1.0] }
+          ]
+        }
+      ],
+      "protectForeground": [
+        { "op": "add", "type": "ellipse", "box": [44, 136, 127, 221] },
+        { "op": "add", "type": "polygon", "points": [[78, 145], [145, 124], [246, 113], [255, 121], [232, 136], [151, 158], [96, 185]] },
+        { "op": "add", "type": "polygon", "points": [[205, 116], [255, 116], [255, 125], [208, 134], [183, 132]] },
+        { "op": "add", "type": "polygon", "points": [[141, 170], [184, 166], [209, 229], [167, 233], [151, 206]] },
+        { "op": "add", "type": "polygon", "points": [[70, 170], [119, 164], [99, 221], [58, 223]] }
+      ]
+    },
+    "drummer": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/drummer.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/drummer_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/drummer_fg.png",
+      "bgDilate": 5,
+      "fillMode": "radial",
+      "diffusionIterations": 950,
+      "shapes": [
+        { "op": "add", "type": "ellipse", "box": [78, 44, 148, 116] },
+        { "op": "add", "type": "polygon", "points": [[73, 91], [125, 74], [173, 104], [178, 171], [129, 195], [79, 169], [53, 124]] },
+        { "op": "add", "type": "polygon", "points": [[71, 114], [39, 119], [34, 153], [82, 151]] },
+        { "op": "add", "type": "polygon", "points": [[134, 81], [157, 87], [171, 143], [150, 147]] },
+        { "op": "add", "type": "ellipse", "box": [28, 106, 108, 146] },
+        { "op": "add", "type": "ellipse", "box": [156, 96, 228, 138] },
+        { "op": "add", "type": "ellipse", "box": [50, 159, 154, 242] },
+        { "op": "add", "type": "ellipse", "box": [118, 142, 211, 214] },
+        { "op": "add", "type": "ellipse", "box": [84, 149, 186, 225] },
+        { "op": "add", "type": "rect", "box": [49, 138, 206, 214] },
+        { "op": "add", "type": "polygon", "points": [[60, 92], [67, 89], [96, 143], [89, 146]] },
+        { "op": "add", "type": "polygon", "points": [[156, 62], [164, 60], [183, 118], [176, 122]] },
+        { "op": "add", "type": "rect", "box": [197, 118, 205, 225] },
+        { "op": "add", "type": "rect", "box": [44, 127, 51, 224] }
+      ],
+      "protectForeground": [
+        { "op": "add", "type": "ellipse", "box": [78, 44, 148, 116] },
+        { "op": "add", "type": "ellipse", "box": [28, 106, 108, 146] },
+        { "op": "add", "type": "ellipse", "box": [156, 96, 228, 138] },
+        { "op": "add", "type": "ellipse", "box": [50, 159, 154, 242] },
+        { "op": "add", "type": "ellipse", "box": [118, 142, 211, 214] }
+      ]
+    },
+    "bass": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/bass.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/bass_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/bass_fg.png",
+      "bgDilate": 5,
+      "fillMode": "diffuse",
+      "diffusionIterations": 1000,
+      "shapes": [
+        { "op": "add", "type": "polygon", "points": [[62, 62], [136, 7], [205, 33], [189, 101], [125, 112], [69, 101]] },
+        { "op": "add", "type": "ellipse", "box": [83, 66, 154, 136] },
+        { "op": "add", "type": "polygon", "points": [[55, 96], [122, 82], [178, 115], [194, 199], [137, 234], [68, 208], [36, 151]] },
+        { "op": "add", "type": "polygon", "points": [[55, 153], [123, 139], [237, 111], [255, 126], [221, 151], [102, 184], [42, 190]] },
+        { "op": "add", "type": "ellipse", "box": [45, 137, 126, 211] },
+        { "op": "add", "type": "polygon", "points": [[174, 112], [248, 94], [255, 111], [193, 132]] },
+        { "op": "add", "type": "polygon", "points": [[94, 184], [132, 180], [116, 240], [72, 238]] },
+        { "op": "add", "type": "polygon", "points": [[138, 177], [184, 178], [215, 238], [168, 240]] },
+        { "op": "add", "type": "polygon", "points": [[38, 113], [64, 111], [74, 169], [42, 180]] }
+      ],
+      "protectForeground": [
+        { "op": "add", "type": "polygon", "points": [[62, 62], [136, 7], [205, 33], [189, 101], [125, 112], [69, 101]] },
+        { "op": "add", "type": "ellipse", "box": [45, 137, 126, 211] },
+        { "op": "add", "type": "polygon", "points": [[55, 153], [123, 139], [237, 111], [255, 126], [221, 151], [102, 184], [42, 190]] }
+      ]
+    },
+    "vocal": {
+      "source": "src/assets/baboon_bonus/symbols_updated_cut/vocal.png",
+      "background": "src/assets/baboon_bonus/symbols_updated_cut/vocal_bg.png",
+      "foreground": "src/assets/baboon_bonus/symbols_updated_cut/vocal_fg.png",
+      "bgDilate": 5,
+      "fillMode": "radial",
+      "diffusionIterations": 950,
+      "shapes": [
+        { "op": "add", "type": "polygon", "points": [[70, 36], [135, 6], [182, 42], [177, 112], [126, 130], [68, 102]] },
+        { "op": "add", "type": "ellipse", "box": [88, 52, 160, 126] },
+        { "op": "add", "type": "polygon", "points": [[53, 88], [126, 77], [194, 112], [200, 205], [140, 239], [75, 214], [33, 151]] },
+        { "op": "add", "type": "polygon", "points": [[42, 85], [69, 72], [94, 128], [67, 145], [40, 116]] },
+        { "op": "add", "type": "polygon", "points": [[173, 94], [207, 86], [220, 151], [195, 161]] },
+        { "op": "add", "type": "ellipse", "box": [197, 73, 230, 104] },
+        { "op": "add", "type": "polygon", "points": [[87, 184], [128, 183], [112, 242], [70, 240]] },
+        { "op": "add", "type": "polygon", "points": [[139, 184], [181, 181], [212, 238], [166, 241]] },
+        { "op": "add", "type": "polygon", "points": [[40, 106], [21, 97], [16, 69], [38, 72]] },
+        { "op": "add", "type": "polygon", "points": [[199, 102], [244, 116], [244, 128], [210, 120]] }
+      ],
+      "protectForeground": [
+        { "op": "add", "type": "polygon", "points": [[70, 36], [135, 6], [182, 42], [177, 112], [126, 130], [68, 102]] },
+        { "op": "add", "type": "ellipse", "box": [197, 73, 230, 104] },
+        { "op": "add", "type": "polygon", "points": [[53, 88], [126, 77], [194, 112], [200, 205], [140, 239], [75, 214], [33, 151]] }
+      ]
+    }
+  }
+}

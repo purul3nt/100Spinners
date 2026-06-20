@@ -1,0 +1,185 @@
+{
+	"loader": {
+		"colors": ["#1c1a16", "#53dc48"]
+	},
+	"reel": {
+		"start": {
+			"x": 472,
+			"y": 840
+		},
+		"symbol": {
+			"width": 242,
+			"height": 240
+		}
+	},
+	"payline": {
+		"numbers": {
+			"start": 230,
+			"end": 1352,
+			"height": 280,
+			"height_offset_mult": 24,
+			"vertical_steps": 72,
+			"style": {
+				"colorbg": false,
+				"type": "round"
+			}
+		},
+		"line": {
+			"start": {
+				"x": 352,
+				"y": 230
+			}
+		}
+	},
+	"payout_menu": {
+
+	},
+	"settings": {
+
+	},
+	"ui": {
+		"buttons": {
+			"spin": {
+				"x": 960,
+				"y": 940,
+				"size": {
+					"x": 195,
+					"y": 191
+				}
+			},
+			"close_payline": {
+				"x": 133,
+				"y": 143,
+				"size": {
+					"x": 50,
+					"y": 50
+				}
+			},
+			"bet_amount_plus": {
+				"x": 780,
+				"y": 1035,
+				"size": {
+					"x": 30,
+					"y": 30
+				}
+			},
+			"bet_amount_minus": {
+				"x": 840,
+				"y": 1035,
+				"size": {
+					"x": 30,
+					"y": 30
+				}
+			},
+			"line_plus": {
+				"x": 145,
+				"y": 995,
+				"size": {
+					"x": 40,
+					"y": 40
+				}
+			},
+			"line_minus": {
+				"x": 92,
+				"y": 995,
+				"size": {
+					"x": 40,
+					"y": 40
+				}
+			},
+			"auto": {
+				"x": 652,
+				"y": 1011,
+				"text_size": 15,
+				"tint_on": "0x00BFFF",
+				"tint_off": "0xffffff",
+				"size": {
+					"x": 175,
+					"y": 90
+				}
+			},
+			"settings": {
+				"x": 1200,
+				"y": 880,
+				"text_size": 15,
+				"size": {
+					"x": 85,
+					"y": 45
+				}
+			},
+			"paytable": {
+				"x": 1400,
+				"y": 880,
+				"text_size": 15,
+				"size": {
+					"x": 175,
+					"y": 90
+				}
+			},
+			"gameinfo": {
+				"x": 1550,
+				"y": 880,
+				"size": {
+					"x": 90,
+					"y": 90
+				}
+			}
+		},
+		"text": {
+			"nb_lines": {
+				"x": 550,
+				"y": 1040,
+				"font_size": 20
+			},
+			"nb_lines_text": {
+				"x": 455,
+				"y": 1040,
+				"font_size": 20
+			},
+			"coin_value": {
+				"x": 290,
+				"y": 1005,
+				"font_size": 20
+			},
+			"coin_value_text": {
+				"x": 405,
+				"y": 1040,
+				"font_size": 20
+			},
+			"bet_total_text": {
+				"x": 610,
+				"y": 1050,
+				"font_size": 20
+			},
+			"bet_total_value": {
+				"x": 685,
+				"y": 1050,
+				"font_size": 20
+			},
+			"balance_text": {
+				"x": 1430,
+				"y": 1050,
+				"font_size": 20
+			},
+			"balance_currency": {
+				"x": 1540,
+				"y": 1050,
+				"font_size": 20
+			},
+			"win_value_text": {
+				"x": 1130,
+				"y": 1050,
+				"font_size": 20
+			},
+						"win_value": {
+				"x": 1200,
+				"y": 1050,
+				"font_size": 20
+			},
+			"game_rule": {
+				"html": "<p>This is the game to match the symbols of each one of the five reels to a winning</p><p>Combination. This is a five reel multi-pay lines slot game which has 10 pay lines.</p><p>Payouts depend on the symbols match on any line.</p><h3>Instruction of how to play:</h3><p>To begin playing you need to select the coin value on the machine. Then select</p><p>the quantity of lines from one to nine you wish to play and press spin. The</p><p>outcome of the reels will determine the payout.</p><h3>Placing Bets</h3><p>You need to select the coin value by clicking on the + sign to increase or &ndash; sign to</p><p>decrease the bets. You also need to select at least one line in order to be able to</p><p>spin the reel. Each line will increment the amount of the bet&rsquo;s total. The lines can</p><p>be selected by clicking on the numbers on the left or right side of the reels.</p><h2>Bonus round</h2><h2>Buttons and displays</h2><p>Balance:</p><p>The current user balance as the system received from the user casino</p><p>Bet amount:</p><p>Amount of the bet that will be deducted from the user balance</p><p>Coin Value:</p><p>The value of a coin in the user currency. The user could use the + and &ndash; sign to adjust the amount.</p><p>Lines:</p><p>The numbers of lines the user is playing. The user could use the + and &ndash; sign to adjust the amount.</p><p>Spin:</p><p>The button to place a bet on this slot.</p><p>Autoplay:</p><p>Settings:</p><p>Paytable:</p><h2>Reels</h2><p>Fisherman is a five reel slot machine. Each time a spin is made, the three reels come to rest randomly with a selection of symbols showing in the game window. Certain combinations of symbols results in payoffs. Consult the payout table for reference to the amounts paid.</p><h2>Symbols</h2><h3>Wild Fish</h3><p>Wild fish will replace any symbol except the scatter and the bonus</p><h3>Jellyfish:</h3><p>3 or more of these symbols will give the user 5 the right to start the bonus game</p><h3>Lighthouse (Free Bets)</h3><p>3 of these symbol will give the user 5 free bets (for the same coin value and number of lines)</p><p>4 of these symbol will give the user 8 free bets (for the same coin value and number of lines)</p><p>5 of these symbol will give the user 20 free bets (for the same coin value and number of lines)</p><h3>The Captain</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of Fish</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>500</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>150</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>25</p></td></tr><tr><td width=\"284\"><p>Two</p></td><td width=\"284\"><p>4</p></td></tr></tbody></table><h3>Octopus</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of octopus</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>200</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>65</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>17</p></td></tr><tr><td width=\"284\"><p>Two</p></td><td width=\"284\"><p>1</p></td></tr></tbody></table><h3>Fisherman</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of Fisherman</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>300</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>120</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>25</p></td></tr><tr><td width=\"284\"><p>Two</p></td><td width=\"284\"><p>3</p></td></tr></tbody></table><h3>Boat</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of Boat</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>200</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>80</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>20</p></td></tr><tr><td width=\"284\"><p>Two</p></td><td width=\"284\"><p>2</p></td></tr></tbody></table><h3>Fish</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of Anchor</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>150</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>50</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>25</p></td></tr><tr><td width=\"284\"><p>Two</p></td><td width=\"284\"><p>1</p></td></tr></tbody></table><h3>Anchor</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of Hook</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>100</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>40</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>10</p></td></tr></tbody></table><h3>Hook</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of Dead Fish</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>90</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>35</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>8</p></td></tr></tbody></table><h3>Dead Fish</h3><p>Winning combination and value</p><table><tbody><tr><td width=\"284\"><p>Total # of Captain</p></td><td width=\"284\"><p>Winning value in multiplies</p></td></tr><tr><td width=\"284\"><p>Five</p></td><td width=\"284\"><p>75</p></td></tr><tr><td width=\"284\"><p>Four</p></td><td width=\"284\"><p>30</p></td></tr><tr><td width=\"284\"><p>Three</p></td><td width=\"284\"><p>5</p></td></tr></tbody></table><p>&nbsp;</p>",
+				"text":"It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if  It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if  It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if  It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if  It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if  It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if  It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if  It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. Or raillery if It sportsman earnestly ye preserved an on. Moment led family sooner cannot her window pulled any. \n Or raillery  if "
+			}
+		}
+	}
+}

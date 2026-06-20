@@ -1,0 +1,111 @@
+
+goblin_hp2.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+goblin_hp1_sparkle
+  rotate: false
+  xy: 611, 6
+  size: 226, 226
+  orig: 226, 226
+  offset: 0, 0
+  index: -1
+goblin_hp2_background
+  rotate: false
+  xy: 328, 228
+  size: 281, 281
+  orig: 281, 281
+  offset: 0, 0
+  index: -1
+goblin_hp2_body
+  rotate: true
+  xy: 839, 26
+  size: 206, 178
+  orig: 206, 178
+  offset: 0, 0
+  index: -1
+goblin_hp2_ear_l
+  rotate: false
+  xy: 328, 2
+  size: 67, 122
+  orig: 67, 122
+  offset: 0, 0
+  index: -1
+goblin_hp2_ear_r
+  rotate: true
+  xy: 328, 126
+  size: 100, 122
+  orig: 100, 122
+  offset: 0, 0
+  index: -1
+goblin_hp2_eyes
+  rotate: false
+  xy: 839, 3
+  size: 67, 21
+  orig: 67, 21
+  offset: 0, 0
+  index: -1
+goblin_hp2_eyes_white
+  rotate: true
+  xy: 397, 26
+  size: 98, 49
+  orig: 98, 49
+  offset: 0, 0
+  index: -1
+goblin_hp2_frame
+  rotate: false
+  xy: 2, 185
+  size: 324, 324
+  orig: 324, 324
+  offset: 0, 0
+  index: -1
+goblin_hp2_frame_mask
+  rotate: false
+  xy: 2, 21
+  size: 324, 162
+  orig: 324, 162
+  offset: 0, 0
+  index: -1
+goblin_hp2_hair
+  rotate: true
+  xy: 611, 234
+  size: 275, 256
+  orig: 275, 256
+  offset: 0, 0
+  index: -1
+goblin_hp2_hand_l
+  rotate: false
+  xy: 452, 83
+  size: 84, 143
+  orig: 84, 143
+  offset: 0, 0
+  index: -1
+goblin_hp2_hand_r
+  rotate: true
+  xy: 869, 239
+  size: 100, 127
+  orig: 100, 127
+  offset: 0, 0
+  index: -1
+goblin_hp2_head
+  rotate: true
+  xy: 869, 341
+  size: 168, 142
+  orig: 168, 142
+  offset: 0, 0
+  index: -1
+goblin_hp2_neckles
+  rotate: false
+  xy: 448, 29
+  size: 126, 52
+  orig: 126, 52
+  offset: 0, 0
+  index: -1
+goblin_hp2_nose
+  rotate: true
+  xy: 538, 168
+  size: 58, 40
+  orig: 58, 40
+  offset: 0, 0
+  index: -1

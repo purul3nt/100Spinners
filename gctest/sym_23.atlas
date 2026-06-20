@@ -1,0 +1,76 @@
+
+sym_23.png
+size: 256,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+sym_23_eye_globe
+  rotate: true
+  xy: 224, 214
+  size: 36, 18
+  orig: 36, 18
+  offset: 0, 0
+  index: -1
+sym_23_glow_head
+  rotate: false
+  xy: 158, 96
+  size: 36, 41
+  orig: 36, 41
+  offset: 0, 0
+  index: -1
+sym_23_head
+  rotate: false
+  xy: 60, 9
+  size: 53, 104
+  orig: 53, 104
+  offset: 0, 0
+  index: -1
+sym_23_laurel_L
+  rotate: false
+  xy: 2, 2
+  size: 56, 111
+  orig: 56, 111
+  offset: 0, 0
+  index: -1
+sym_23_laurel_R
+  rotate: false
+  xy: 138, 139
+  size: 56, 111
+  orig: 56, 111
+  offset: 0, 0
+  index: -1
+sym_23_neck
+  rotate: false
+  xy: 115, 46
+  size: 41, 67
+  orig: 41, 67
+  offset: 0, 0
+  index: -1
+sym_23_paper
+  rotate: false
+  xy: 2, 115
+  size: 134, 135
+  orig: 134, 135
+  offset: 0, 0
+  index: -1
+sym_23_pupils
+  rotate: false
+  xy: 158, 82
+  size: 33, 12
+  orig: 33, 12
+  offset: 0, 0
+  index: -1
+sym_23_ribbon
+  rotate: true
+  xy: 196, 105
+  size: 145, 26
+  orig: 145, 26
+  offset: 0, 0
+  index: -1
+sym_23_star
+  rotate: false
+  xy: 115, 20
+  size: 26, 24
+  orig: 26, 24
+  offset: 0, 0
+  index: -1

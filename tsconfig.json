@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "strict": false ,
+	
+			"typeRoots": [
+"src/@types",
+			"node_modules/@types",
+			"node_module/phaser/types"
+		] 
+  },
+  "include": [
+    "game.ts",
+    "src/scenes/LoadingScene.ts",
+    "src/scenes/SplashScene.ts",
+    "src/scenes/SlotScene.ts",
+    "src/sixsixsixMath.ts",
+    "src/@types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/UI",
+    "src/config",
+    "src/Data",
+    "src/objects",
+    "src/animations",
+    "src/references"
+  ]
+}
+ 
