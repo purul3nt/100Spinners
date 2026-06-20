@@ -2,18 +2,18 @@
 """Composite the reel frame over the bg + 5 column-aligned symbols.
 
 This simulates what the player will see in-game:
-  - bg_sixsixsix.png as base (1376x768)
+  - shogun_background_source.png as base (1376x768)
   - 5 high-pay symbols placed at the 5 panel columns
   - reel_frame.png overlay on top
 """
 import os
 from PIL import Image
 
-bg = Image.open("/home/llama-claw/Repos/SixSixSix/src/assets/game/bg_sixsixsix.png").convert("RGBA")
+bg = Image.open("/home/llama-claw/Repos/100Spinners/src/assets/game/shogun_background_source.png").convert("RGBA")
 bg_w, bg_h = bg.size
 print(f"bg {bg_w}x{bg_h}")
 
-frame = Image.open("/home/llama-claw/Repos/SixSixSix/src/assets/game/reel_frame.png").convert("RGBA")
+frame = Image.open("/home/llama-claw/Repos/100Spinners/src/assets/game/reel_frame.png").convert("RGBA")
 fw, fh = frame.size
 print(f"frame {fw}x{fh}")
 
@@ -37,10 +37,10 @@ panel_cy = 360
 # Layer: bg -> symbols (centered in panels) -> frame.
 out = bg.copy()
 
-high = sorted([f for f in os.listdir("/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_high") if f.endswith(".png")])
+high = sorted([f for f in os.listdir("/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_high") if f.endswith(".png")])
 print(f"placing {len(high)} symbols:")
 for i, fname in enumerate(high):
-    sym = Image.open(f"/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_high/{fname}").convert("RGBA")
+    sym = Image.open(f"/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_high/{fname}").convert("RGBA")
     sw, sh = sym.size
     # Fit symbol within panel: panel width ~244, panel height ~660.
     max_w = 220
@@ -57,5 +57,5 @@ for i, fname in enumerate(high):
 # Place frame on top.
 out.paste(frame, (fx, fy), frame)
 
-out.save("/home/llama-claw/.openclaw/media/outgoing/sixsixsix-mira-verify/_composite_with_frame.png")
-print("wrote /home/llama-claw/.openclaw/media/outgoing/sixsixsix-mira-verify/_composite_with_frame.png")
+out.save("/home/llama-claw/.openclaw/media/outgoing/shogun-spinners-mira-verify/_composite_with_frame.png")
+print("wrote /home/llama-claw/.openclaw/media/outgoing/shogun-spinners-mira-verify/_composite_with_frame.png")

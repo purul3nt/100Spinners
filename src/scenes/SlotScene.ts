@@ -15,7 +15,7 @@ import {
   buyBonus,
   playPaidSpin,
   scaledSymbolPay,
-} from "../sixsixsixMath";
+} from "../shogunSpinnersMath";
 
 const UI_FONT = "Impact, Haettenschweiler, 'Arial Black', sans-serif";
 const BODY_FONT = "'Trebuchet MS', Arial, sans-serif";

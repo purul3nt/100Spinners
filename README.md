@@ -15,7 +15,7 @@ npm run dev
 
 - 4x5 board.
 - 14 attached paylines, evaluated left-to-right.
-- Rebalanced local math module in `src/sixsixsixMath.ts`.
+- Rebalanced local math module in `src/shogunSpinnersMath.ts`.
 - Cheapest bonus buy only at `10x` bet.
 - Placeholder symbols with visibly distinct shapes and colors.
 

@@ -33,8 +33,8 @@ function loadTsCommonJs(relativePath) {
   return module.exports;
 }
 
-const math = loadTsCommonJs("src/sixsixsixMath.ts");
-const mathSource = fs.readFileSync(path.join(root, "src/sixsixsixMath.ts"), "utf8");
+const math = loadTsCommonJs("src/shogunSpinnersMath.ts");
+const mathSource = fs.readFileSync(path.join(root, "src/shogunSpinnersMath.ts"), "utf8");
 const slotSceneSource = fs.readFileSync(path.join(root, "src/scenes/SlotScene.ts"), "utf8");
 const splashSceneSource = fs.readFileSync(path.join(root, "src/scenes/SplashScene.ts"), "utf8");
 

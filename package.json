@@ -40,7 +40,7 @@
   "scripts": {
     "symbols:layers": "powershell -ExecutionPolicy Bypass -File scripts/run_symbol_layers.ps1",
     "test": "node tests/regression-tests.mjs",
-    "test:math": "node tests/sixsixsix-math-sim.mjs 100000",
+    "test:math": "node tests/shogun-spinners-math-sim.mjs 100000",
     "test:bonus-presentation": "node tests/bonus-presentation-sim.mjs 100",
     "test:build": "npm run test && npm run test:bonus-presentation && set NODE_OPTIONS=--openssl-legacy-provider&& webpack --mode production",
     "dev": "webpack --mode development && webpack-dev-server --mode development",

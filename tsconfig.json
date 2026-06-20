@@ -17,7 +17,7 @@
     "src/scenes/LoadingScene.ts",
     "src/scenes/SplashScene.ts",
     "src/scenes/SlotScene.ts",
-    "src/sixsixsixMath.ts",
+    "src/shogunSpinnersMath.ts",
     "src/@types/**/*.d.ts"
   ],
   "exclude": [

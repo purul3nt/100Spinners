@@ -1,5 +1,5 @@
 import "phaser";
-import { BONUS_MULTIPLIERS, BUY_BONUS_PRICE_MULTIPLIER } from "../sixsixsixMath";
+import { BONUS_MULTIPLIERS, BUY_BONUS_PRICE_MULTIPLIER } from "../shogunSpinnersMath";
 
 const UI_FONT = "Impact, Haettenschweiler, 'Arial Black', sans-serif";
 const BODY_FONT = "'Trebuchet MS', Arial, sans-serif";

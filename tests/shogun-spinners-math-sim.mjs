@@ -42,7 +42,7 @@ function rnd() {
   return (rngState >>> 0) / 4294967296;
 }
 
-const math = loadTsCommonJs("src/sixsixsixMath.ts");
+const math = loadTsCommonJs("src/shogunSpinnersMath.ts");
 const bands = [
   [0, 1],
   [1, 2],
@@ -108,7 +108,7 @@ const summary = {
 
 const outDir = path.join(root, "test-results");
 fs.mkdirSync(outDir, { recursive: true });
-const outPath = path.join(outDir, `sixsixsix-math-${spins}.json`);
+const outPath = path.join(outDir, `shogun-spinners-math-${spins}.json`);
 fs.writeFileSync(outPath, JSON.stringify(summary, null, 2));
 console.log(JSON.stringify(summary, null, 2));
 console.log(`Wrote ${outPath}`);

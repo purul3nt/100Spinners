@@ -3,7 +3,7 @@
     "game": "1000 Shogun Spinners",
     "generatedAt": "2026-06-20T18:21:09.966Z",
     "repo": "/home/llama-claw/Repos/100Spinners",
-    "mathSource": "src/sixsixsixMath.ts",
+    "mathSource": "src/shogunSpinnersMath.ts",
     "paidSpins": 1000000,
     "paidSeed": 268443686,
     "buyRounds": 100000,

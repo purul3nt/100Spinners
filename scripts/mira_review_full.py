@@ -24,8 +24,8 @@ def apply_grey_tint(im):
     return out
 
 
-bg = Image.open("/home/llama-claw/Repos/SixSixSix/src/assets/game/bg_sixsixsix.png").convert("RGBA")
-frame = Image.open("/home/llama-claw/Repos/SixSixSix/src/assets/game/reel_frame_overlay.png").convert("RGBA")
+bg = Image.open("/home/llama-claw/Repos/100Spinners/src/assets/game/shogun_background_source.png").convert("RGBA")
+frame = Image.open("/home/llama-claw/Repos/100Spinners/src/assets/game/reel_frame_overlay.png").convert("RGBA")
 fw, fh = frame.size
 fx = (bg.size[0] - fw) // 2
 fy = (bg.size[1] - fh) // 2
@@ -36,12 +36,12 @@ panel_cy = 360
 # Top row: 5 high-pays (centered y=240).
 # Bottom row: 5 low-pays (grey, centered y=480).
 out = bg.copy()
-high = sorted([f for f in os.listdir("/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_high") if f.endswith(".png")])
-low = sorted([f for f in os.listdir("/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_low") if f.endswith(".png")])
+high = sorted([f for f in os.listdir("/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_high") if f.endswith(".png")])
+low = sorted([f for f in os.listdir("/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_low") if f.endswith(".png")])
 
 # Place high-pays row.
 for i, fname in enumerate(high):
-    sym = Image.open(f"/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_high/{fname}").convert("RGBA")
+    sym = Image.open(f"/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_high/{fname}").convert("RGBA")
     sw, sh = sym.size
     max_w = 200
     max_h = 200
@@ -55,7 +55,7 @@ for i, fname in enumerate(high):
 
 # Place low-pays row (grey).
 for i, fname in enumerate(low):
-    sym = Image.open(f"/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_low/{fname}").convert("RGBA")
+    sym = Image.open(f"/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_low/{fname}").convert("RGBA")
     sym = apply_grey_tint(sym)
     sw, sh = sym.size
     max_w = 200
@@ -71,5 +71,5 @@ for i, fname in enumerate(low):
 # Frame overlay on top.
 out.paste(frame, (fx, fy), frame)
 
-out.save("/home/llama-claw/.openclaw/media/outgoing/sixsixsix-mira-verify/_composite_full_preview.png")
-print("wrote /home/llama-claw/.openclaw/media/outgoing/sixsixsix-mira-verify/_composite_full_preview.png")
+out.save("/home/llama-claw/.openclaw/media/outgoing/shogun-spinners-mira-verify/_composite_full_preview.png")
+print("wrote /home/llama-claw/.openclaw/media/outgoing/shogun-spinners-mira-verify/_composite_full_preview.png")

@@ -4,7 +4,7 @@ import os
 from PIL import Image
 
 # Load background.
-bg = Image.open("/home/llama-claw/Repos/SixSixSix/src/assets/game/bg_sixsixsix.png").convert("RGB")
+bg = Image.open("/home/llama-claw/Repos/100Spinners/src/assets/game/shogun_background_source.png").convert("RGB")
 bg_w, bg_h = bg.size
 print(f"bg {bg_w}x{bg_h}")
 
@@ -23,11 +23,11 @@ canvas_h = 2 * cell_h + gap_y + label_h + 20
 out = bg.copy().resize((canvas_w, canvas_h))
 
 # Place symbol PNGs.
-high = sorted([f for f in os.listdir("/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_high") if f.endswith(".png")])
-low = sorted([f for f in os.listdir("/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_low") if f.endswith(".png")])
+high = sorted([f for f in os.listdir("/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_high") if f.endswith(".png")])
+low = sorted([f for f in os.listdir("/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_low") if f.endswith(".png")])
 
 for i, fname in enumerate(high):
-    im = Image.open(f"/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_high/{fname}").convert("RGBA")
+    im = Image.open(f"/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_high/{fname}").convert("RGBA")
     iw, ih = im.size
     # Fit to cell preserving aspect.
     scale = min(cell_w / iw, cell_h / ih)
@@ -39,7 +39,7 @@ for i, fname in enumerate(high):
     out.paste(im, (x, y), im)
 
 for i, fname in enumerate(low):
-    im = Image.open(f"/home/llama-claw/Repos/SixSixSix/src/assets/game/symbols_low/{fname}").convert("RGBA")
+    im = Image.open(f"/home/llama-claw/Repos/100Spinners/src/assets/game/symbols_low/{fname}").convert("RGBA")
     # Apply grey-tint to simulate Baboon's LOW_PAY_GREY_TINT.
     # Simple approach: blend with grey.
     r, g, b, a = im.split()
@@ -70,5 +70,5 @@ for i, fname in enumerate(low):
     y = cell_h + gap_y + (cell_h - new_h) // 2
     out.paste(im, (x, y), im)
 
-out.save("/home/llama-claw/.openclaw/media/outgoing/sixsixsix-mira-verify/_final_in_game_preview.png")
-print("wrote /home/llama-claw/.openclaw/media/outgoing/sixsixsix-mira-verify/_final_in_game_preview.png")
+out.save("/home/llama-claw/.openclaw/media/outgoing/shogun-spinners-mira-verify/_final_in_game_preview.png")
+print("wrote /home/llama-claw/.openclaw/media/outgoing/shogun-spinners-mira-verify/_final_in_game_preview.png")
