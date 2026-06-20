@@ -28,6 +28,7 @@ const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
 const SYMBOL_IMAGE_SCALE = 1.1;
 const LOW_PAY_IMAGE_SCALE = 1.2;
 const REEL_START_STAGGER_MS = 42;
+const STOPPED_SYMBOL_Y_OFFSET = -5;
 const WHEEL_VALUES = [2, 3, 5, 8, 10, 15, 20, 50];
 const SPIN_SYMBOL_CODES: SymbolCode[] = ["H1", "H2", "H3", "H4", "H5", "L1", "L2", "L3", "L4", "L5", "W1"];
 const SYMBOL_IMAGE_KEYS: Partial<Record<SymbolCode, string>> = {
@@ -627,9 +628,9 @@ export default class SlotScene extends Phaser.Scene {
       maskShape.fillStyle(0xffffff, 1);
       maskShape.fillRect(
         this.cellX(col) - rowGap * 0.56,
-        this.frameTop + this.frameH * 0.08 + 10,
+        this.frameTop + this.frameH * 0.08,
         rowGap * 1.12,
-        this.frameH * 0.78,
+        this.frameH * 0.78 + 10,
       );
       maskShape.setVisible(false);
       maskShapes.push(maskShape);
@@ -893,7 +894,7 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private cellY(row: number) {
-    return this.frameTop + ROW_CENTER_Y[row] * this.frameH;
+    return this.frameTop + ROW_CENTER_Y[row] * this.frameH + STOPPED_SYMBOL_Y_OFFSET;
   }
 
   private wait(ms: number) {
