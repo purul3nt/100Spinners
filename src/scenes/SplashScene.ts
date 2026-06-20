@@ -27,14 +27,19 @@ export default class SplashScene extends Phaser.Scene {
     const height = Number(this.scale.height) || 720;
     if (this.content) this.content.destroy(true);
     this.content = this.add.container(0, 0).setDepth(5);
+    const portrait = height > width * 1.05;
 
-    const bg = this.add.rectangle(width / 2, height / 2, width, height, 0x120f18, 1);
-    const title = this.add.text(width / 2, height * 0.22, "1000 SHOGUN SPINNERS", {
+    const bg = this.add.image(width / 2, height / 2, "splash_transition").setOrigin(0.5);
+    bg.setScale(Math.max(width / bg.width, height / bg.height));
+    const shade = this.add.rectangle(width / 2, height / 2, width, height, 0x06070d, 0.38);
+    const title = this.add.text(width / 2, height * 0.22, portrait ? "1000 SHOGUN\nSPINNERS" : "1000 SHOGUN SPINNERS", {
       fontFamily: UI_FONT,
-      fontSize: Math.max(36, Math.min(78, width * 0.055)) + "px",
+      fontSize: (portrait ? Math.max(30, Math.min(46, width * 0.108)) : Math.max(36, Math.min(78, width * 0.055))) + "px",
       color: "#facc15",
       stroke: "#000000",
       strokeThickness: 10,
+      align: "center",
+      lineSpacing: -6,
     }).setOrigin(0.5);
 
     const subtitle = this.add.text(width / 2, height * 0.34, "4x5 payline prototype", {
@@ -59,7 +64,7 @@ export default class SplashScene extends Phaser.Scene {
       strokeThickness: 6,
     }).setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: 0.45, duration: 620, yoyo: true, repeat: -1 });
-    this.content.add([bg, title, subtitle, cardA, cardB, prompt]);
+    this.content.add([bg, shade, title, subtitle, cardA, cardB, prompt]);
   }
 
   private card(x: number, y: number, width: number, height: number, titleText: string, bodyText: string) {
