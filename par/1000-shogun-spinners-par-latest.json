@@ -1,0 +1,476 @@
+{
+  "meta": {
+    "game": "1000 Shogun Spinners",
+    "generatedAt": "2026-06-20T13:04:55.333Z",
+    "repo": "/home/llama-claw/Repos/100Spinners",
+    "mathSource": "src/sixsixsixMath.ts",
+    "paidSpins": 1000000,
+    "paidSeed": 268443686,
+    "buyRounds": 100000,
+    "buySeed": 268480519,
+    "note": "Simulated v1 playable math. Shuriken/spinner multiplier symbols enhance paying line wins only; no standalone direct multiplier awards."
+  },
+  "summary": {
+    "totalRtp": 0.971468,
+    "baseRtp": 0.604057,
+    "featureRtp": 0.367411,
+    "totalHitRate": 0.144625,
+    "totalHitFrequency": "1 in 6.9144",
+    "baseHitRate": 0.133942,
+    "baseHitFrequency": "1 in 7.4659",
+    "bonusTriggerRate": 0.012292,
+    "bonusTriggerFrequency": "1 in 81.3537",
+    "featureWinRate": 0.012284,
+    "featureWinFrequency": "1 in 81.4067",
+    "visibleShurikenRate": 0.078681,
+    "visibleShurikenFrequency": "1 in 12.7095",
+    "wheelFeatureRate": 0.000763,
+    "wheelFeatureFrequency": "1 in 1310.616",
+    "avgFeatureContributionPerPaidSpin": 0.367411,
+    "maxWin": 5400,
+    "maxWinCount": 1,
+    "maxWinFrequency": "1 in 1000000",
+    "variance": 71.4741,
+    "stdDev": 8.4542
+  },
+  "buyBonus": {
+    "priceXBet": 10,
+    "rounds": 100000,
+    "avgWinXBet": 29.569714,
+    "rtpVsBuyPrice": 2.956971,
+    "hitRate": 0.99869,
+    "hitFrequency": "1 in 1.0013",
+    "maxWin": 6229.44,
+    "variance": 1630.6596,
+    "stdDev": 40.3814
+  },
+  "winDistribution": [
+    {
+      "band": "0-1x",
+      "count": 0,
+      "totalWin": 0,
+      "frequency": "not observed",
+      "rtpContribution": 0,
+      "shareOfRtp": 0
+    },
+    {
+      "band": "1-2x",
+      "count": 77959,
+      "totalWin": 126293.58,
+      "frequency": "1 in 12.8273",
+      "rtpContribution": 0.126294,
+      "shareOfRtp": 0.130003
+    },
+    {
+      "band": "2-3x",
+      "count": 0,
+      "totalWin": 0,
+      "frequency": "not observed",
+      "rtpContribution": 0,
+      "shareOfRtp": 0
+    },
+    {
+      "band": "3-5x",
+      "count": 21701,
+      "totalWin": 75981.24,
+      "frequency": "1 in 46.0808",
+      "rtpContribution": 0.075981,
+      "shareOfRtp": 0.078213
+    },
+    {
+      "band": "5-10x",
+      "count": 23588,
+      "totalWin": 164120.58,
+      "frequency": "1 in 42.3944",
+      "rtpContribution": 0.164121,
+      "shareOfRtp": 0.168941
+    },
+    {
+      "band": "10-20x",
+      "count": 11141,
+      "totalWin": 162580.5,
+      "frequency": "1 in 89.7585",
+      "rtpContribution": 0.162581,
+      "shareOfRtp": 0.167355
+    },
+    {
+      "band": "20-50x",
+      "count": 8223,
+      "totalWin": 250380.72,
+      "frequency": "1 in 121.6101",
+      "rtpContribution": 0.250381,
+      "shareOfRtp": 0.257734
+    },
+    {
+      "band": "50-100x",
+      "count": 1558,
+      "totalWin": 106590.6,
+      "frequency": "1 in 641.8485",
+      "rtpContribution": 0.106591,
+      "shareOfRtp": 0.109721
+    },
+    {
+      "band": "100-200x",
+      "count": 354,
+      "totalWin": 45401.58,
+      "frequency": "1 in 2824.8588",
+      "rtpContribution": 0.045402,
+      "shareOfRtp": 0.046735
+    },
+    {
+      "band": "200-500x",
+      "count": 89,
+      "totalWin": 25073.28,
+      "frequency": "1 in 11235.9551",
+      "rtpContribution": 0.025073,
+      "shareOfRtp": 0.02581
+    },
+    {
+      "band": "500-1000x",
+      "count": 9,
+      "totalWin": 6443.82,
+      "frequency": "1 in 111111.1111",
+      "rtpContribution": 0.006444,
+      "shareOfRtp": 0.006633
+    },
+    {
+      "band": ">1000x",
+      "count": 3,
+      "totalWin": 8602.2,
+      "frequency": "1 in 333333.3333",
+      "rtpContribution": 0.008602,
+      "shareOfRtp": 0.008855
+    }
+  ],
+  "buyDistribution": [
+    {
+      "band": "0-1x",
+      "count": 0,
+      "totalWin": 0,
+      "frequency": "not observed",
+      "avgContributionPerBuy": 0,
+      "shareOfBuyWin": 0
+    },
+    {
+      "band": "1-2x",
+      "count": 553,
+      "totalWin": 895.86,
+      "frequency": "1 in 180.8318",
+      "avgContributionPerBuy": 0.008959,
+      "shareOfBuyWin": 0.000303
+    },
+    {
+      "band": "2-3x",
+      "count": 0,
+      "totalWin": 0,
+      "frequency": "not observed",
+      "avgContributionPerBuy": 0,
+      "shareOfBuyWin": 0
+    },
+    {
+      "band": "3-5x",
+      "count": 3813,
+      "totalWin": 16298.82,
+      "frequency": "1 in 26.2261",
+      "avgContributionPerBuy": 0.162988,
+      "shareOfBuyWin": 0.005512
+    },
+    {
+      "band": "5-10x",
+      "count": 12737,
+      "totalWin": 105638.58,
+      "frequency": "1 in 7.8511",
+      "avgContributionPerBuy": 1.056386,
+      "shareOfBuyWin": 0.035725
+    },
+    {
+      "band": "10-20x",
+      "count": 30492,
+      "totalWin": 465024.24,
+      "frequency": "1 in 3.2795",
+      "avgContributionPerBuy": 4.650242,
+      "shareOfBuyWin": 0.157264
+    },
+    {
+      "band": "20-50x",
+      "count": 39840,
+      "totalWin": 1239280.56,
+      "frequency": "1 in 2.51",
+      "avgContributionPerBuy": 12.392806,
+      "shareOfBuyWin": 0.419105
+    },
+    {
+      "band": "50-100x",
+      "count": 9516,
+      "totalWin": 632831.94,
+      "frequency": "1 in 10.5086",
+      "avgContributionPerBuy": 6.328319,
+      "shareOfBuyWin": 0.214014
+    },
+    {
+      "band": "100-200x",
+      "count": 2375,
+      "totalWin": 312818.22,
+      "frequency": "1 in 42.1053",
+      "avgContributionPerBuy": 3.128182,
+      "shareOfBuyWin": 0.10579
+    },
+    {
+      "band": "200-500x",
+      "count": 498,
+      "totalWin": 143227.98,
+      "frequency": "1 in 200.8032",
+      "avgContributionPerBuy": 1.43228,
+      "shareOfBuyWin": 0.048437
+    },
+    {
+      "band": "500-1000x",
+      "count": 37,
+      "totalWin": 24579.18,
+      "frequency": "1 in 2702.7027",
+      "avgContributionPerBuy": 0.245792,
+      "shareOfBuyWin": 0.008312
+    },
+    {
+      "band": ">1000x",
+      "count": 8,
+      "totalWin": 16376.04,
+      "frequency": "1 in 12500",
+      "avgContributionPerBuy": 0.16376,
+      "shareOfBuyWin": 0.005538
+    }
+  ],
+  "constants": {
+    "cols": 5,
+    "rows": 4,
+    "defaultBet": 1,
+    "freeSpins": 10,
+    "baseBonusChance": 0.0123078,
+    "wheelEventChance": 0.084587,
+    "bonusModeHitAssistChance": 0.414,
+    "v1PayScale": 5.4
+  },
+  "symbols": [
+    {
+      "code": "H1",
+      "label": "Crown",
+      "tier": "high",
+      "color": 16436245,
+      "stroke": 8138002,
+      "shape": "hex",
+      "pay3": 5.5,
+      "pay4": 16,
+      "pay5": 50
+    },
+    {
+      "code": "H2",
+      "label": "Blade",
+      "tier": "high",
+      "color": 3718648,
+      "stroke": 988970,
+      "shape": "diamond",
+      "pay3": 2.2,
+      "pay4": 5.5,
+      "pay5": 20
+    },
+    {
+      "code": "H3",
+      "label": "Eye",
+      "tier": "high",
+      "color": 16020150,
+      "stroke": 4982041,
+      "shape": "circle",
+      "pay3": 2.2,
+      "pay4": 5.5,
+      "pay5": 20
+    },
+    {
+      "code": "H4",
+      "label": "Star",
+      "tier": "high",
+      "color": 10980346,
+      "stroke": 3223169,
+      "shape": "star",
+      "pay3": 1.2,
+      "pay4": 3.5,
+      "pay5": 10
+    },
+    {
+      "code": "H5",
+      "label": "Cross",
+      "tier": "high",
+      "color": 16478597,
+      "stroke": 8330525,
+      "shape": "cross",
+      "pay3": 1.2,
+      "pay4": 3.5,
+      "pay5": 10
+    },
+    {
+      "code": "L1",
+      "label": "Tile",
+      "tier": "low",
+      "color": 3462041,
+      "stroke": 413243,
+      "shape": "square",
+      "pay3": 0.3,
+      "pay4": 1.2,
+      "pay5": 3.2
+    },
+    {
+      "code": "L2",
+      "label": "Peak",
+      "tier": "low",
+      "color": 6333946,
+      "stroke": 1981066,
+      "shape": "triangle",
+      "pay3": 0.3,
+      "pay4": 1.2,
+      "pay5": 3.2
+    },
+    {
+      "code": "L3",
+      "label": "Capsule",
+      "tier": "low",
+      "color": 16498468,
+      "stroke": 7877903,
+      "shape": "pill",
+      "pay3": 0.3,
+      "pay4": 1.2,
+      "pay5": 3.2
+    },
+    {
+      "code": "L4",
+      "label": "Burst",
+      "tier": "low",
+      "color": 2282478,
+      "stroke": 1461859,
+      "shape": "burst",
+      "pay3": 0.3,
+      "pay4": 1.2,
+      "pay5": 3.2
+    },
+    {
+      "code": "L5",
+      "label": "Rune",
+      "tier": "low",
+      "color": 16347926,
+      "stroke": 8138002,
+      "shape": "rune",
+      "pay3": 0.3,
+      "pay4": 1.2,
+      "pay5": 3.2
+    },
+    {
+      "code": "W1",
+      "label": "Wheel",
+      "tier": "special",
+      "color": 16777215,
+      "stroke": 1120295,
+      "shape": "wheel",
+      "pay3": 0,
+      "pay4": 0,
+      "pay5": 0
+    }
+  ],
+  "paylines": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    [
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    [
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      2,
+      1,
+      0
+    ],
+    [
+      1,
+      0,
+      1,
+      0,
+      1
+    ],
+    [
+      1,
+      2,
+      1,
+      2,
+      1
+    ],
+    [
+      1,
+      2,
+      3,
+      2,
+      1
+    ],
+    [
+      2,
+      1,
+      0,
+      1,
+      2
+    ],
+    [
+      2,
+      1,
+      2,
+      1,
+      2
+    ],
+    [
+      2,
+      3,
+      2,
+      3,
+      2
+    ],
+    [
+      3,
+      2,
+      1,
+      2,
+      3
+    ],
+    [
+      3,
+      2,
+      3,
+      2,
+      3
+    ]
+  ]
+}
