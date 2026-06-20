@@ -34,10 +34,10 @@
     "stdDev": 8.4542
   },
   "buyBonus": {
-    "priceXBet": 10,
+    "priceXBet": 100,
     "rounds": 100000,
     "avgWinXBet": 29.569714,
-    "rtpVsBuyPrice": 2.956971,
+    "rtpVsBuyPrice": 0.295697,
     "hitRate": 0.99869,
     "hitFrequency": "1 in 1.0013",
     "maxWin": 6229.44,

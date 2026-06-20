@@ -40,7 +40,7 @@ export const COLS = 5;
 export const ROWS = 4;
 export const DEFAULT_BET = 1;
 export const FREE_SPINS = 10;
-export const BUY_BONUS_PRICE_MULTIPLIER = 10;
+export const BUY_BONUS_PRICE_MULTIPLIER = 100;
 export const BASE_BONUS_CHANCE = 0.0123078;
 export const WHEEL_EVENT_CHANCE = 0.084587;
 export const BONUS_MODE_HIT_ASSIST_CHANCE = 0.414;
@@ -64,6 +64,11 @@ export const SYMBOL_BY_CODE = SYMBOLS.reduce((map, symbol) => {
   map[symbol.code] = symbol;
   return map;
 }, {} as Record<SymbolCode, SymbolDefinition>);
+
+export function scaledSymbolPay(symbol: SymbolDefinition, count: 3 | 4 | 5) {
+  const rawPay = count === 5 ? symbol.pay5 : count === 4 ? symbol.pay4 : symbol.pay3;
+  return roundMoney(rawPay * V1_PAY_SCALE);
+}
 
 export const PAYLINES: number[][] = [
   [0, 0, 0, 0, 0],
@@ -141,7 +146,7 @@ export function scoreGrid(grid: CellResult[][], bet = DEFAULT_BET): { lineWins: 
     }
     if (count >= 3) {
       const symbol = SYMBOL_BY_CODE[first];
-      const pay = (count === 5 ? symbol.pay5 : count === 4 ? symbol.pay4 : symbol.pay3) * V1_PAY_SCALE;
+      const pay = scaledSymbolPay(symbol, count as 3 | 4 | 5);
       lineWins.push({ lineIndex, symbol: first, count, amount: roundMoney(pay * bet), cells });
     }
   }

@@ -14,6 +14,7 @@ import {
   SpinResult,
   buyBonus,
   playPaidSpin,
+  scaledSymbolPay,
 } from "../sixsixsixMath";
 
 const UI_FONT = "Impact, Haettenschweiler, 'Arial Black', sans-serif";
@@ -52,6 +53,22 @@ const UI_HEX = {
   sage: "#7A8263",
   sakura: "#C86A5E",
 };
+const SHOGUN_PAYLINE_COLORS = [
+  UI_PALETTE.bronze,
+  UI_PALETTE.copper,
+  UI_PALETTE.sakura,
+  UI_PALETTE.peach,
+  UI_PALETTE.sage,
+  UI_PALETTE.beige,
+  UI_PALETTE.taupe,
+  UI_PALETTE.leather,
+  UI_PALETTE.redBrown,
+  UI_PALETTE.armour,
+  UI_PALETTE.parchment,
+  UI_PALETTE.green,
+  UI_PALETTE.copper,
+  UI_PALETTE.bronze,
+];
 const CELL = 118;
 const REEL_FRAME_W = 1376;
 const REEL_FRAME_H = 768;
@@ -187,6 +204,13 @@ export default class SlotScene extends Phaser.Scene {
   private betText!: Phaser.GameObjects.Text;
   private winText!: Phaser.GameObjects.Text;
   private logoImage!: Phaser.GameObjects.Image;
+  private clockText!: Phaser.GameObjects.Text;
+  private logoGlowLayers: Array<{
+    image: Phaser.GameObjects.Image;
+    offsetX: number;
+    offsetY: number;
+    scale: number;
+  }> = [];
   private uiBar!: Phaser.GameObjects.Rectangle;
   private betPanel!: Phaser.GameObjects.Rectangle;
   private spinButton!: Phaser.GameObjects.Container;
@@ -266,7 +290,34 @@ export default class SlotScene extends Phaser.Scene {
       fontSize: "1px",
       color: "#ffffff",
     }).setOrigin(0.5).setVisible(false);
+    const logoGlowSpecs = [
+      { offsetX: 0, offsetY: 0, scale: 1.08, alpha: 0.34 },
+      { offsetX: -3, offsetY: 0, scale: 1.02, alpha: 0.74 },
+      { offsetX: 3, offsetY: 0, scale: 1.02, alpha: 0.74 },
+      { offsetX: 0, offsetY: -3, scale: 1.02, alpha: 0.74 },
+      { offsetX: 0, offsetY: 3, scale: 1.02, alpha: 0.74 },
+    ];
+    this.logoGlowLayers = logoGlowSpecs.map((layer) => ({
+      image: this.add.image(0, 0, "shogun_logo")
+        .setOrigin(0, 0)
+        .setDepth(29)
+        .setTint(0xf2c45f)
+        .setAlpha(layer.alpha)
+        .setBlendMode(Phaser.BlendModes.ADD),
+      offsetX: layer.offsetX,
+      offsetY: layer.offsetY,
+      scale: layer.scale,
+    }));
     this.logoImage = this.add.image(0, 0, "shogun_logo").setOrigin(0, 0).setDepth(30);
+    this.clockText = this.add.text(5, 3, "", {
+      fontFamily: "Arial, Helvetica, sans-serif",
+      fontSize: "13px",
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 3,
+    }).setOrigin(0, 0).setDepth(220);
+    this.updateClock();
+    this.time.addEvent({ delay: 30000, loop: true, callback: () => this.updateClock() });
 
     this.uiBar = this.add.rectangle(0, 0, 1, 1, 0x050505, 0.74)
       .setOrigin(0, 0)
@@ -384,6 +435,14 @@ export default class SlotScene extends Phaser.Scene {
     bg.on("pointerover", () => container.setScale(1.04));
     bg.on("pointerout", () => container.setScale(1));
     return container;
+  }
+
+  private updateClock() {
+    if (!this.clockText) return;
+    const now = new Date();
+    const hours = ("0" + now.getHours()).slice(-2);
+    const minutes = ("0" + now.getMinutes()).slice(-2);
+    this.clockText.setText(`${hours}:${minutes} | 1000 SHOGUN SPINNERS`);
   }
 
   private createBoard() {
@@ -528,9 +587,24 @@ export default class SlotScene extends Phaser.Scene {
     if (this.logoImage) {
       const logoW = Math.min(width * 0.17, height * 0.28, 220);
       const logoH = logoW * (this.logoImage.height / this.logoImage.width);
+      const logoX = Math.max(12, width * 0.014);
+      const logoY = Math.max(22, height * 0.03);
+      this.logoGlowLayers.forEach((layer) => {
+        const glowW = logoW * layer.scale;
+        const glowH = logoH * layer.scale;
+        layer.image
+          .setPosition(
+            logoX + layer.offsetX * this.scaleFactor - (glowW - logoW) / 2,
+            logoY + layer.offsetY * this.scaleFactor - (glowH - logoH) / 2,
+          )
+          .setDisplaySize(glowW, glowH);
+      });
       this.logoImage
-        .setPosition(Math.max(12, width * 0.014), Math.max(10, height * 0.018))
+        .setPosition(logoX, logoY)
         .setDisplaySize(logoW, logoH);
+    }
+    if (this.clockText) {
+      this.clockText.setPosition(5, 3).setFontSize(height > width ? 10 : 13);
     }
     this.boardFrame
       .setPosition(this.frameLeft + this.frameW * 0.035, this.frameTop + this.frameH * 0.05)
@@ -730,7 +804,7 @@ export default class SlotScene extends Phaser.Scene {
     const top = cy - panelH / 2;
     const overlay = this.add.container(0, 0).setDepth(260);
     const blocker = this.add.rectangle(width / 2, height / 2, width, height, UI_PALETTE.ink, 0.72).setInteractive({ useHandCursor: false });
-    const panel = this.add.rectangle(cx, cy, panelW, panelH, UI_PALETTE.parchment, 0.98).setStrokeStyle(5, UI_PALETTE.bronze, 0.92).setInteractive({ useHandCursor: false });
+    const panel = this.add.rectangle(cx, cy, panelW, panelH, UI_PALETTE.parchment, 0.2).setStrokeStyle(5, UI_PALETTE.bronze, 0.92).setInteractive({ useHandCursor: false });
     panel.on("pointerdown", (_pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => event.stopPropagation());
     const title = this.add.text(left + 26, top + 18, "PAYTABLE & RULES", {
       fontFamily: UI_FONT,
@@ -790,7 +864,7 @@ export default class SlotScene extends Phaser.Scene {
         stroke: UI_HEX.peach,
         strokeThickness: 2,
       }).setOrigin(0, 0.5);
-      const pays = this.add.text(payLeft + payW - 8, y + rowH / 2, `${symbol.pay3.toFixed(2)}   ${symbol.pay4.toFixed(2)}   ${symbol.pay5.toFixed(2)}x`, {
+      const pays = this.add.text(payLeft + payW - 8, y + rowH / 2, `${scaledSymbolPay(symbol, 3).toFixed(2)}   ${scaledSymbolPay(symbol, 4).toFixed(2)}   ${scaledSymbolPay(symbol, 5).toFixed(2)}x`, {
         fontFamily: BODY_FONT,
         fontSize: `${Math.max(12, rowH * 0.3)}px`,
         color: UI_HEX.darkBrown,
@@ -813,8 +887,8 @@ export default class SlotScene extends Phaser.Scene {
       "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "The Shuriken Spinner can land on reels 1, 3, and 5. When it carries a multiplier, the wheel can boost the line win.\n\n" +
-      "Bonus trigger starts 10 automatic free spins. Buy Bonus costs 10x the current bet and starts the same feature.\n\n" +
-      "Wins are displayed as bet multipliers and balance updates after each resolved spin.";
+      `Bonus trigger starts 10 automatic free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet and starts the same feature.\n\n` +
+      "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
       fontSize: `${portrait ? 14 : 16}px`,
@@ -920,7 +994,7 @@ export default class SlotScene extends Phaser.Scene {
       for (let reel = 0; reel < COLS; reel++) {
         for (let lineRow = 0; lineRow < ROWS; lineRow++) {
           const selected = lineRows[reel] === lineRow;
-          const fill = selected ? UI_PALETTE.redBrown : UI_PALETTE.beige;
+          const fill = selected ? SHOGUN_PAYLINE_COLORS[index % SHOGUN_PAYLINE_COLORS.length] : UI_PALETTE.beige;
           const alpha = selected ? 0.96 : 0.5;
           const cell = this.add.rectangle(
             gridX + reel * (cellW + cellGap),
@@ -1404,7 +1478,7 @@ export default class SlotScene extends Phaser.Scene {
     this.lineGraphics.clear();
     const visibleWins = wins.slice(0, 4);
     visibleWins.forEach((win, index) => {
-      const color = [0xfacc15, 0x38bdf8, 0xf472b6, 0x34d399][index % 4];
+      const color = SHOGUN_PAYLINE_COLORS[win.lineIndex % SHOGUN_PAYLINE_COLORS.length];
       this.lineGraphics.lineStyle(5, color, 0.9);
       this.lineGraphics.beginPath();
       win.cells.forEach((cell, cellIndex) => {
@@ -1497,7 +1571,7 @@ export default class SlotScene extends Phaser.Scene {
     const drawProgress = () => {
       this.lineGraphics.clear();
       visibleWins.forEach((win, index) => {
-        const color = [0xfacc15, 0x38bdf8, 0xf472b6, 0x34d399][index % 4];
+        const color = SHOGUN_PAYLINE_COLORS[win.lineIndex % SHOGUN_PAYLINE_COLORS.length];
         const points = win.cells.map((cell) => ({ x: this.cellX(cell.col), y: this.cellY(cell.row) }));
         const segmentCount = points.length - 1;
         if (segmentCount <= 0) return;
@@ -1774,6 +1848,9 @@ export default class SlotScene extends Phaser.Scene {
   private async playFreeSpinSequence(freeSpins: SpinResult[], totalWin: number, titleText: string) {
     if (!freeSpins.length) {
       await this.showBonusSummary(totalWin, 0, titleText);
+      this.balance += totalWin;
+      this.lastWin = totalWin;
+      this.updateHud();
       return;
     }
 
@@ -1792,7 +1869,6 @@ export default class SlotScene extends Phaser.Scene {
 
         this.grid = spin.grid;
         this.lastWin = spin.totalWin;
-        this.balance += spin.totalWin;
         collected += spin.totalWin;
         this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length, spin.totalWin > 0);
         this.renderGrid(spin.lineWins);
@@ -1816,6 +1892,9 @@ export default class SlotScene extends Phaser.Scene {
       this.hideBonusCollectDisplay();
       this.setBonusGameBackground(false);
     }
+    this.balance += totalWin;
+    this.lastWin = totalWin;
+    this.updateHud();
     this.flashStatus(totalWin > 0 ? `Bonus paid ${totalWin.toFixed(2)}x` : "Bonus complete");
   }
 
