@@ -34,12 +34,14 @@ function loadTsCommonJs(relativePath) {
 }
 
 const math = loadTsCommonJs("src/sixsixsixMath.ts");
+const mathSource = fs.readFileSync(path.join(root, "src/sixsixsixMath.ts"), "utf8");
 const slotSceneSource = fs.readFileSync(path.join(root, "src/scenes/SlotScene.ts"), "utf8");
 
 assert.equal(math.COLS, 5, "1000 Shogun Spinners should use five reels");
 assert.equal(math.ROWS, 4, "1000 Shogun Spinners should use four visible rows");
 assert.equal(math.PAYLINES.length, 14, "attached blueprint has 14 paylines");
 assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x bet");
+assert.ok(math.BONUS_TRIGGER_CELL_CHANCE > 0, "visible bonus trigger cell chance should be configured");
 
 const grid = [
   [{ code: "H1" }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
@@ -70,6 +72,19 @@ assert.equal(spin.grid[0].length, 4, "spin should return four rows per column");
 const buy = math.buyBonus(deterministic, 1);
 assert.equal(buy.cost, 100, "bonus buy cost should be 100x bet");
 assert.equal(buy.freeSpins.length, 10, "bonus buy should resolve 10 free spins");
+
+const visibleBonusSpin = math.playPaidSpin(() => 0, 1);
+assert.equal(visibleBonusSpin.bonusTriggered, true, "visible BONUS spinner should trigger free spins");
+assert.ok(visibleBonusSpin.freeSpins, "visible BONUS spinner trigger should resolve free spins");
+assert.ok(
+  math.countBonusTriggerSymbols(visibleBonusSpin.grid) > 0,
+  "bonus trigger should be tied to visible BONUS spinner symbols",
+);
+assert.ok(!mathSource.includes("random() < BASE_BONUS_CHANCE"), "bonus trigger should not use an invisible random gate");
+assert.ok(
+  slotSceneSource.includes("BONUS Shuriken Spinner"),
+  "rules should describe visible BONUS spinner trigger symbols",
+);
 
 assert.ok(!slotSceneSource.includes("this.balance += spin.totalWin"), "bonus wins should not credit balance per free spin");
 const bonusSummaryIndex = slotSceneSource.indexOf('await this.showBonusSummary(totalWin, freeSpins.length, "TOTAL WIN");');
