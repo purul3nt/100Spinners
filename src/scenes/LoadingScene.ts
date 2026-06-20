@@ -131,7 +131,7 @@ export default class LoadingScene extends Phaser.Scene {
     this.load.image("logo_main", "src/assets/baboon_bonus/logo_updated.png");
     this.load.image("bonus_transition", "src/assets/baboon_bonus/transition.jpg?v=bonus-transition-1");
     SHOGUN_HIGH_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_high/${key}.png?v=shogun-symbols-4`));
-    SHOGUN_LOW_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_low/${key}.png?v=shogun-low-clean-fg-1`));
+    SHOGUN_LOW_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_low/${key}.png?v=shogun-low-round-restore-1`));
     this.load.image("shogun_wheel", "src/assets/game/symbols_special/shuriken_wheel.png?v=shogun-wheel-1");
     ROCKING_FRAME_FILES.forEach((file, index) => this.load.image(`baboon_rocking_${index}`, `${ROCKING_FRAME_PATH}/${file}?v=rocking-frames-3`));
     CHILL_FRAME_FILES.forEach((file, index) => this.load.image(`baboon_chill_${index}`, `${CHILL_FRAME_PATH}/${file}?v=chill-frames-2`));
