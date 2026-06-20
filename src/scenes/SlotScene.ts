@@ -66,6 +66,7 @@ export default class SlotScene extends Phaser.Scene {
   private reelMasks: Phaser.Display.Masks.GeometryMask[] = [];
   private lineGraphics!: Phaser.GameObjects.Graphics;
   private boardFrame!: Phaser.GameObjects.Rectangle;
+  private reelBackingTint!: Phaser.GameObjects.Graphics;
   private reelFrame!: Phaser.GameObjects.Image;
   private titleText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
@@ -94,6 +95,9 @@ export default class SlotScene extends Phaser.Scene {
   private autoButtonShell!: Phaser.GameObjects.Container;
   private maxBetButton!: Phaser.GameObjects.Image;
   private bonusPanel?: Phaser.GameObjects.Container;
+  private bonusCollectDisplay?: Phaser.GameObjects.Container;
+  private bonusCollectText?: Phaser.GameObjects.Text;
+  private bonusSpinText?: Phaser.GameObjects.Text;
   private wheelOverlay?: Phaser.GameObjects.Container;
   private rulesOverlay?: Phaser.GameObjects.Container;
   private backgroundClouds?: Phaser.GameObjects.TileSprite;
@@ -274,6 +278,7 @@ export default class SlotScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setStrokeStyle(4, 0xb99345, 0.64);
     this.reelFrame = this.add.image(0, 0, "shogun_reel_frame").setDepth(7);
+    this.reelBackingTint = this.add.graphics().setDepth(7.35);
     this.lineGraphics = this.add.graphics().setDepth(12);
   }
 
@@ -304,6 +309,7 @@ export default class SlotScene extends Phaser.Scene {
     this.reelFrame
       .setPosition(width / 2, this.frameTop + this.frameH / 2)
       .setDisplaySize(this.frameW, this.frameH);
+    this.drawReelBackingTint();
 
     this.layoutBaboonFooter(width, height);
 
@@ -367,6 +373,24 @@ export default class SlotScene extends Phaser.Scene {
     this.grid = result.grid;
     this.renderGrid([]);
     this.drawPaylines([]);
+  }
+
+  private drawReelBackingTint() {
+    if (!this.reelBackingTint) return;
+    const left = this.frameLeft + this.frameW * 0.063;
+    const top = this.frameTop + this.frameH * 0.085;
+    const width = this.frameW * 0.874;
+    const height = this.frameH * 0.775;
+    this.reelBackingTint.clear();
+    this.reelBackingTint.fillStyle(0x2c2f35, 0.34);
+    this.reelBackingTint.fillRoundedRect(left, top, width, height, Math.max(18, 26 * this.scaleFactor));
+    this.reelBackingTint.fillStyle(0xaab0b4, 0.16);
+    this.reelBackingTint.fillRoundedRect(left + 5 * this.scaleFactor, top + 5 * this.scaleFactor, width - 10 * this.scaleFactor, height - 10 * this.scaleFactor, Math.max(14, 22 * this.scaleFactor));
+    this.reelBackingTint.lineStyle(Math.max(2, 3 * this.scaleFactor), 0x1f2329, 0.18);
+    for (let col = 1; col < COLS; col++) {
+      const x = Phaser.Math.Linear(this.cellX(col - 1), this.cellX(col), 0.5);
+      this.reelBackingTint.lineBetween(x, top + height * 0.04, x, top + height * 0.96);
+    }
   }
 
   private async spin() {
@@ -726,21 +750,21 @@ export default class SlotScene extends Phaser.Scene {
 
   private getCherryBlossomEmitterConfig(width: number, height: number): Phaser.Types.GameObjects.Particles.ParticleEmitterConfig {
     const area = width * height;
-    const maxParticles = Phaser.Math.Clamp(Math.round(area / 24000), 26, 54);
-    const frequency = Phaser.Math.Clamp(Math.round(920 - maxParticles * 10), 340, 620);
+    const maxParticles = Phaser.Math.Clamp(Math.round(area / 17000), 42, 82);
+    const frequency = Phaser.Math.Clamp(Math.round(760 - maxParticles * 6), 250, 460);
     const petalScale = Phaser.Math.Clamp(Math.min(width, height) / 760, 0.72, 1.15);
     return {
       x: { min: -width * 0.18, max: width * 1.06 },
       y: { min: -height * 0.16, max: height * 0.94 },
-      speedX: { min: 6, max: 30 },
-      speedY: { min: 9, max: 28 },
+      speedX: { min: 8, max: 34 },
+      speedY: { min: 11, max: 34 },
       accelerationX: { min: -1.5, max: 3.5 },
       lifespan: { min: 12500, max: 19000 },
       frequency,
       quantity: 1,
       maxParticles,
-      scale: { start: 0.18 * petalScale, end: 0.07 * petalScale },
-      alpha: { start: 0.46, end: 0 },
+      scale: { start: 0.27 * petalScale, end: 0.1 * petalScale },
+      alpha: { start: 0.68, end: 0 },
       rotate: { min: -55, max: 65 },
       particleBringToTop: false,
     };
@@ -872,9 +896,8 @@ export default class SlotScene extends Phaser.Scene {
       reelOverlays.push(reel);
       reel.setMask(this.reelMasks[col]);
 
-      for (let row = -2; row < ROWS + 5; row++) {
-        reel.add(this.createSpinSymbol(this.randomSpinCode(), this.cellX(col), topY + row * rowGap));
-      }
+      let spinCodes = this.createSpinReelCodes();
+      this.populateSpinReel(reel, col, topY, rowGap, spinCodes);
       reel.setVisible(false);
 
       reelPromises.push(new Promise((resolve) => {
@@ -887,16 +910,16 @@ export default class SlotScene extends Phaser.Scene {
             duration: 86,
             ease: "Linear",
             repeat: -1,
+            onRepeat: () => {
+              spinCodes = this.advanceSpinReelCodes(spinCodes);
+              this.populateSpinReel(reel, col, topY, rowGap, spinCodes);
+            },
           });
 
           this.time.delayedCall(680 + col * 190, () => {
             loop.stop();
-            reel.removeAll(true);
             reel.y = -rowGap * 2;
-            for (let row = -2; row < ROWS + 2; row++) {
-              const code = row >= 0 && row < ROWS ? finalGrid[col][row].code : this.randomSpinCode();
-              reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap, false));
-            }
+            this.populateLandingReel(reel, col, topY, rowGap, finalGrid);
             this.tweens.add({
               targets: reel,
               y: 0,
@@ -919,6 +942,42 @@ export default class SlotScene extends Phaser.Scene {
     }
     await Promise.all(reelPromises);
     reelOverlays.forEach((reel) => reel.destroy(true));
+  }
+
+  private populateSpinReel(
+    reel: Phaser.GameObjects.Container,
+    col: number,
+    topY: number,
+    rowGap: number,
+    codes: SymbolCode[],
+  ) {
+    reel.removeAll(true);
+    for (let index = 0; index < codes.length; index++) {
+      const row = index - 2;
+      reel.add(this.createSpinSymbol(codes[index], this.cellX(col), topY + row * rowGap));
+    }
+  }
+
+  private populateLandingReel(
+    reel: Phaser.GameObjects.Container,
+    col: number,
+    topY: number,
+    rowGap: number,
+    finalGrid: CellResult[][],
+  ) {
+    reel.removeAll(true);
+    for (let row = -2; row < ROWS + 2; row++) {
+      const code = row >= 0 && row < ROWS ? finalGrid[col][row].code : this.randomSpinCode();
+      reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap, false));
+    }
+  }
+
+  private createSpinReelCodes() {
+    return Array.from({ length: ROWS + 7 }, () => this.randomSpinCode());
+  }
+
+  private advanceSpinReelCodes(codes: SymbolCode[]) {
+    return [this.randomSpinCode(), ...codes.slice(0, codes.length - 1)];
   }
 
   private createSpinSymbol(code: SymbolCode, x: number, y: number, blurred = true) {
@@ -1146,8 +1205,8 @@ export default class SlotScene extends Phaser.Scene {
     });
 
     resultText.setText(`${value}x SHURIKEN BOOST`);
-    this.tweens.add({ targets: [resultText, mathText], alpha: 1, scaleX: 1.08, scaleY: 1.08, duration: 220, yoyo: true, ease: "Sine.Out" });
-    await this.wait(950);
+    await this.animateWheelMultiplierApplication(value, baseWin, totalWin, centerX, centerY, wheelSize, resultText, mathText);
+    await this.wait(460);
     if (this.wheelOverlay) {
       this.tweens.add({
         targets: this.wheelOverlay,
@@ -1169,6 +1228,91 @@ export default class SlotScene extends Phaser.Scene {
     return values;
   }
 
+  private async animateWheelMultiplierApplication(
+    value: number,
+    baseWin: number,
+    totalWin: number,
+    centerX: number,
+    centerY: number,
+    wheelSize: number,
+    resultText: Phaser.GameObjects.Text,
+    mathText: Phaser.GameObjects.Text,
+  ) {
+    const width = Number(this.scale.width) || 1280;
+    const amountY = centerY + wheelSize * 0.79;
+    const amountFont = Math.max(24, Math.min(42, width * 0.032));
+    const beforeText = this.add.text(centerX - wheelSize * 0.24, amountY, baseWin.toFixed(2), {
+      fontFamily: UI_FONT,
+      fontSize: `${amountFont}px`,
+      color: "#cbd5e1",
+      stroke: "#000000",
+      strokeThickness: 7,
+    }).setOrigin(0.5).setAlpha(0);
+    const arrowText = this.add.text(centerX, amountY, "\u2192", {
+      fontFamily: UI_FONT,
+      fontSize: `${amountFont * 0.9}px`,
+      color: "#facc15",
+      stroke: "#000000",
+      strokeThickness: 6,
+    }).setOrigin(0.5).setAlpha(0);
+    const afterText = this.add.text(centerX + wheelSize * 0.25, amountY, baseWin.toFixed(2), {
+      fontFamily: UI_FONT,
+      fontSize: `${amountFont}px`,
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 8,
+    }).setOrigin(0.5).setAlpha(0);
+    const badge = this.add.text(centerX, centerY - wheelSize * 0.02, `${value}x`, {
+      fontFamily: UI_FONT,
+      fontSize: `${Math.max(30, amountFont * 1.18)}px`,
+      color: "#facc15",
+      stroke: "#000000",
+      strokeThickness: 8,
+    }).setOrigin(0.5).setAlpha(0).setScale(0.55);
+
+    this.wheelOverlay?.add([beforeText, arrowText, afterText, badge]);
+    mathText.setText("BASE WIN");
+    await new Promise<void>((resolve) => {
+      this.tweens.add({
+        targets: [resultText, mathText, beforeText, arrowText, afterText],
+        alpha: 1,
+        duration: 190,
+        ease: "Sine.Out",
+        onComplete: () => resolve(),
+      });
+    });
+
+    await new Promise<void>((resolve) => {
+      this.tweens.add({
+        targets: badge,
+        alpha: 1,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 190,
+        ease: "Back.Out",
+        onComplete: () => resolve(),
+      });
+    });
+
+    await new Promise<void>((resolve) => {
+      this.tweens.add({
+        targets: badge,
+        x: afterText.x,
+        y: afterText.y - amountFont * 0.95,
+        duration: 520,
+        ease: "Cubic.InOut",
+        onComplete: () => {
+          afterText.setText(totalWin.toFixed(2)).setColor("#fef08a");
+          mathText.setText(`${baseWin.toFixed(2)} x ${value} = ${totalWin.toFixed(2)}`);
+          this.tweens.add({ targets: [afterText, mathText], scaleX: 1.12, scaleY: 1.12, duration: 180, yoyo: true, ease: "Sine.Out" });
+          this.tweens.add({ targets: badge, alpha: 0, scaleX: 1.45, scaleY: 1.45, duration: 210, ease: "Sine.In" });
+          resolve();
+        },
+      });
+    });
+    await this.wait(360);
+  }
+
   private async playFreeSpinSequence(freeSpins: SpinResult[], totalWin: number, titleText: string) {
     if (!freeSpins.length) {
       await this.showBonusSummary(totalWin, 0, titleText);
@@ -1178,9 +1322,11 @@ export default class SlotScene extends Phaser.Scene {
     await this.showBonusTransition(titleText, freeSpins.length);
 
     let collected = 0;
+    this.showBonusCollectDisplay(0, 1, freeSpins.length);
     for (let index = 0; index < freeSpins.length; index++) {
       const spin = freeSpins[index];
       this.flashStatus(`Free spin ${index + 1}/${freeSpins.length}`);
+      this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length);
       await this.wait(index === 0 ? 420 : 260);
       await this.animateReelSpin(spin.grid);
 
@@ -1188,6 +1334,7 @@ export default class SlotScene extends Phaser.Scene {
       this.lastWin = spin.totalWin;
       this.balance += spin.totalWin;
       collected += spin.totalWin;
+      this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length, spin.totalWin > 0);
       this.renderGrid(spin.lineWins);
       this.drawPaylines([]);
       this.updateHud();
@@ -1202,9 +1349,65 @@ export default class SlotScene extends Phaser.Scene {
     }
 
     this.lastWin = collected;
+    this.updateBonusCollectDisplay(collected, freeSpins.length, freeSpins.length, collected > 0);
     this.updateHud();
     await this.showBonusSummary(totalWin, freeSpins.length, "FREE SPINS COMPLETE");
+    this.hideBonusCollectDisplay();
     this.flashStatus(totalWin > 0 ? `Bonus paid ${totalWin.toFixed(2)}x` : "Bonus complete");
+  }
+
+  private showBonusCollectDisplay(collected: number, currentSpin: number, totalSpins: number) {
+    this.hideBonusCollectDisplay();
+    const width = Number(this.scale.width) || 1280;
+    const height = Number(this.scale.height) || 720;
+    const portrait = height > width * 1.05;
+    const panelW = portrait ? Math.min(width * 0.58, 290) : 310;
+    const panelH = portrait ? 74 : 82;
+    const x = portrait ? width / 2 : this.frameLeft + this.frameW * 0.82;
+    const y = Math.max(78, this.frameTop + this.frameH * 0.015);
+    const panel = this.add.rectangle(0, 0, panelW, panelH, 0x09090f, 0.84)
+      .setStrokeStyle(3, 0xfacc15, 0.92);
+    this.bonusSpinText = this.add.text(0, -panelH * 0.23, `FREE SPIN ${currentSpin}/${totalSpins}`, {
+      fontFamily: BODY_FONT,
+      fontSize: `${portrait ? 13 : 15}px`,
+      color: "#fef3c7",
+      stroke: "#000000",
+      strokeThickness: 3,
+    }).setOrigin(0.5);
+    this.bonusCollectText = this.add.text(0, panelH * 0.16, `BONUS COLLECTED  \u20AC${this.formatMoney(collected)}`, {
+      fontFamily: UI_FONT,
+      fontSize: `${portrait ? 18 : 24}px`,
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 5,
+    }).setOrigin(0.5);
+    this.bonusCollectDisplay = this.add.container(x, y, [panel, this.bonusSpinText, this.bonusCollectText])
+      .setDepth(44)
+      .setAlpha(0);
+    this.tweens.add({ targets: this.bonusCollectDisplay, alpha: 1, duration: 180, ease: "Sine.Out" });
+  }
+
+  private updateBonusCollectDisplay(collected: number, currentSpin: number, totalSpins: number, pulse = false) {
+    if (!this.bonusCollectDisplay || !this.bonusCollectText || !this.bonusSpinText) return;
+    this.bonusSpinText.setText(`FREE SPIN ${currentSpin}/${totalSpins}`);
+    this.bonusCollectText.setText(`BONUS COLLECTED  \u20AC${this.formatMoney(collected)}`);
+    if (!pulse) return;
+    this.tweens.add({
+      targets: this.bonusCollectDisplay,
+      scaleX: 1.06,
+      scaleY: 1.06,
+      duration: 170,
+      yoyo: true,
+      ease: "Sine.Out",
+    });
+  }
+
+  private hideBonusCollectDisplay() {
+    if (!this.bonusCollectDisplay) return;
+    this.bonusCollectDisplay.destroy(true);
+    this.bonusCollectDisplay = undefined;
+    this.bonusCollectText = undefined;
+    this.bonusSpinText = undefined;
   }
 
   private async showBonusTransition(titleText: string, spins: number) {
