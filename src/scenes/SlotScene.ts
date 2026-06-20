@@ -1348,7 +1348,7 @@ export default class SlotScene extends Phaser.Scene {
     this.lastWin = collected;
     this.updateBonusCollectDisplay(collected, freeSpins.length, freeSpins.length, collected > 0);
     this.updateHud();
-    await this.showBonusSummary(totalWin, freeSpins.length, "FREE SPINS COMPLETE");
+    await this.showBonusSummary(totalWin, freeSpins.length, "TOTAL WIN");
     this.hideBonusCollectDisplay();
     this.flashStatus(totalWin > 0 ? `Bonus paid ${totalWin.toFixed(2)}x` : "Bonus complete");
   }
@@ -1505,12 +1505,22 @@ export default class SlotScene extends Phaser.Scene {
     const overlay = this.add.container(width / 2, height / 2).setDepth(50).setAlpha(0);
     const panel = this.add.rectangle(0, 0, 460, 220, 0x111827, 0.97).setStrokeStyle(6, 0xfacc15, 1);
     const title = this.add.text(0, -62, titleText, { fontFamily: UI_FONT, fontSize: "40px", color: "#facc15", stroke: "#000000", strokeThickness: 6 }).setOrigin(0.5);
-    const amount = this.add.text(0, 8, `${value.toFixed(2)}x`, { fontFamily: UI_FONT, fontSize: "58px", color: "#ffffff", stroke: "#000000", strokeThickness: 8 }).setOrigin(0.5);
+    const amount = this.add.text(0, 8, "0.00x", { fontFamily: UI_FONT, fontSize: "58px", color: "#ffffff", stroke: "#000000", strokeThickness: 8 }).setOrigin(0.5);
     const copy = this.add.text(0, 72, `${spins} free spins resolved`, { fontFamily: BODY_FONT, fontSize: "20px", color: "#cbd5e1" }).setOrigin(0.5);
     overlay.add([panel, title, amount, copy]);
-    this.tweens.add({ targets: overlay, alpha: 1, scaleX: 1.04, scaleY: 1.04, duration: 180, yoyo: true });
-    await this.wait(1500);
-    overlay.destroy(true);
+    const counter = { value: 0 };
+    this.tweens.add({ targets: overlay, alpha: 1, scaleX: 1.04, scaleY: 1.04, duration: 280, ease: "Back.Out" });
+    this.tweens.add({
+      targets: counter,
+      value,
+      duration: Phaser.Math.Clamp(900 + value * 20, 1100, 2600),
+      ease: "Cubic.Out",
+      onUpdate: () => amount.setText(`${counter.value.toFixed(2)}x`),
+      onComplete: () => amount.setText(`${value.toFixed(2)}x`),
+    });
+    await this.wait(Phaser.Math.Clamp(1800 + value * 20, 2200, 3600));
+    this.tweens.add({ targets: overlay, alpha: 0, scaleX: 0.9, scaleY: 0.9, duration: 320, ease: "Sine.In", onComplete: () => overlay.destroy(true) });
+    await this.wait(340);
   }
 
   private clearGridViews() {
