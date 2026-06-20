@@ -10,6 +10,7 @@ import {
   ROWS,
   SYMBOL_BY_CODE,
   SymbolCode,
+  SpinResult,
   buyBonus,
   playPaidSpin,
 } from "../sixsixsixMath";
@@ -366,19 +367,20 @@ export default class SlotScene extends Phaser.Scene {
     const result = playPaidSpin(() => Math.random(), this.bet);
     await this.animateReelSpin(result.grid);
     this.grid = result.grid;
-    this.lastWin = result.totalWin;
-    this.balance += result.totalWin;
+    const paidSpinWin = Math.max(0, result.totalWin - result.bonusWin);
+    this.lastWin = paidSpinWin;
+    this.balance += paidSpinWin;
     this.renderGrid(result.lineWins);
     this.drawPaylines(result.lineWins);
     this.updateHud();
 
     if (result.wheelMultiplier > 0) {
-      await this.showWheelSpin(result.wheelMultiplier, result.baseWin, result.totalWin);
+      await this.showWheelSpin(result.wheelMultiplier, result.baseWin, paidSpinWin);
     }
 
     if (result.bonusTriggered && result.freeSpins) {
-      await this.showBonusSummary(result.bonusWin, result.freeSpins.length, "BONUS TRIGGERED");
-    } else if (result.totalWin > 0) {
+      await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, "BONUS TRIGGERED");
+    } else if (paidSpinWin > 0) {
       this.flashStatus(result.wheelMultiplier > 0 ? `Wheel boost ${result.wheelMultiplier}x` : `${result.lineWins.length} line win(s)`);
     } else {
       this.flashStatus("No win");
@@ -413,15 +415,7 @@ export default class SlotScene extends Phaser.Scene {
     this.updateHud();
     this.flashStatus("Buying bonus...");
     const result = buyBonus(() => Math.random(), this.bet);
-    const lastSpin = result.freeSpins[result.freeSpins.length - 1];
-    await this.animateReelSpin(lastSpin.grid);
-    this.balance += result.totalWin;
-    this.lastWin = result.totalWin;
-    this.grid = lastSpin.grid;
-    this.renderGrid(lastSpin.lineWins);
-    this.drawPaylines(lastSpin.lineWins);
-    this.updateHud();
-    await this.showBonusSummary(result.totalWin, result.freeSpins.length, "BUY BONUS RESULT");
+    await this.playFreeSpinSequence(result.freeSpins, result.totalWin, "BUY BONUS");
     this.spinning = false;
     this.updateHud();
   }
@@ -882,6 +876,95 @@ export default class SlotScene extends Phaser.Scene {
     if (values.indexOf(value) === -1) values[3] = value;
     values.sort((a, b) => a - b);
     return values;
+  }
+
+  private async playFreeSpinSequence(freeSpins: SpinResult[], totalWin: number, titleText: string) {
+    if (!freeSpins.length) {
+      await this.showBonusSummary(totalWin, 0, titleText);
+      return;
+    }
+
+    await this.showBonusTransition(titleText, freeSpins.length);
+
+    let collected = 0;
+    for (let index = 0; index < freeSpins.length; index++) {
+      const spin = freeSpins[index];
+      this.flashStatus(`Free spin ${index + 1}/${freeSpins.length}`);
+      await this.wait(index === 0 ? 420 : 260);
+      await this.animateReelSpin(spin.grid);
+
+      this.grid = spin.grid;
+      this.lastWin = spin.totalWin;
+      this.balance += spin.totalWin;
+      collected += spin.totalWin;
+      this.renderGrid(spin.lineWins);
+      this.drawPaylines(spin.lineWins);
+      this.updateHud();
+
+      if (spin.wheelMultiplier > 0) {
+        await this.showWheelSpin(spin.wheelMultiplier, spin.baseWin, spin.totalWin);
+      }
+
+      this.flashStatus(spin.totalWin > 0 ? `Free spin win ${spin.totalWin.toFixed(2)}x` : "Free spin no win");
+      await this.wait(spin.totalWin > 0 ? 680 : 360);
+    }
+
+    this.lastWin = collected;
+    this.updateHud();
+    await this.showBonusSummary(totalWin, freeSpins.length, "FREE SPINS COMPLETE");
+    this.flashStatus(totalWin > 0 ? `Bonus paid ${totalWin.toFixed(2)}x` : "Bonus complete");
+  }
+
+  private async showBonusTransition(titleText: string, spins: number) {
+    const width = Number(this.scale.width) || 1280;
+    const height = Number(this.scale.height) || 720;
+    const blocker = this.add.rectangle(0, 0, width, height, 0x020617, 0.72).setOrigin(0).setInteractive({ useHandCursor: false });
+    const parts: Phaser.GameObjects.GameObject[] = [blocker];
+
+    if (this.textures.exists("bonus_transition")) {
+      const image = this.add.image(width / 2, height / 2, "bonus_transition").setOrigin(0.5).setAlpha(0.9);
+      image.setScale(Math.max(width / image.width, height / image.height));
+      parts.push(image);
+    }
+
+    const glow = this.add.rectangle(width / 2, height / 2, Math.min(560, width * 0.76), Math.min(230, height * 0.34), 0x09090f, 0.7)
+      .setStrokeStyle(5, 0xfacc15, 0.95);
+    const title = this.add.text(width / 2, height / 2 - 54, titleText, {
+      fontFamily: UI_FONT,
+      fontSize: `${Math.max(34, Math.min(62, width * 0.05))}px`,
+      color: "#facc15",
+      stroke: "#000000",
+      strokeThickness: 8,
+    }).setOrigin(0.5);
+    const spinCount = this.add.text(width / 2, height / 2 + 12, `${spins} FREE SPINS`, {
+      fontFamily: UI_FONT,
+      fontSize: `${Math.max(30, Math.min(54, width * 0.043))}px`,
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 8,
+    }).setOrigin(0.5);
+    const auto = this.add.text(width / 2, height / 2 + 74, "AUTO PLAY", {
+      fontFamily: BODY_FONT,
+      fontSize: `${Math.max(16, Math.min(24, width * 0.018))}px`,
+      color: "#fde68a",
+      stroke: "#000000",
+      strokeThickness: 4,
+    }).setOrigin(0.5);
+
+    const overlay = this.add.container(0, 0, [...parts, glow, title, spinCount, auto]).setDepth(50).setAlpha(0);
+    this.tweens.add({ targets: overlay, alpha: 1, duration: 220, ease: "Sine.Out" });
+    this.tweens.add({ targets: [glow, title, spinCount], scaleX: 1.04, scaleY: 1.04, duration: 360, yoyo: true, repeat: 1, ease: "Sine.InOut" });
+    await this.wait(1120);
+    await new Promise<void>((resolve) => {
+      this.tweens.add({
+        targets: overlay,
+        alpha: 0,
+        duration: 220,
+        ease: "Sine.In",
+        onComplete: () => resolve(),
+      });
+    });
+    overlay.destroy(true);
   }
 
   private async showBonusSummary(value: number, spins: number, titleText: string) {
