@@ -688,10 +688,15 @@ export default class SlotScene extends Phaser.Scene {
   private createSpinSymbol(code: SymbolCode, x: number, y: number) {
     const assetKey = code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[code];
     if (assetKey && this.textures.exists(assetKey)) {
-      const image = this.add.image(x, y, assetKey).setOrigin(0.5);
-      image.setScale(this.getSymbolImageScale(image, code) * this.scaleFactor);
+      const image = this.add.image(0, 0, assetKey).setOrigin(0.5);
+      const scale = this.getSymbolImageScale(image, code) * this.scaleFactor;
+      const blurFarBehind = this.add.image(0, -24 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.16);
+      const blurBehind = this.add.image(0, -12 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.3);
+      const blurAhead = this.add.image(0, 12 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.3);
+      const blurFarAhead = this.add.image(0, 24 * this.scaleFactor, assetKey).setOrigin(0.5).setScale(scale).setAlpha(0.16);
+      image.setScale(scale);
       if (code[0] === "L") image.setAlpha(0.96);
-      return image;
+      return this.add.container(x, y, [blurFarBehind, blurBehind, blurAhead, blurFarAhead, image]);
     }
     return this.add.text(x, y, code, {
       fontFamily: UI_FONT,
