@@ -34,6 +34,7 @@ function loadTsCommonJs(relativePath) {
 }
 
 const math = loadTsCommonJs("src/sixsixsixMath.ts");
+const slotSceneSource = fs.readFileSync(path.join(root, "src/scenes/SlotScene.ts"), "utf8");
 
 assert.equal(math.COLS, 5, "1000 Shogun Spinners should use five reels");
 assert.equal(math.ROWS, 4, "1000 Shogun Spinners should use four visible rows");
@@ -69,5 +70,15 @@ assert.equal(spin.grid[0].length, 4, "spin should return four rows per column");
 const buy = math.buyBonus(deterministic, 1);
 assert.equal(buy.cost, 100, "bonus buy cost should be 100x bet");
 assert.equal(buy.freeSpins.length, 10, "bonus buy should resolve 10 free spins");
+
+assert.ok(!slotSceneSource.includes("this.balance += spin.totalWin"), "bonus wins should not credit balance per free spin");
+const bonusSummaryIndex = slotSceneSource.indexOf('await this.showBonusSummary(totalWin, freeSpins.length, "TOTAL WIN");');
+const bonusBalanceCreditIndex = slotSceneSource.indexOf("this.balance += totalWin;", bonusSummaryIndex);
+assert.ok(bonusSummaryIndex > 0, "bonus sequence should show TOTAL WIN summary");
+assert.ok(bonusBalanceCreditIndex > bonusSummaryIndex, "bonus balance credit should happen after TOTAL WIN reveal");
+assert.ok(
+  slotSceneSource.includes("after the TOTAL WIN reveal"),
+  "rules should describe post-summary bonus balance credit timing",
+);
 
 console.log("1000 Shogun Spinners regression tests passed");

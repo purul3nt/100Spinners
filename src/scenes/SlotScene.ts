@@ -888,7 +888,7 @@ export default class SlotScene extends Phaser.Scene {
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "The Shuriken Spinner can land on reels 1, 3, and 5. When it carries a multiplier, the wheel can boost the line win.\n\n" +
       `Bonus trigger starts 10 automatic free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet and starts the same feature.\n\n` +
-      "Wins are displayed as bet multipliers and balance updates after each resolved spin.";
+      "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
       fontSize: `${portrait ? 14 : 16}px`,
@@ -1848,6 +1848,9 @@ export default class SlotScene extends Phaser.Scene {
   private async playFreeSpinSequence(freeSpins: SpinResult[], totalWin: number, titleText: string) {
     if (!freeSpins.length) {
       await this.showBonusSummary(totalWin, 0, titleText);
+      this.balance += totalWin;
+      this.lastWin = totalWin;
+      this.updateHud();
       return;
     }
 
@@ -1866,7 +1869,6 @@ export default class SlotScene extends Phaser.Scene {
 
         this.grid = spin.grid;
         this.lastWin = spin.totalWin;
-        this.balance += spin.totalWin;
         collected += spin.totalWin;
         this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length, spin.totalWin > 0);
         this.renderGrid(spin.lineWins);
@@ -1890,6 +1892,9 @@ export default class SlotScene extends Phaser.Scene {
       this.hideBonusCollectDisplay();
       this.setBonusGameBackground(false);
     }
+    this.balance += totalWin;
+    this.lastWin = totalWin;
+    this.updateHud();
     this.flashStatus(totalWin > 0 ? `Bonus paid ${totalWin.toFixed(2)}x` : "Bonus complete");
   }
 
