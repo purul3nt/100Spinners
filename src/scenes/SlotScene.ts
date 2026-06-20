@@ -382,8 +382,9 @@ export default class SlotScene extends Phaser.Scene {
     this.lastWin = paidSpinWin;
     this.balance += paidSpinWin;
     this.renderGrid(result.lineWins);
-    this.drawPaylines(result.lineWins);
+    this.drawPaylines([]);
     this.updateHud();
+    await this.presentWins(result.lineWins);
 
     if (result.wheelMultiplier > 0) {
       await this.showWheelSpin(result.wheelMultiplier, result.baseWin, paidSpinWin);
@@ -656,9 +657,6 @@ export default class SlotScene extends Phaser.Scene {
     }
     const container = this.add.container(0, 0, parts).setDepth(highlighted ? 11 : 8);
     container.setData("code", symbol.code);
-    if (highlighted) {
-      this.tweens.add({ targets: container, scaleX: 1.08, scaleY: 1.08, duration: 240, yoyo: true, repeat: 2 });
-    }
     return { container, bg, label, image, multiplier };
   }
 
@@ -922,6 +920,72 @@ export default class SlotScene extends Phaser.Scene {
     });
   }
 
+  private async presentWins(wins: LineWin[]) {
+    if (!wins.length) return;
+    await this.animatePaylinesLeftToRight(wins);
+    this.drawPaylines(wins);
+    this.playWinningSymbolAnimations(wins);
+  }
+
+  private async animatePaylinesLeftToRight(wins: LineWin[]) {
+    if (!this.lineGraphics) return;
+    const visibleWins = wins.slice(0, 4);
+    if (!visibleWins.length) return;
+
+    const state = { progress: 0 };
+    const drawProgress = () => {
+      this.lineGraphics.clear();
+      visibleWins.forEach((win, index) => {
+        const color = [0xfacc15, 0x38bdf8, 0xf472b6, 0x34d399][index % 4];
+        const rows = PAYLINES[win.lineIndex];
+        const points = rows.map((row, col) => ({ x: this.cellX(col), y: this.cellY(row) }));
+        const segmentCount = points.length - 1;
+        const scaledProgress = Phaser.Math.Clamp(state.progress, 0, 1) * segmentCount;
+        const fullSegments = Math.floor(scaledProgress);
+        const remainder = scaledProgress - fullSegments;
+
+        this.lineGraphics.lineStyle(6, color, 0.95);
+        this.lineGraphics.beginPath();
+        this.lineGraphics.moveTo(points[0].x, points[0].y);
+        for (let segment = 0; segment < fullSegments; segment++) {
+          this.lineGraphics.lineTo(points[segment + 1].x, points[segment + 1].y);
+        }
+        if (fullSegments < segmentCount) {
+          const from = points[fullSegments];
+          const to = points[fullSegments + 1];
+          this.lineGraphics.lineTo(
+            Phaser.Math.Linear(from.x, to.x, remainder),
+            Phaser.Math.Linear(from.y, to.y, remainder),
+          );
+        }
+        this.lineGraphics.strokePath();
+      });
+    };
+
+    await new Promise<void>((resolve) => {
+      this.tweens.add({
+        targets: state,
+        progress: 1,
+        duration: 260,
+        ease: "Cubic.Out",
+        onUpdate: drawProgress,
+        onComplete: () => resolve(),
+      });
+    });
+  }
+
+  private playWinningSymbolAnimations(wins: LineWin[]) {
+    const winningCells = new Set<string>();
+    wins.forEach((win) => win.cells.forEach((cell) => winningCells.add(`${cell.col}:${cell.row}`)));
+    winningCells.forEach((key) => {
+      const [colText, rowText] = key.split(":");
+      const view = this.symbolViews[Number(colText)]?.[Number(rowText)];
+      if (!view) return;
+      view.container.setAlpha(1).setDepth(12);
+      this.tweens.add({ targets: view.container, scaleX: 1.08, scaleY: 1.08, duration: 240, yoyo: true, repeat: 2 });
+    });
+  }
+
   private updateHud() {
     this.balanceText.setText(`BALANCE\n\u20AC${this.formatMoney(this.balance)}`);
     this.betText.setText(`BET\n\u20AC${this.bet.toFixed(2)}`);
@@ -1071,8 +1135,9 @@ export default class SlotScene extends Phaser.Scene {
       this.balance += spin.totalWin;
       collected += spin.totalWin;
       this.renderGrid(spin.lineWins);
-      this.drawPaylines(spin.lineWins);
+      this.drawPaylines([]);
       this.updateHud();
+      await this.presentWins(spin.lineWins);
 
       if (spin.wheelMultiplier > 0) {
         await this.showWheelSpin(spin.wheelMultiplier, spin.baseWin, spin.totalWin);
