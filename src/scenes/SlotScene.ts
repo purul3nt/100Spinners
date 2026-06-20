@@ -187,6 +187,12 @@ export default class SlotScene extends Phaser.Scene {
   private betText!: Phaser.GameObjects.Text;
   private winText!: Phaser.GameObjects.Text;
   private logoImage!: Phaser.GameObjects.Image;
+  private logoGlowLayers: Array<{
+    image: Phaser.GameObjects.Image;
+    offsetX: number;
+    offsetY: number;
+    scale: number;
+  }> = [];
   private uiBar!: Phaser.GameObjects.Rectangle;
   private betPanel!: Phaser.GameObjects.Rectangle;
   private spinButton!: Phaser.GameObjects.Container;
@@ -266,6 +272,24 @@ export default class SlotScene extends Phaser.Scene {
       fontSize: "1px",
       color: "#ffffff",
     }).setOrigin(0.5).setVisible(false);
+    const logoGlowSpecs = [
+      { offsetX: 0, offsetY: 0, scale: 1.08, alpha: 0.34 },
+      { offsetX: -3, offsetY: 0, scale: 1.02, alpha: 0.74 },
+      { offsetX: 3, offsetY: 0, scale: 1.02, alpha: 0.74 },
+      { offsetX: 0, offsetY: -3, scale: 1.02, alpha: 0.74 },
+      { offsetX: 0, offsetY: 3, scale: 1.02, alpha: 0.74 },
+    ];
+    this.logoGlowLayers = logoGlowSpecs.map((layer) => ({
+      image: this.add.image(0, 0, "shogun_logo")
+        .setOrigin(0, 0)
+        .setDepth(29)
+        .setTint(0xf2c45f)
+        .setAlpha(layer.alpha)
+        .setBlendMode(Phaser.BlendModes.ADD),
+      offsetX: layer.offsetX,
+      offsetY: layer.offsetY,
+      scale: layer.scale,
+    }));
     this.logoImage = this.add.image(0, 0, "shogun_logo").setOrigin(0, 0).setDepth(30);
 
     this.uiBar = this.add.rectangle(0, 0, 1, 1, 0x050505, 0.74)
@@ -528,8 +552,20 @@ export default class SlotScene extends Phaser.Scene {
     if (this.logoImage) {
       const logoW = Math.min(width * 0.17, height * 0.28, 220);
       const logoH = logoW * (this.logoImage.height / this.logoImage.width);
+      const logoX = Math.max(12, width * 0.014);
+      const logoY = Math.max(10, height * 0.018);
+      this.logoGlowLayers.forEach((layer) => {
+        const glowW = logoW * layer.scale;
+        const glowH = logoH * layer.scale;
+        layer.image
+          .setPosition(
+            logoX + layer.offsetX * this.scaleFactor - (glowW - logoW) / 2,
+            logoY + layer.offsetY * this.scaleFactor - (glowH - logoH) / 2,
+          )
+          .setDisplaySize(glowW, glowH);
+      });
       this.logoImage
-        .setPosition(Math.max(12, width * 0.014), Math.max(10, height * 0.018))
+        .setPosition(logoX, logoY)
         .setDisplaySize(logoW, logoH);
     }
     this.boardFrame
