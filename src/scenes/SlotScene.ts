@@ -9,6 +9,7 @@ import {
   PAYLINES,
   ROWS,
   SYMBOL_BY_CODE,
+  SYMBOLS,
   SymbolCode,
   SpinResult,
   buyBonus,
@@ -92,6 +93,7 @@ export default class SlotScene extends Phaser.Scene {
   private maxBetButton!: Phaser.GameObjects.Image;
   private bonusPanel?: Phaser.GameObjects.Container;
   private wheelOverlay?: Phaser.GameObjects.Container;
+  private rulesOverlay?: Phaser.GameObjects.Container;
   private backgroundClouds?: Phaser.GameObjects.TileSprite;
   private frameLeft = 0;
   private frameTop = 0;
@@ -217,7 +219,7 @@ export default class SlotScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     const menuBars = [-13, 0, 13].map((y) => this.add.rectangle(0, y, 30, 5, 0xffffff, 1).setOrigin(0.5));
     this.menuButton = this.add.container(0, 0, [this.menuButtonBg, ...menuBars]).setDepth(70);
-    this.menuButtonBg.on("pointerdown", () => this.flashStatus("Menu"));
+    this.menuButtonBg.on("pointerdown", () => this.showRulesMenu());
     this.menuButtonBg.on("pointerover", () => this.menuButton.setScale(1.05));
     this.menuButtonBg.on("pointerout", () => this.menuButton.setScale(1));
 
@@ -424,6 +426,166 @@ export default class SlotScene extends Phaser.Scene {
     if (!this.bonusPanel) return;
     this.bonusPanel.destroy(true);
     this.bonusPanel = undefined;
+  }
+
+  private showRulesMenu() {
+    if (this.rulesOverlay) this.rulesOverlay.destroy(true);
+    const width = Number(this.scale.width) || 1280;
+    const height = Number(this.scale.height) || 720;
+    const portrait = height > width * 1.05;
+    const panelW = Math.min(width * (portrait ? 0.94 : 0.78), portrait ? 540 : 1040);
+    const panelH = Math.min(height * (portrait ? 0.84 : 0.82), portrait ? 740 : 720);
+    const cx = width / 2;
+    const cy = height / 2;
+    const left = cx - panelW / 2;
+    const top = cy - panelH / 2;
+    const overlay = this.add.container(0, 0).setDepth(260);
+    const blocker = this.add.rectangle(width / 2, height / 2, width, height, 0x02030a, 0.72).setInteractive({ useHandCursor: false });
+    const panel = this.add.rectangle(cx, cy, panelW, panelH, 0x121322, 0.96).setStrokeStyle(5, 0xfacc15, 0.86).setInteractive({ useHandCursor: false });
+    panel.on("pointerdown", (_pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => event.stopPropagation());
+    const title = this.add.text(left + 26, top + 18, "PAYTABLE & RULES", {
+      fontFamily: UI_FONT,
+      fontSize: `${portrait ? 28 : 36}px`,
+      color: "#facc15",
+      stroke: "#111111",
+      strokeThickness: 6,
+    }).setOrigin(0, 0);
+    const closeBg = this.add.circle(left + panelW - 34, top + 34, 22, 0x181818, 1).setStrokeStyle(3, 0xffffff, 0.9).setInteractive({ useHandCursor: true });
+    const closeText = this.add.text(closeBg.x, closeBg.y - 1, "X", { fontFamily: "Arial Black, Arial, sans-serif", fontSize: "24px", color: "#ffffff" }).setOrigin(0.5);
+    closeBg.on("pointerdown", () => this.hideRulesMenu());
+    blocker.on("pointerdown", () => this.hideRulesMenu());
+    overlay.add([blocker, panel, title, closeBg, closeText]);
+
+    const viewportTop = top + (portrait ? 72 : 82);
+    const viewportBottom = top + panelH - 30;
+    const viewportH = viewportBottom - viewportTop;
+    const content = this.add.container(0, 0).setDepth(261);
+    const maskGraphics = this.add.graphics().setVisible(false);
+    maskGraphics.fillStyle(0xffffff, 1);
+    maskGraphics.fillRect(left + 18, viewportTop, panelW - 36, viewportH);
+    content.setMask(maskGraphics.createGeometryMask());
+    overlay.add([maskGraphics, content]);
+
+    const paySymbols = SYMBOLS.filter((symbol) => symbol.code !== "W1").slice().sort((a, b) => b.pay5 - a.pay5);
+    const payLeft = left + 30;
+    const payTop = viewportTop + 30;
+    const payW = portrait ? panelW - 60 : panelW * 0.48;
+    const rowH = portrait ? 44 : Math.max(32, Math.min(48, (panelH - 150) / paySymbols.length));
+    const payHeader = this.add.text(payLeft, payTop - 30, "SYMBOL PAYS", {
+      fontFamily: UI_FONT,
+      fontSize: `${portrait ? 22 : 26}px`,
+      color: "#38bdf8",
+      stroke: "#111111",
+      strokeThickness: 4,
+    }).setOrigin(0, 0);
+    const payColumns = this.add.text(payLeft + payW - 8, payTop - 24, "3    4    5", {
+      fontFamily: UI_FONT,
+      fontSize: `${Math.max(13, rowH * 0.34)}px`,
+      color: "#fef3c7",
+      stroke: "#111111",
+      strokeThickness: 3,
+    }).setOrigin(1, 0);
+    content.add([payHeader, payColumns]);
+
+    paySymbols.forEach((symbol, index) => {
+      const y = payTop + index * rowH;
+      const rowBg = this.add.rectangle(payLeft + payW / 2, y + rowH / 2, payW, rowH - 4, index % 2 === 0 ? 0x1e2234 : 0x171a2a, 0.86).setStrokeStyle(1, 0x405074, 0.55);
+      const assetKey = SYMBOL_IMAGE_KEYS[symbol.code];
+      const icon = assetKey && this.textures.exists(assetKey)
+        ? this.add.image(payLeft + rowH * 0.52, y + rowH / 2, assetKey).setDisplaySize(rowH * 0.82, rowH * 0.82).setOrigin(0.5)
+        : this.add.text(payLeft + rowH * 0.52, y + rowH / 2, symbol.code, { fontFamily: UI_FONT, fontSize: `${Math.max(16, rowH * 0.42)}px`, color: "#ffffff", stroke: "#000000", strokeThickness: 4 }).setOrigin(0.5);
+      const name = this.add.text(payLeft + rowH + 12, y + rowH / 2, symbol.label.toUpperCase(), {
+        fontFamily: UI_FONT,
+        fontSize: `${Math.max(13, rowH * 0.34)}px`,
+        color: "#ffffff",
+        stroke: "#111111",
+        strokeThickness: 3,
+      }).setOrigin(0, 0.5);
+      const pays = this.add.text(payLeft + payW - 8, y + rowH / 2, `${symbol.pay3.toFixed(2)}   ${symbol.pay4.toFixed(2)}   ${symbol.pay5.toFixed(2)}x`, {
+        fontFamily: BODY_FONT,
+        fontSize: `${Math.max(12, rowH * 0.3)}px`,
+        color: "#fef3c7",
+        fontStyle: "bold",
+      }).setOrigin(1, 0.5);
+      content.add([rowBg, icon, name, pays]);
+    });
+
+    const rulesLeft = portrait ? left + 30 : left + panelW * 0.55;
+    const rulesTop = portrait ? payTop + paySymbols.length * rowH + 30 : payTop;
+    const rulesW = portrait ? panelW - 60 : panelW * 0.39;
+    const rulesTitle = this.add.text(rulesLeft, rulesTop - 30, "RULES", {
+      fontFamily: UI_FONT,
+      fontSize: `${portrait ? 22 : 26}px`,
+      color: "#ec4899",
+      stroke: "#111111",
+      strokeThickness: 4,
+    }).setOrigin(0, 0);
+    const rulesBody = "5 reel, 4 row line-pay slot with 14 fixed paylines.\n\n" +
+      "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
+      "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
+      "The Shuriken Spinner can land on reels 1, 3, and 5. When it carries a multiplier, the wheel can boost the line win.\n\n" +
+      "Bonus trigger starts 10 automatic free spins. Buy Bonus costs 10x the current bet and starts the same feature.\n\n" +
+      "Wins are displayed as bet multipliers and balance updates after each resolved spin.";
+    const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
+      fontFamily: BODY_FONT,
+      fontSize: `${portrait ? 14 : 16}px`,
+      color: "#ffffff",
+      lineSpacing: portrait ? 4 : 6,
+      wordWrap: { width: rulesW },
+    }).setOrigin(0, 0);
+    const wheelTitle = this.add.text(rulesLeft, rulesTop + rulesText.height + 30, "SHURIKEN MULTIPLIERS", {
+      fontFamily: UI_FONT,
+      fontSize: `${portrait ? 20 : 24}px`,
+      color: "#38bdf8",
+      stroke: "#111111",
+      strokeThickness: 4,
+    }).setOrigin(0, 0);
+    const wheelText = this.add.text(rulesLeft, wheelTitle.y + 34, "Possible wheel values: 2x, 3x, 5x, 8x, 10x, 15x, 20x, 50x.", {
+      fontFamily: BODY_FONT,
+      fontSize: `${portrait ? 14 : 15}px`,
+      color: "#fef3c7",
+      wordWrap: { width: rulesW },
+    }).setOrigin(0, 0);
+    content.add([rulesTitle, rulesText, wheelTitle, wheelText]);
+
+    const contentBottom = Math.max(payTop + paySymbols.length * rowH, wheelText.y + wheelText.height);
+    const minScroll = Math.min(0, viewportBottom - contentBottom - 18);
+    let scrollY = 0;
+    let dragging = false;
+    let dragStartY = 0;
+    let dragStartScroll = 0;
+    const applyScroll = (nextY: number) => {
+      scrollY = Phaser.Math.Clamp(nextY, minScroll, 0);
+      content.setY(scrollY);
+    };
+    const scrollZone = this.add.zone(left + 18, viewportTop, panelW - 36, viewportH).setOrigin(0, 0).setInteractive({ useHandCursor: false }).setDepth(262);
+    scrollZone.on("pointerdown", (pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => {
+      event.stopPropagation();
+      dragging = true;
+      dragStartY = pointer.y;
+      dragStartScroll = scrollY;
+    });
+    scrollZone.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (dragging) applyScroll(dragStartScroll + pointer.y - dragStartY);
+    });
+    scrollZone.on("pointerup", () => { dragging = false; });
+    scrollZone.on("pointerout", () => { dragging = false; });
+    overlay.add(scrollZone);
+
+    const wheelHandler = (pointer: Phaser.Input.Pointer, _objects: Phaser.GameObjects.GameObject[], _dx: number, dy: number) => {
+      if (!this.rulesOverlay) return;
+      if (pointer.x < left || pointer.x > left + panelW || pointer.y < top || pointer.y > top + panelH) return;
+      applyScroll(scrollY - dy * 0.55);
+    };
+    this.input.on("wheel", wheelHandler);
+    overlay.once("destroy", () => this.input.off("wheel", wheelHandler));
+    this.rulesOverlay = overlay;
+  }
+
+  private hideRulesMenu() {
+    if (!this.rulesOverlay) return;
+    this.rulesOverlay.destroy(true);
+    this.rulesOverlay = undefined;
   }
 
   private renderGrid(wins: LineWin[]) {
