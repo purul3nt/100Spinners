@@ -71,6 +71,7 @@ export default class SlotScene extends Phaser.Scene {
   private balanceText!: Phaser.GameObjects.Text;
   private betText!: Phaser.GameObjects.Text;
   private winText!: Phaser.GameObjects.Text;
+  private logoImage!: Phaser.GameObjects.Image;
   private uiBar!: Phaser.GameObjects.Rectangle;
   private betPanel!: Phaser.GameObjects.Rectangle;
   private spinButton!: Phaser.GameObjects.Container;
@@ -136,6 +137,7 @@ export default class SlotScene extends Phaser.Scene {
       fontSize: "1px",
       color: "#ffffff",
     }).setOrigin(0.5).setVisible(false);
+    this.logoImage = this.add.image(0, 0, "shogun_logo").setOrigin(0, 0).setDepth(30);
 
     this.uiBar = this.add.rectangle(0, 0, 1, 1, 0x050505, 0.74)
       .setOrigin(0, 0)
@@ -282,6 +284,13 @@ export default class SlotScene extends Phaser.Scene {
     this.frameTop = firstRowY - ROW_CENTER_Y[0] * this.frameH;
 
     this.titleText.setPosition(width / 2, Math.max(48, height * 0.075)).setFontSize(Math.max(32, Math.min(58, width * 0.043)));
+    if (this.logoImage) {
+      const logoW = Math.min(width * 0.17, height * 0.28, 220);
+      const logoH = logoW * (this.logoImage.height / this.logoImage.width);
+      this.logoImage
+        .setPosition(Math.max(12, width * 0.014), Math.max(10, height * 0.018))
+        .setDisplaySize(logoW, logoH);
+    }
     this.statusText.setPosition(width / 2, this.titleText.y + 45).setFontSize(Math.max(14, Math.min(21, width * 0.017)));
     this.boardFrame
       .setPosition(this.frameLeft + this.frameW * 0.035, this.frameTop + this.frameH * 0.05)
