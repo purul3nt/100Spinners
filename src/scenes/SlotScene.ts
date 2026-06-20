@@ -27,6 +27,7 @@ const REEL_FRAME_BASE_W = REEL_FRAME_BASE_H * REEL_FRAME_ASPECT;
 const REEL_CENTER_X = [184, 449, 704, 949, 1198].map((x) => x / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
+const CHERRY_BLOSSOM_PETAL_KEY = "generated_cherry_blossom_petal";
 const SYMBOL_IMAGE_SCALE = 1.1;
 const LOW_PAY_IMAGE_SCALE = 1.2;
 const REEL_START_STAGGER_MS = 42;
@@ -96,6 +97,8 @@ export default class SlotScene extends Phaser.Scene {
   private wheelOverlay?: Phaser.GameObjects.Container;
   private rulesOverlay?: Phaser.GameObjects.Container;
   private backgroundClouds?: Phaser.GameObjects.TileSprite;
+  private backgroundPetals?: Phaser.GameObjects.Particles.ParticleEmitterManager;
+  private backgroundPetalEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
   private frameLeft = 0;
   private frameTop = 0;
   private frameW = 0;
@@ -124,6 +127,7 @@ export default class SlotScene extends Phaser.Scene {
       .setDepth(-5.5)
       .setAlpha(0.72);
     this.add.rectangle(width / 2, height / 2, width, height, 0x180f0a, 0.18).setDepth(-5);
+    this.createCherryBlossomParticles(width, height);
   }
 
   update(_time: number, delta: number) {
@@ -296,6 +300,7 @@ export default class SlotScene extends Phaser.Scene {
       .setPosition(this.frameLeft + this.frameW * 0.035, this.frameTop + this.frameH * 0.05)
       .setSize(this.frameW * 0.93, this.frameH * 0.88);
     this.scaleBackground(width, height);
+    this.layoutCherryBlossomParticles(width, height);
     this.reelFrame
       .setPosition(width / 2, this.frameTop + this.frameH / 2)
       .setDisplaySize(this.frameW, this.frameH);
@@ -690,6 +695,55 @@ export default class SlotScene extends Phaser.Scene {
         .setSize(width, height)
         .setTileScale(cloudScale, cloudScale);
     }
+  }
+
+  private createCherryBlossomParticles(width: number, height: number) {
+    this.createCherryBlossomPetalTexture();
+    this.backgroundPetals = this.add.particles(CHERRY_BLOSSOM_PETAL_KEY)
+      .setDepth(-4.75);
+    this.backgroundPetalEmitter = this.backgroundPetals.createEmitter(this.getCherryBlossomEmitterConfig(width, height));
+    this.backgroundPetalEmitter.reserve(Math.max(28, Math.round((width * height) / 26000)));
+  }
+
+  private createCherryBlossomPetalTexture() {
+    if (this.textures.exists(CHERRY_BLOSSOM_PETAL_KEY)) return;
+    const petal = this.make.graphics({ x: 0, y: 0, add: false });
+    petal.fillStyle(0xffc9d9, 0.94);
+    petal.fillEllipse(11, 8, 17, 9, 24);
+    petal.fillStyle(0xffffff, 0.36);
+    petal.fillEllipse(8, 6, 6, 3, 16);
+    petal.generateTexture(CHERRY_BLOSSOM_PETAL_KEY, 22, 16);
+    petal.destroy();
+  }
+
+  private layoutCherryBlossomParticles(width: number, height: number) {
+    if (!this.backgroundPetalEmitter) {
+      this.createCherryBlossomParticles(width, height);
+      return;
+    }
+    this.backgroundPetalEmitter.fromJSON(this.getCherryBlossomEmitterConfig(width, height));
+  }
+
+  private getCherryBlossomEmitterConfig(width: number, height: number): Phaser.Types.GameObjects.Particles.ParticleEmitterConfig {
+    const area = width * height;
+    const maxParticles = Phaser.Math.Clamp(Math.round(area / 24000), 26, 54);
+    const frequency = Phaser.Math.Clamp(Math.round(920 - maxParticles * 10), 340, 620);
+    const petalScale = Phaser.Math.Clamp(Math.min(width, height) / 760, 0.72, 1.15);
+    return {
+      x: { min: -width * 0.18, max: width * 1.06 },
+      y: { min: -height * 0.16, max: height * 0.94 },
+      speedX: { min: 6, max: 30 },
+      speedY: { min: 9, max: 28 },
+      accelerationX: { min: -1.5, max: 3.5 },
+      lifespan: { min: 12500, max: 19000 },
+      frequency,
+      quantity: 1,
+      maxParticles,
+      scale: { start: 0.18 * petalScale, end: 0.07 * petalScale },
+      alpha: { start: 0.46, end: 0 },
+      rotate: { min: -55, max: 65 },
+      particleBringToTop: false,
+    };
   }
 
   private drawSymbolShape(graphics: Phaser.GameObjects.Graphics, code: SymbolCode, highlighted: boolean) {
