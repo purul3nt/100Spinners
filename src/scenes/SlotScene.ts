@@ -62,7 +62,31 @@ const REEL_CENTER_X = [184, 449, 704, 949, 1198].map((x) => x / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
 const CHERRY_BLOSSOM_PETAL_KEY = "generated_cherry_blossom_petal";
-const SAMURAI_FRAME_FILES = [
+const SAMURAI_IDLE_FRAME_IDS = [
+  "001",
+  "003",
+  "004",
+  "005",
+  "007",
+  "008",
+  "010",
+  "011",
+  "012",
+  "014",
+  "015",
+  "016",
+  "018",
+  "019",
+  "020",
+  "022",
+  "023",
+  "025",
+  "027",
+  "028",
+  "029",
+  "030",
+];
+const SAMURAI_SLASH_FRAME_IDS = [
   "001",
   "002",
   "003",
@@ -368,8 +392,8 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private createSamuraiFx() {
-    const idleFrameKeys = SAMURAI_FRAME_FILES.map((frame) => ({ key: `samurai_idle_${frame}` }));
-    const slashFrameKeys = SAMURAI_FRAME_FILES.map((frame) => ({ key: `samurai_slash_${frame}` }));
+    const idleFrameKeys = SAMURAI_IDLE_FRAME_IDS.map((frame) => ({ key: `samurai_idle_${frame}` }));
+    const slashFrameKeys = SAMURAI_SLASH_FRAME_IDS.map((frame) => ({ key: `samurai_slash_${frame}` }));
     if (!this.anims.exists("samurai_idle_loop")) {
       this.anims.create({
         key: "samurai_idle_loop",
@@ -482,7 +506,7 @@ export default class SlotScene extends Phaser.Scene {
   private async playSamuraiWinSlash() {
     if (!this.samuraiFx) return;
     this.setSamuraiMood("slash");
-    await this.wait(Math.ceil((SAMURAI_FRAME_FILES.length / 15) * 1000));
+    await this.wait(Math.ceil((SAMURAI_SLASH_FRAME_IDS.length / 15) * 1000));
     this.setSamuraiMood("idle");
   }
 

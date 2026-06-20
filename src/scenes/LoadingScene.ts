@@ -10,7 +10,31 @@ const SAMURAI_IDLE_FRAME_PATH = "src/assets/game/samurai/Idle_samurai";
 const SAMURAI_SLASH_FRAME_PATH = "src/assets/game/samurai/slash_Samurai";
 const SHOGUN_HIGH_SYMBOLS = ["sym_high_01", "sym_high_02", "sym_high_03", "sym_high_04", "sym_high_05"];
 const SHOGUN_LOW_SYMBOLS = ["sym_low_01", "sym_low_02", "sym_low_03", "sym_low_04", "sym_low_05"];
-const SAMURAI_FRAME_FILES = [
+const SAMURAI_IDLE_FRAME_FILES = [
+  "ezgif-frame-001.png",
+  "ezgif-frame-003.png",
+  "ezgif-frame-004.png",
+  "ezgif-frame-005.png",
+  "ezgif-frame-007.png",
+  "ezgif-frame-008.png",
+  "ezgif-frame-010.png",
+  "ezgif-frame-011.png",
+  "ezgif-frame-012.png",
+  "ezgif-frame-014.png",
+  "ezgif-frame-015.png",
+  "ezgif-frame-016.png",
+  "ezgif-frame-018.png",
+  "ezgif-frame-019.png",
+  "ezgif-frame-020.png",
+  "ezgif-frame-022.png",
+  "ezgif-frame-023.png",
+  "ezgif-frame-025.png",
+  "ezgif-frame-027.png",
+  "ezgif-frame-028.png",
+  "ezgif-frame-029.png",
+  "ezgif-frame-030.png"
+];
+const SAMURAI_SLASH_FRAME_FILES = [
   "ezgif-frame-001.png",
   "ezgif-frame-002.png",
   "ezgif-frame-003.png",
@@ -166,9 +190,12 @@ export default class LoadingScene extends Phaser.Scene {
     SHOGUN_HIGH_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_high/${key}.png?v=shogun-symbols-4`));
     SHOGUN_LOW_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_low/${key}.png?v=shogun-low-round-restore-1`));
     this.load.image("shogun_wheel", "src/assets/game/symbols_special/shuriken_wheel.png?v=shogun-wheel-1");
-    SAMURAI_FRAME_FILES.forEach((file) => {
+    SAMURAI_IDLE_FRAME_FILES.forEach((file) => {
       const frame = file.match(/(\d+)\.png$/)?.[1] || file;
       this.load.image(`samurai_idle_${frame}`, `${SAMURAI_IDLE_FRAME_PATH}/${file}?v=samurai-idle-1`);
+    });
+    SAMURAI_SLASH_FRAME_FILES.forEach((file) => {
+      const frame = file.match(/(\d+)\.png$/)?.[1] || file;
       this.load.image(`samurai_slash_${frame}`, `${SAMURAI_SLASH_FRAME_PATH}/${file}?v=samurai-slash-1`);
     });
     ROCKING_FRAME_FILES.forEach((file, index) => this.load.image(`baboon_rocking_${index}`, `${ROCKING_FRAME_PATH}/${file}?v=rocking-frames-3`));
