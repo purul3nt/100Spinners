@@ -213,6 +213,7 @@ export default class SlotScene extends Phaser.Scene {
   private bonusTotalSpins = 0;
   private wheelOverlay?: Phaser.GameObjects.Container;
   private rulesOverlay?: Phaser.GameObjects.Container;
+  private backgroundImage?: Phaser.GameObjects.Image;
   private backgroundClouds?: Phaser.GameObjects.TileSprite;
   private backgroundPetals?: Phaser.GameObjects.Particles.ParticleEmitterManager;
   private backgroundPetalEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -243,7 +244,7 @@ export default class SlotScene extends Phaser.Scene {
   private createBackground() {
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
-    this.add.image(width / 2, height / 2, "shogun_background").setDepth(-6).setAlpha(0.96);
+    this.backgroundImage = this.add.image(width / 2, height / 2, "shogun_background").setDepth(-6).setAlpha(0.96);
     this.backgroundClouds = this.add.tileSprite(width / 2, height / 2, width, height, "shogun_background_clouds")
       .setDepth(-5.5)
       .setAlpha(0.72);
@@ -1022,8 +1023,11 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private scaleBackground(width: number, height: number) {
-    const bg = this.children.list.find((child) => child instanceof Phaser.GameObjects.Image && child.texture.key === "shogun_background") as Phaser.GameObjects.Image | undefined;
-    if (bg) bg.setPosition(width / 2, height / 2).setScale(Math.max(width / bg.width, height / bg.height));
+    if (this.backgroundImage) {
+      this.backgroundImage
+        .setPosition(width / 2, height / 2)
+        .setScale(Math.max(width / this.backgroundImage.width, height / this.backgroundImage.height));
+    }
     if (this.backgroundClouds) {
       const texture = this.textures.get("shogun_background_clouds").getSourceImage() as HTMLImageElement;
       const cloudScale = Math.max(width / texture.width, height / texture.height);
@@ -1032,6 +1036,17 @@ export default class SlotScene extends Phaser.Scene {
         .setSize(width, height)
         .setTileScale(cloudScale, cloudScale);
     }
+  }
+
+  private setBonusGameBackground(active: boolean) {
+    if (!this.backgroundImage) return;
+    const targetTexture = active && this.textures.exists("bonus_background") ? "bonus_background" : "shogun_background";
+    if (this.backgroundImage.texture.key !== targetTexture) {
+      this.backgroundImage.setTexture(targetTexture);
+      this.scaleBackground(Number(this.scale.width) || 1280, Number(this.scale.height) || 720);
+    }
+    this.backgroundImage.setAlpha(active ? 0.95 : 0.96);
+    this.backgroundClouds?.setAlpha(active ? 0.24 : 0.72);
   }
 
   private createCherryBlossomParticles(width: number, height: number) {
@@ -1698,39 +1713,44 @@ export default class SlotScene extends Phaser.Scene {
     }
 
     await this.showBonusTransition(titleText, freeSpins.length);
+    this.setBonusGameBackground(true);
 
     let collected = 0;
-    this.showBonusCollectDisplay(0, 1, freeSpins.length);
-    for (let index = 0; index < freeSpins.length; index++) {
-      const spin = freeSpins[index];
-      this.flashStatus(`Free spin ${index + 1}/${freeSpins.length}`);
-      this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length);
-      await this.wait(index === 0 ? 420 : 260);
-      await this.animateReelSpin(spin.grid);
+    try {
+      this.showBonusCollectDisplay(0, 1, freeSpins.length);
+      for (let index = 0; index < freeSpins.length; index++) {
+        const spin = freeSpins[index];
+        this.flashStatus(`Free spin ${index + 1}/${freeSpins.length}`);
+        this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length);
+        await this.wait(index === 0 ? 420 : 260);
+        await this.animateReelSpin(spin.grid);
 
-      this.grid = spin.grid;
-      this.lastWin = spin.totalWin;
-      this.balance += spin.totalWin;
-      collected += spin.totalWin;
-      this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length, spin.totalWin > 0);
-      this.renderGrid(spin.lineWins);
-      this.drawPaylines([]);
-      this.updateHud();
-      await this.presentWins(spin.lineWins);
+        this.grid = spin.grid;
+        this.lastWin = spin.totalWin;
+        this.balance += spin.totalWin;
+        collected += spin.totalWin;
+        this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length, spin.totalWin > 0);
+        this.renderGrid(spin.lineWins);
+        this.drawPaylines([]);
+        this.updateHud();
+        await this.presentWins(spin.lineWins);
 
-      if (spin.wheelMultiplier > 0) {
-        await this.showWheelSpin(spin.wheelMultiplier, spin.baseWin, spin.totalWin);
+        if (spin.wheelMultiplier > 0) {
+          await this.showWheelSpin(spin.wheelMultiplier, spin.baseWin, spin.totalWin);
+        }
+
+        this.flashStatus(spin.totalWin > 0 ? `Free spin win ${spin.totalWin.toFixed(2)}x` : "Free spin no win");
+        await this.wait(spin.totalWin > 0 ? 680 : 360);
       }
 
-      this.flashStatus(spin.totalWin > 0 ? `Free spin win ${spin.totalWin.toFixed(2)}x` : "Free spin no win");
-      await this.wait(spin.totalWin > 0 ? 680 : 360);
+      this.lastWin = collected;
+      this.updateBonusCollectDisplay(collected, freeSpins.length, freeSpins.length, collected > 0);
+      this.updateHud();
+      await this.showBonusSummary(totalWin, freeSpins.length, "TOTAL WIN");
+    } finally {
+      this.hideBonusCollectDisplay();
+      this.setBonusGameBackground(false);
     }
-
-    this.lastWin = collected;
-    this.updateBonusCollectDisplay(collected, freeSpins.length, freeSpins.length, collected > 0);
-    this.updateHud();
-    await this.showBonusSummary(totalWin, freeSpins.length, "TOTAL WIN");
-    this.hideBonusCollectDisplay();
     this.flashStatus(totalWin > 0 ? `Bonus paid ${totalWin.toFixed(2)}x` : "Bonus complete");
   }
 
