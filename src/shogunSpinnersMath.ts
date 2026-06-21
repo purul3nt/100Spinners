@@ -358,7 +358,7 @@ export function playBonusFeature(random = Math.random, bet = DEFAULT_BET, tier: 
     const resolved = resolveWheelEvents(grid, meter);
     meter = resolved.meter;
     const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * BONUS_FEATURE_PAY_SCALE) }));
-    const bonusBaseWin = roundMoney(scored.baseWin * BONUS_FEATURE_PAY_SCALE);
+    const bonusBaseWin = roundMoney(scaledLineWins.reduce((sum, win) => sum + win.amount, 0));
     const spinTotal = roundMoney(bonusBaseWin > 0 && meter > 0 ? bonusBaseWin * meter : bonusBaseWin);
     totalWin = roundMoney(totalWin + spinTotal);
     freeSpins.push({

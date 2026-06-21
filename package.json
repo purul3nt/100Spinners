@@ -39,7 +39,7 @@
   },
   "scripts": {
     "symbols:layers": "powershell -ExecutionPolicy Bypass -File scripts/run_symbol_layers.ps1",
-    "test": "node tests/regression-tests.mjs",
+    "test": "node tests/regression-tests.mjs && node tests/bonus-win-display-parity.mjs",
     "test:cert-math": "node tests/cert-math-audit.mjs && node tests/independent-core-parity.mjs",
     "test:math": "node tests/shogun-spinners-math-sim.mjs 100000",
     "test:math-tail": "node tests/shogun-spinners-tail-sim.mjs 1000000 268443686",
@@ -47,6 +47,7 @@
     "test:math-tail:100m": "node tests/shogun-spinners-tail-sim.mjs 100000000 268443686",
     "test:math-tail:parallel:100m": "node tests/shogun-spinners-tail-parallel.mjs 100000000 268443686",
     "test:bonus-presentation": "node tests/bonus-presentation-sim.mjs 100",
+    "test:bonus-win-display": "node tests/bonus-win-display-parity.mjs",
     "test:build": "npm run test && npm run test:bonus-presentation && set NODE_OPTIONS=--openssl-legacy-provider&& webpack --mode production",
     "dev": "webpack --mode development && webpack-dev-server --mode development",
     "build": "webpack --mode production && webpack-dev-server --mode production"

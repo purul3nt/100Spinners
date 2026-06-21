@@ -127,7 +127,8 @@ function reconstructBonusFeatureIndependently(freeSpins, bet = 1, tier = 1) {
     const scored = scoreGridIndependently(freeSpin.grid, bet);
     const resolved = resolveWheelEventsIndependently(freeSpin.grid, meter);
     meter = resolved.meter;
-    const bonusBaseWin = roundMoney(scored.baseWin * math.BONUS_FEATURE_PAY_SCALE);
+    const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * math.BONUS_FEATURE_PAY_SCALE) }));
+    const bonusBaseWin = roundMoney(scaledLineWins.reduce((sum, win) => sum + win.amount, 0));
     const spinTotal = roundMoney(bonusBaseWin > 0 && meter > 0 ? bonusBaseWin * meter : bonusBaseWin);
     totalWin = roundMoney(totalWin + spinTotal);
     reconstructedFreeSpins.push({
