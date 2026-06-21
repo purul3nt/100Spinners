@@ -162,6 +162,23 @@ assert.ok(
   slotSceneSource.includes("SHURIKEN ${wheelCashText}"),
   "wheel sequence should present standalone Shuriken cash hits",
 );
+const wheelSymbolPulseIndex = slotSceneSource.indexOf("await this.pulseWheelSymbols(events);");
+const wheelOverlayIndex = slotSceneSource.indexOf("this.wheelOverlay = this.add.container", wheelSymbolPulseIndex);
+const wheelSpinDurationIndex = slotSceneSource.indexOf("duration: 1550", wheelOverlayIndex);
+const wheelResultIndex = slotSceneSource.indexOf("WINNING MULTIPLIER", wheelSpinDurationIndex);
+const paidSpinWheelCallIndex = slotSceneSource.indexOf("await this.showWheelSequence(result.wheelEvents");
+const paidSpinBalanceCreditIndex = slotSceneSource.indexOf("this.balance += paidSpinWin;");
+assert.ok(wheelSymbolPulseIndex > 0, "wheel flow should pulse landed wheel symbols first");
+assert.ok(wheelOverlayIndex > wheelSymbolPulseIndex, "wheel overlay should appear after symbol pulse");
+assert.ok(wheelSpinDurationIndex > wheelOverlayIndex, "wheel spin should happen after enlarged wheel appears");
+assert.ok(wheelResultIndex > wheelSpinDurationIndex, "wheel result should show after the wheel spin");
+assert.ok(paidSpinBalanceCreditIndex > paidSpinWheelCallIndex, "paid spin balance credit should happen after wheel presentation");
+assert.ok(
+  !slotSceneSource.includes("BASE WIN") &&
+    !slotSceneSource.includes("animateWheelMultiplierApplication") &&
+    !slotSceneSource.includes("=> METER"),
+  "wheel overlay should not show old before/after multiplied-value math",
+);
 
 assert.ok(!slotSceneSource.includes("this.balance += spin.totalWin"), "bonus wins should not credit balance per free spin");
 const bonusSummaryIndex = slotSceneSource.indexOf('await this.showBonusSummary(totalWin, "TOTAL WIN");');

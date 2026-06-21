@@ -76,6 +76,8 @@ const REEL_FRAME_H = 768;
 const REEL_FRAME_ASPECT = REEL_FRAME_W / REEL_FRAME_H;
 const REEL_FRAME_BASE_H = ROWS * CELL + 96;
 const REEL_FRAME_BASE_W = REEL_FRAME_BASE_H * REEL_FRAME_ASPECT;
+const MACHINE_IMAGE_SCALE = 1.15;
+const PORTRAIT_MACHINE_IMAGE_SCALE = 1.02;
 const REEL_CENTER_X = [184, 449, 704, 949, 1198].map((x) => x / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
@@ -135,8 +137,8 @@ const SAMURAI_SLASH_FRAME_IDS = [
   "030",
 ];
 const SAMURAI_MOOD_BASE_HEIGHT: Record<SamuraiMood, number> = {
-  idle: 768,
-  slash: 1440,
+  idle: 640,
+  slash: 960,
 };
 const SAMURAI_MOOD_SCALE: Record<SamuraiMood, number> = {
   idle: 1,
@@ -159,7 +161,6 @@ const REEL_START_STAGGER_MS = 42;
 const SLAM_STOP_REEL_STAGGER_MS = 55;
 const SLAM_STOP_MIN_SPIN_MS = 180;
 const STOPPED_SYMBOL_Y_OFFSET = -5;
-const WHEEL_VALUES = [5, 10, 20, 50, 100, 250, 500, 1000];
 const SPIN_SYMBOL_CODES: SymbolCode[] = ["H1", "H2", "H3", "H4", "H5", "L1", "L2", "L3", "L4", "L5", "W1"];
 const SYMBOL_IMAGE_KEYS: Partial<Record<SymbolCode, string>> = {
   H1: "shogun_sym_high_01",
@@ -198,14 +199,13 @@ export default class SlotScene extends Phaser.Scene {
   private reelMaskShapes: Phaser.GameObjects.Graphics[] = [];
   private reelMasks: Phaser.Display.Masks.GeometryMask[] = [];
   private lineGraphics!: Phaser.GameObjects.Graphics;
-  private boardFrame!: Phaser.GameObjects.Rectangle;
-  private reelBackingTint!: Phaser.GameObjects.Graphics;
-  private reelFrame!: Phaser.GameObjects.Image;
+  private machinePanel!: Phaser.GameObjects.Graphics;
+  private machineFrameImage!: Phaser.GameObjects.Image;
+  private reelFrameBorder!: Phaser.GameObjects.Graphics;
   private titleText!: Phaser.GameObjects.Text;
   private balanceText!: Phaser.GameObjects.Text;
   private betText!: Phaser.GameObjects.Text;
   private winText!: Phaser.GameObjects.Text;
-  private multiplierMeterText!: Phaser.GameObjects.Text;
   private logoImage!: Phaser.GameObjects.Image;
   private clockText!: Phaser.GameObjects.Text;
   private logoGlowLayers: Array<{
@@ -227,13 +227,13 @@ export default class SlotScene extends Phaser.Scene {
   private menuButtonBg!: Phaser.GameObjects.Rectangle;
   private betUpText!: Phaser.GameObjects.Text;
   private betDownText!: Phaser.GameObjects.Text;
+  private betMinusBg!: Phaser.GameObjects.Rectangle;
+  private betPlusBg!: Phaser.GameObjects.Rectangle;
   private betMinusButton!: Phaser.GameObjects.Image;
   private betPlusButton!: Phaser.GameObjects.Image;
-  private autoButton!: Phaser.GameObjects.Image;
   private autoButtonBg!: Phaser.GameObjects.Arc;
   private autoButtonText!: Phaser.GameObjects.Text;
   private autoButtonShell!: Phaser.GameObjects.Container;
-  private maxBetButton!: Phaser.GameObjects.Image;
   private bonusPanel?: Phaser.GameObjects.Container;
   private bonusCollectDisplay?: Phaser.GameObjects.Container;
   private bonusCollectPanel?: Phaser.GameObjects.Rectangle;
@@ -332,7 +332,6 @@ export default class SlotScene extends Phaser.Scene {
     this.balanceText = this.createHudText("BALANCE 0.00");
     this.betText = this.createHudText("BET 1.00");
     this.winText = this.createHudText("WIN 0.00");
-    this.multiplierMeterText = this.createHudText("METER\n0x");
 
     this.betMinusButton = this.add.image(0, 0, "ui_btn_minus").setDepth(68).setInteractive({ useHandCursor: true });
     this.betPlusButton = this.add.image(0, 0, "ui_btn_plus").setDepth(68).setInteractive({ useHandCursor: true });
@@ -340,6 +339,10 @@ export default class SlotScene extends Phaser.Scene {
     this.betPlusButton.on("pointerdown", () => this.adjustBet(1));
     this.betMinusButton.setVisible(false);
     this.betPlusButton.setVisible(false);
+    this.betMinusBg = this.add.rectangle(0, 0, 38, 33, 0x5e5968, 0.94).setDepth(67).setVisible(false).setInteractive({ useHandCursor: true });
+    this.betPlusBg = this.add.rectangle(0, 0, 38, 33, 0x5e5968, 0.94).setDepth(67).setVisible(false).setInteractive({ useHandCursor: true });
+    this.betMinusBg.on("pointerdown", () => this.adjustBet(-1));
+    this.betPlusBg.on("pointerdown", () => this.adjustBet(1));
 
     this.betUpText = this.add.text(0, 0, "\u25B2", {
       fontFamily: "Arial Black, Arial, sans-serif",
@@ -358,13 +361,6 @@ export default class SlotScene extends Phaser.Scene {
     this.betUpText.on("pointerdown", () => this.adjustBet(1));
     this.betDownText.on("pointerdown", () => this.adjustBet(-1));
 
-    this.autoButton = this.add.image(0, 0, "ui_btn_auto").setDepth(66).setInteractive({ useHandCursor: true });
-    this.maxBetButton = this.add.image(0, 0, "ui_btn_max").setDepth(66).setInteractive({ useHandCursor: true });
-    this.autoButton.on("pointerdown", () => this.spin());
-    this.maxBetButton.on("pointerdown", () => this.setMaxBet());
-    this.autoButton.setVisible(false);
-    this.maxBetButton.setVisible(false);
-
     this.autoButtonBg = this.add.circle(0, 0, 28, 0x242424, 0.98)
       .setInteractive({ useHandCursor: true });
     this.autoButtonText = this.add.text(0, -1, "\u21BB", {
@@ -378,9 +374,9 @@ export default class SlotScene extends Phaser.Scene {
     this.autoButtonBg.on("pointerout", () => this.autoButtonShell.setScale(1));
 
     this.buyButtonBg = this.add.circle(0, 0, 34, 0xf2d7f0, 1).setStrokeStyle(3, 0x111111, 1);
-    this.buyButtonText = this.add.text(0, 0, "BUY\nBONUS", {
+    this.buyButtonText = this.add.text(0, 0, "BUY", {
       fontFamily: "Arial Black, Arial, sans-serif",
-      fontSize: "13px",
+      fontSize: "15px",
       color: "#111111",
       align: "center",
       stroke: "#ffffff",
@@ -395,7 +391,7 @@ export default class SlotScene extends Phaser.Scene {
     this.menuButtonBg = this.add.rectangle(0, 0, 58, 58, 0x151515, 0.92)
       .setStrokeStyle(0, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
-    const menuBars = [-13, 0, 13].map((y) => this.add.rectangle(0, y, 30, 5, 0xffffff, 1).setOrigin(0.5));
+    const menuBars = [-20, 0, 20].map((y) => this.add.rectangle(12, y, 73, 13, 0xffffff, 1).setOrigin(0.5));
     this.menuButton = this.add.container(0, 0, [this.menuButtonBg, ...menuBars]).setDepth(70);
     this.menuButtonBg.on("pointerdown", () => this.showRulesMenu());
     this.menuButtonBg.on("pointerover", () => this.menuButton.setScale(1.05));
@@ -450,11 +446,12 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private createBoard() {
-    this.boardFrame = this.add.rectangle(0, 0, 1, 1, 0x050816, 0.72)
-      .setOrigin(0, 0)
-      .setStrokeStyle(4, 0xb99345, 0.64);
-    this.reelFrame = this.add.image(0, 0, "shogun_reel_frame").setDepth(7);
-    this.reelBackingTint = this.add.graphics().setDepth(7.35);
+    this.machineFrameImage = this.add.image(0, 0, "shogun_reel_frame").setOrigin(0.5).setDepth(1.1);
+    this.machinePanel = this.add.graphics().setDepth(2);
+    // Thin glowing white border around the reel area, matching the
+    // Baboon Bonanza reference style. Sits at the same depth band as the
+    // previous boardFrame so reels/UI ordering is unchanged.
+    this.reelFrameBorder = this.add.graphics().setDepth(7);
     this.lineGraphics = this.add.graphics().setDepth(12);
   }
 
@@ -509,18 +506,18 @@ export default class SlotScene extends Phaser.Scene {
     const footerTop = this.uiBar ? this.uiBar.y : height;
     const availableRight = Math.max(0, width - boardRight);
     const targetHeight = portrait
-      ? Math.min(height * 0.45, width * 0.82, this.frameH * 0.95)
+      ? Math.min(height * 0.3, width * 0.76, this.frameH * 1.18)
       : Math.min(this.frameH * 1.06, height * 0.72, Math.max(360, availableRight * 1.55));
     const scale = (targetHeight / SAMURAI_MOOD_BASE_HEIGHT[this.samuraiMood]) * SAMURAI_MOOD_SCALE[this.samuraiMood];
     const x = portrait
-      ? this.frameLeft + this.frameW * 0.86
+      ? width / 2
       : (availableRight > 120 ? boardRight + Math.max(availableRight * 0.38, this.frameW * 0.055) : this.frameLeft + this.frameW * 0.92);
     const y = portrait
-      ? Math.min(footerTop + targetHeight * 0.08, boardBottom + targetHeight * 0.14)
-      : Math.min(footerTop + targetHeight * 0.18, boardBottom + targetHeight * 0.18);
+      ? Math.max(height * 0.18, this.frameTop + this.frameH * 0.08)
+      : Math.min(footerTop + targetHeight * 0.32, boardBottom + targetHeight * 0.32);
     this.samuraiFx
       .setVisible(true)
-      .setAlpha(0.86)
+      .setAlpha(portrait ? 0.92 : 0.86)
       .setPosition(
         x + this.frameW * 0.035 * SAMURAI_MOOD_X_OFFSET[this.samuraiMood],
         y + this.frameH * 0.035 * SAMURAI_MOOD_Y_OFFSET[this.samuraiMood],
@@ -580,19 +577,29 @@ export default class SlotScene extends Phaser.Scene {
   private layoutScene() {
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
-    this.scaleFactor = Math.min(1, (width * 0.94) / REEL_FRAME_BASE_W, (height * 0.62) / REEL_FRAME_BASE_H);
+    const portrait = height > width * 1.05;
+    const compactLandscape = !portrait && height < 520;
+    const machineScale = this.getMachineImageScale(width, height);
+    const machineWidthBudget = portrait ? width * 0.985 : width * 0.94;
+    const frameWidthScale = machineWidthBudget / (REEL_FRAME_BASE_W * machineScale);
+    const frameHeightBudget = height * (portrait ? 0.46 : compactLandscape ? 0.52 : 0.62);
+    this.scaleFactor = Math.min(1, frameWidthScale, frameHeightBudget / REEL_FRAME_BASE_H);
     this.frameW = REEL_FRAME_BASE_W * this.scaleFactor;
     this.frameH = REEL_FRAME_BASE_H * this.scaleFactor;
     this.frameLeft = width / 2 - this.frameW / 2;
-    const firstRowY = Math.max(height * 0.28, Math.max(166, height * 0.075 + 112));
+    const firstRowY = portrait
+      ? Math.min(height * 0.38, Math.max(height * 0.35, 286))
+      : compactLandscape
+        ? Math.max(height * 0.36, 136)
+        : Math.max(height * 0.28, Math.max(166, height * 0.075 + 112));
     this.frameTop = firstRowY - ROW_CENTER_Y[0] * this.frameH;
 
     this.titleText.setPosition(width / 2, Math.max(48, height * 0.075)).setFontSize(Math.max(32, Math.min(58, width * 0.043)));
     if (this.logoImage) {
-      const logoW = Math.min(width * 0.17, height * 0.28, 220);
+      const logoW = portrait ? Math.min(width * 0.32, height * 0.15, 154) : Math.min(width * 0.17, height * 0.28, 220);
       const logoH = logoW * (this.logoImage.height / this.logoImage.width);
-      const logoX = Math.max(12, width * 0.014);
-      const logoY = Math.max(22, height * 0.03);
+      const logoX = portrait ? Math.max(18, width * 0.065) : Math.max(12, width * 0.014);
+      const logoY = portrait ? Math.max(26, height * 0.04) : Math.max(22, height * 0.03);
       this.logoGlowLayers.forEach((layer) => {
         const glowW = logoW * layer.scale;
         const glowH = logoH * layer.scale;
@@ -610,21 +617,15 @@ export default class SlotScene extends Phaser.Scene {
     if (this.clockText) {
       this.clockText.setPosition(5, 3).setFontSize(height > width ? 10 : 13);
     }
-    this.boardFrame
-      .setPosition(this.frameLeft + this.frameW * 0.035, this.frameTop + this.frameH * 0.05)
-      .setSize(this.frameW * 0.93, this.frameH * 0.88);
     this.scaleBackground(width, height);
     this.layoutCherryBlossomParticles(width, height);
-    this.reelFrame
-      .setPosition(width / 2, this.frameTop + this.frameH / 2)
-      .setDisplaySize(this.frameW, this.frameH);
-    this.drawReelBackingTint();
+    const reelBounds = this.getReelContentBounds();
+    const machineBounds = this.getMachineFrameBounds(width, height);
+    this.machineFrameImage.setPosition(machineBounds.centerX, machineBounds.centerY).setDisplaySize(machineBounds.width, machineBounds.height);
+    this.drawMachinePanel(reelBounds);
+    this.drawReelFrameBorder(reelBounds);
 
     this.layoutBaboonFooter(width, height);
-    this.multiplierMeterText
-      .setPosition(this.frameLeft + this.frameW * 0.83, this.frameTop + this.frameH * 0.03)
-      .setFontSize(height > width * 1.05 ? 15 : 20)
-      .setOrigin(0.5, 0);
     this.layoutBonusCollectDisplay(width, height);
     this.refreshSamuraiLayout();
 
@@ -632,53 +633,106 @@ export default class SlotScene extends Phaser.Scene {
     this.drawPaylines([]);
   }
 
+  private getMachineImageScale(width: number, height: number) {
+    return height > width * 1.05 ? PORTRAIT_MACHINE_IMAGE_SCALE : MACHINE_IMAGE_SCALE;
+  }
+
+  private getMachineFrameBounds(width: number, height = Number(this.scale.height) || 720) {
+    const machineScale = this.getMachineImageScale(width, height);
+    const scaledW = this.frameW * machineScale;
+    const scaledH = this.frameH * machineScale;
+    const centerX = width / 2;
+    const centerY = this.frameTop + this.frameH / 2;
+    return {
+      left: centerX - scaledW / 2,
+      top: centerY - scaledH / 2,
+      width: scaledW,
+      height: scaledH,
+      centerX,
+      centerY,
+    };
+  }
+
+  private getReelContentBounds() {
+    const firstGap = REEL_CENTER_X[1] - REEL_CENTER_X[0];
+    const lastGap = REEL_CENTER_X[COLS - 1] - REEL_CENTER_X[COLS - 2];
+    const rowGap = ROW_CENTER_Y[1] - ROW_CENTER_Y[0];
+    const left = this.frameLeft + (REEL_CENTER_X[0] - firstGap * 0.5) * this.frameW;
+    const right = this.frameLeft + (REEL_CENTER_X[COLS - 1] + lastGap * 0.5) * this.frameW;
+    const top = this.frameTop + (ROW_CENTER_Y[0] - rowGap * 0.5) * this.frameH + STOPPED_SYMBOL_Y_OFFSET;
+    const bottom = this.frameTop + (ROW_CENTER_Y[ROWS - 1] + rowGap * 0.5) * this.frameH + STOPPED_SYMBOL_Y_OFFSET;
+    const padX = Math.max(4, this.frameW * 0.006);
+    const padY = Math.max(4, this.frameH * 0.012);
+    return {
+      left: left - padX,
+      top: top - padY,
+      width: right - left + padX * 2,
+      height: bottom - top + padY * 2,
+    };
+  }
+
   private layoutBaboonFooter(width: number, height: number) {
     const portrait = height > width;
-    const barH = portrait ? Math.max(142, height * 0.18) : Math.max(108, height * 0.11);
+    const compactLandscape = !portrait && height < 520;
+    const barH = portrait ? Math.max(176, height * 0.214) : compactLandscape ? Math.max(78, height * 0.2) : Math.max(108, height * 0.11);
     const barTop = height - barH;
-    this.uiBar.setPosition(0, barTop).setSize(width, barH).setFillStyle(0x050505, portrait ? 0.58 : 0.76);
+    this.uiBar.setPosition(0, barTop).setSize(width, barH).setFillStyle(portrait ? 0x05050a : 0x050505, portrait ? 0.58 : 0.76);
 
-    const panelW = portrait ? Math.min(width * 0.72, 390) : Math.min(410, width * 0.235);
-    const panelH = portrait ? 70 : Math.min(86, Math.max(76, height * 0.078));
-    const panelRight = portrait ? width * 0.04 : Math.max(90, width * 0.052);
+    const panelW = portrait ? Math.min(width * 0.72, 300) : compactLandscape ? Math.min(280, width * 0.36) : Math.min(410, width * 0.235);
+    const panelH = portrait ? 58 : compactLandscape ? 58 : Math.min(86, Math.max(76, height * 0.078));
+    const panelRight = portrait ? 0 : compactLandscape ? Math.max(30, width * 0.045) : Math.max(90, width * 0.052);
     const panelX = portrait ? width / 2 : width - panelRight - panelW / 2;
-    const panelY = barTop + barH * 0.52;
-    this.betPanel.setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
+    const panelY = portrait ? height - 27 : barTop + barH * (compactLandscape ? 0.56 : 0.52);
+    this.betPanel.setVisible(!portrait).setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
-    const spinSize = portrait ? Math.min(104, width * 0.2) : Math.min(94, Math.max(82, height * 0.086));
-    const spinX = portrait ? panelX + panelW * 0.22 : panelX + panelW * 0.22;
-    const spinY = panelY;
+    const spinSize = portrait ? Math.min(264, Math.max(246, width * 0.676)) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
+    const spinX = portrait ? width / 2 : panelX + panelW * 0.22;
+    const spinY = portrait ? barTop + barH * 0.48 : panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
     this.spinButtonBg.setRadius(spinSize / 2).setFillStyle(0x242424, 0.98).setStrokeStyle(Math.max(7, spinSize * 0.085), 0xffffff, 1);
-    this.spinButtonText.setFontSize(Math.max(38, spinSize * 0.58));
+    this.spinButtonText.setFontSize(Math.max(38, spinSize * 0.4));
     this.spinHitZone.setPosition(spinX - spinSize / 2, spinY - spinSize / 2).setSize(spinSize, spinSize);
     this.spinHitZone.setInteractive(new Phaser.Geom.Rectangle(0, 0, spinSize, spinSize), Phaser.Geom.Rectangle.Contains);
 
-    const betTextX = panelX - panelW * 0.37;
-    this.betText.setPosition(betTextX, panelY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 14 : 19) : (portrait ? 18 : 22)).setOrigin(0, 0.5);
-    const arrowX = panelX - panelW * 0.03;
-    this.betUpText.setPosition(arrowX, panelY - panelH * 0.24).setFontSize(portrait ? 24 : 28);
-    this.betDownText.setPosition(arrowX, panelY + panelH * 0.24).setFontSize(portrait ? 24 : 28);
+    const betTextX = portrait ? width * 0.57 : panelX - panelW * 0.37;
+    const betTextY = portrait ? height - 42 : panelY;
+    this.betText.setPosition(betTextX, betTextY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 26 : compactLandscape ? 14 : 19) : (portrait ? 26 : compactLandscape ? 16 : 22)).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
 
-    const autoSize = spinSize * 0.58;
-    this.autoButton.setPosition(panelX + panelW * 0.42, panelY).setScale(portrait ? 0.45 : 0.52);
-    this.autoButtonShell.setPosition(panelX + panelW * 0.43, panelY).setScale(1);
-    this.autoButtonBg.setRadius(autoSize / 2).setFillStyle(0x242424, 0.98);
-    this.autoButtonText.setFontSize(Math.max(23, autoSize * 0.6));
-    this.maxBetButton.setPosition(panelX + panelW * 0.42, panelY).setScale(portrait ? 0.45 : 0.52);
+    const sideOffset = portrait ? width * 0.212 : Math.max(80, spinSize * 0.82);
+    const plusOffset = portrait ? Math.max(155, spinSize * 0.59) : sideOffset;
+    const minusX = portrait ? spinX - sideOffset : panelX - panelW * 0.03;
+    const plusX = portrait ? spinX + plusOffset : panelX - panelW * 0.03;
+    this.betMinusButton.setVisible(false);
+    this.betPlusButton.setVisible(false);
+    this.betMinusBg.setVisible(portrait).setPosition(minusX, spinY).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    this.betPlusBg.setVisible(portrait).setPosition(plusX, spinY).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    this.betDownText.setDepth(portrait ? 78 : 72).setText(portrait ? "-" : "\u25BC").setPosition(portrait ? minusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY + panelH * 0.22).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    this.betUpText.setDepth(portrait ? 78 : 72).setText(portrait ? "+" : "\u25B2").setPosition(portrait ? plusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY - panelH * 0.22).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    if (!portrait) {
+      this.betMinusBg.setVisible(false);
+      this.betPlusBg.setVisible(false);
+    }
 
-    const buySize = portrait ? Math.min(62, width * 0.13) : Math.min(68, height * 0.064);
-    const clusterLeft = portrait ? Math.max(24, width * 0.08) : Math.max(276, width * 0.152);
-    const buyX = clusterLeft + buySize / 2;
-    const leftY = panelY;
-    this.buyButton.setPosition(buyX, leftY).setScale(1);
-    this.buyButtonBg.setRadius(buySize / 2).setFillStyle(0xf2d7f0, 1).setStrokeStyle(3, 0x111111, 1);
-    this.buyButtonText.setFontSize(Math.max(11, buySize * 0.19));
+    const autoSize = portrait ? 116 : spinSize * 0.58;
+    this.autoButtonShell.setPosition(portrait ? width - 56 : panelX + panelW * 0.43, portrait ? barTop + barH * 0.6 : spinY).setScale(1);
+    this.autoButtonBg.setRadius(autoSize / 2).setFillStyle(portrait ? 0x5e5968 : 0x242424, portrait ? 0.86 : 0.98);
+    this.autoButtonText.setFontSize(portrait ? 26 : Math.max(23, autoSize * 0.6));
 
-    this.menuButton.setPosition(buyX + buySize * 1.22, leftY);
-    this.menuButtonBg.setSize(portrait ? 50 : 58, portrait ? 50 : 58);
+    const buySize = portrait ? 136 : compactLandscape ? Math.min(48, height * 0.12) : Math.min(68, height * 0.064);
+    const clusterLeft = portrait ? Math.max(26, width * 0.08) : compactLandscape ? Math.max(96, width * 0.27) : Math.max(276, width * 0.152);
+    const buyX = portrait ? width * 0.116 : clusterLeft + buySize / 2;
+    const leftY = portrait ? barTop + Math.max(35, barH * 0.23) : panelY;
+    this.buyButton.setPosition(buyX, portrait ? barTop + barH * 0.21 : leftY).setScale(1);
+    this.buyButtonBg.setRadius(buySize / 2).setFillStyle(portrait ? 0xfacc15 : 0xf2d7f0, portrait ? 1 : 1).setStrokeStyle(3, 0x111111, 1);
+    this.buyButtonText.setText(portrait ? "BUY\nBONUS" : "BUY").setFontSize(portrait ? 22 : Math.max(12, buySize * 0.19)).setColor("#111111").setStroke("#ffffff", 1).setRotation(portrait ? -0.55 : 0);
 
-    this.balanceText.setPosition(buyX + buySize * 2.15, leftY).setFontSize(portrait ? 17 : 24).setOrigin(0, 0.5);
+    const menuX = portrait ? width * 0.098 : buyX + buySize * 1.18;
+    const menuY = portrait ? barTop + barH * 0.595 : leftY;
+    this.menuButton.setPosition(menuX, menuY);
+    this.menuButtonBg.setPosition(portrait ? -12 : 0, portrait ? -12 : 0);
+    this.menuButtonBg.setSize(portrait ? 130 : compactLandscape ? 44 : 58, portrait ? 130 : compactLandscape ? 44 : 58).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
+
+    this.balanceText.setPosition(portrait ? width * 0.255 : buyX + buySize * 2.05, portrait ? height - 42 : leftY).setFontSize(portrait ? 26 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
     this.winText.setVisible(false);
   }
 
@@ -689,21 +743,30 @@ export default class SlotScene extends Phaser.Scene {
     this.drawPaylines([]);
   }
 
-  private drawReelBackingTint() {
-    if (!this.reelBackingTint) return;
-    const left = this.frameLeft + this.frameW * 0.035;
-    const top = this.frameTop + this.frameH * 0.05;
-    const width = this.frameW * 0.93;
-    const height = this.frameH * 0.88;
-    this.reelBackingTint.clear();
-    this.reelBackingTint.fillStyle(0x2c2f35, 0.34);
-    this.reelBackingTint.fillRoundedRect(left, top, width, height, Math.max(18, 26 * this.scaleFactor));
-    this.reelBackingTint.fillStyle(0xaab0b4, 0.16);
-    this.reelBackingTint.fillRoundedRect(left + 5 * this.scaleFactor, top + 5 * this.scaleFactor, width - 10 * this.scaleFactor, height - 10 * this.scaleFactor, Math.max(14, 22 * this.scaleFactor));
-    this.reelBackingTint.lineStyle(Math.max(2, 3 * this.scaleFactor), 0x1f2329, 0.18);
+  private drawMachinePanel(bounds: { left: number; top: number; width: number; height: number }) {
+    if (!this.machinePanel) return;
+    this.machinePanel.clear();
+    const radius = Math.max(8, 14 * this.scaleFactor);
+    this.machinePanel.fillStyle(0x1a1d24, 0.42);
+    this.machinePanel.fillRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, radius);
+  }
+
+  private drawReelFrameBorder(bounds: { left: number; top: number; width: number; height: number }) {
+    if (!this.reelFrameBorder) return;
+    const g = this.reelFrameBorder;
+    g.clear();
+    // Outer halo: a faint white stroke a few px out, drawn first.
+    const halo = Math.max(2, 4 * this.scaleFactor);
+    const core = Math.max(1, 2 * this.scaleFactor);
+    const radius = Math.max(8, 14 * this.scaleFactor);
+    g.lineStyle(halo, 0xffffff, 0.22);
+    g.strokeRoundedRect(bounds.left - halo, bounds.top - halo, bounds.width + halo * 2, bounds.height + halo * 2, radius + halo);
+    g.lineStyle(core, 0xffffff, 0.85);
+    g.strokeRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, radius);
+    g.lineStyle(Math.max(1, 2 * this.scaleFactor), 0x1f2329, 0.22);
     for (let col = 1; col < COLS; col++) {
       const x = Phaser.Math.Linear(this.cellX(col - 1), this.cellX(col), 0.5);
-      this.reelBackingTint.lineBetween(x, top + height * 0.035, x, top + height * 0.965);
+      g.lineBetween(x, bounds.top + bounds.height * 0.02, x, bounds.top + bounds.height * 0.98);
     }
   }
 
@@ -724,7 +787,6 @@ export default class SlotScene extends Phaser.Scene {
     this.grid = result.grid;
     const paidSpinWin = Math.max(0, result.totalWin - result.bonusWin);
     this.lastWin = paidSpinWin;
-    this.balance += paidSpinWin;
     this.renderGrid(result.lineWins);
     this.drawPaylines([]);
     this.updateHud();
@@ -733,13 +795,14 @@ export default class SlotScene extends Phaser.Scene {
     if (result.wheelEvents.length > 0) {
       await this.showWheelSequence(result.wheelEvents, result.baseWin, paidSpinWin, result.baseWheelCashWin);
     }
+    this.balance += paidSpinWin;
     this.currentMultiplierMeter = result.multiplierMeter;
     this.updateHud();
 
     if (result.bonusTriggered && result.freeSpins) {
-      await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, `TIER ${result.bonusTier} SHURIKEN BONUS`);
+      await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, `SHURIKEN BONUS`);
     } else if (paidSpinWin > 0) {
-      this.flashStatus(result.baseWheelCashWin > 0 ? `Shuriken cash ${result.baseWheelCashWin.toFixed(2)}x` : result.multiplierMeter > 0 ? `Meter ${result.multiplierMeter}x` : `${result.lineWins.length} line win(s)`);
+      this.flashStatus(result.baseWheelCashWin > 0 ? `Shuriken cash ${result.baseWheelCashWin.toFixed(2)}x` : `${result.lineWins.length} line win(s)`);
     } else {
       this.flashStatus("No win");
     }
@@ -791,7 +854,7 @@ export default class SlotScene extends Phaser.Scene {
     this.updateHud();
     this.flashStatus("Buying bonus...");
     const result = buyBonus(() => Math.random(), this.bet);
-    await this.playFreeSpinSequence(result.freeSpins, result.totalWin, `BUY BONUS - TIER ${result.bonusTier}`);
+    await this.playFreeSpinSequence(result.freeSpins, result.totalWin, `BUY BONUS`);
     this.spinning = false;
     this.updateHud();
   }
@@ -899,7 +962,7 @@ export default class SlotScene extends Phaser.Scene {
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "Shurikens can land on reels 1, 3, and 5. Each Shuriken activates a Wicked Wheel at that position, resolving left to right.\n\n" +
       "Blue Wicked Wheels appear in the base game. Red Wicked Wheels appear in free spins. Base-game non-bonus Shuriken outcomes can award cash and can add to or multiply the multiplier meter.\n\n" +
-      `Bonus Shuriken outcomes from Blue Wheels award stronger free-spin tiers: 1, 2, or 3 outcomes trigger Tier 1, 2, or 3 with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
+      `Bonus Shuriken outcomes from Blue Wheels award stronger free-spin tiers: 1, 2, or 3 outcomes trigger free-spin levels with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
       "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
@@ -1671,7 +1734,6 @@ export default class SlotScene extends Phaser.Scene {
       .setText(this.bonusTotalSpins > 0 ? `FREE\nSPINS ${this.bonusCurrentSpin}/${this.bonusTotalSpins}` : `BET\n\u20AC${this.bet.toFixed(2)}`)
       .setFontSize(this.bonusTotalSpins > 0 ? 19 : 22);
     this.winText.setText(`WIN ${this.lastWin.toFixed(2)}`);
-    this.multiplierMeterText?.setText(`METER\n${this.currentMultiplierMeter}x`);
     if (this.spinButtonText) {
       const canSlam = this.slamStopAvailable && this.spinning;
       const spinRadius = Math.max(38, this.spinButtonBg.displayWidth / 2);
@@ -1709,6 +1771,7 @@ export default class SlotScene extends Phaser.Scene {
 
   private async showWheelSequence(events: WheelEvent[], baseWin: number, totalWin: number, wheelCashWin = 0) {
     if (this.wheelOverlay) this.wheelOverlay.destroy(true);
+    await this.pulseWheelSymbols(events);
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
     const centerX = width / 2;
@@ -1751,7 +1814,7 @@ export default class SlotScene extends Phaser.Scene {
       stroke: UI_HEX.ink,
       strokeThickness: 7,
     }).setOrigin(0.5);
-    const meterText = this.add.text(centerX, centerY + wheelSize * 0.79, `METER ${this.currentMultiplierMeter}x`, {
+    const meterText = this.add.text(centerX, centerY + wheelSize * 0.79, `${this.currentMultiplierMeter}x`, {
       fontFamily: BODY_FONT,
       fontSize: `${Math.max(16, Math.min(24, width * 0.018))}px`,
       color: UI_HEX.peach,
@@ -1760,9 +1823,9 @@ export default class SlotScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.wheelOverlay = this.add.container(0, 0, [blocker, glow, ring, wheelGroup, pointer, title, resultText, meterText]).setDepth(45).setAlpha(0);
-    this.tweens.add({ targets: this.wheelOverlay, alpha: 1, duration: 180, ease: "Sine.Out" });
-    this.tweens.add({ targets: wheelGroup, alpha: 1, scaleX: 1, scaleY: 1, duration: 260, ease: "Back.Out" });
-    await this.wait(260);
+    this.tweens.add({ targets: this.wheelOverlay, alpha: 1, duration: 260, ease: "Sine.Out" });
+    this.tweens.add({ targets: wheelGroup, alpha: 1, scaleX: 1, scaleY: 1, duration: 520, ease: "Back.Out" });
+    await this.wait(680);
 
     for (let index = 0; index < events.length; index++) {
       const event = events[index];
@@ -1776,7 +1839,7 @@ export default class SlotScene extends Phaser.Scene {
         this.tweens.add({
           targets: wheelGroup,
           angle: wheelGroup.angle + stopAngle,
-          duration: 760,
+          duration: 1550,
           ease: "Cubic.Out",
           onComplete: () => resolve(),
         });
@@ -1785,21 +1848,15 @@ export default class SlotScene extends Phaser.Scene {
       this.updateHud();
       const outcomeCopy = event.outcome.kind === "bonus"
         ? `BONUS SHURIKEN ${index + 1}/${events.length}`
-        : `${outcomeText} => METER ${event.meterAfter}x`;
+        : `WINNING MULTIPLIER ${outcomeText}`;
       resultText.setText(outcomeCopy);
       const wheelCashText = wheelCashWin > 0 ? `CASH ${wheelCashWin.toFixed(2)}` : "";
-      meterText.setText(baseWin > 0 && event.meterAfter > 0
-        ? wheelCashWin > 0
-          ? `LINE ${baseWin.toFixed(2)} x ${event.meterAfter} + ${wheelCashText} = ${totalWin.toFixed(2)}`
-          : `LINE ${baseWin.toFixed(2)} x ${event.meterAfter} = ${totalWin.toFixed(2)}`
-        : wheelCashWin > 0
-          ? `SHURIKEN ${wheelCashText}`
-          : `METER ${event.meterAfter}x`);
+      meterText.setText(wheelCashWin > 0 ? `SHURIKEN ${wheelCashText}` : `${event.meterAfter}x`);
       this.tweens.add({ targets: [resultText, meterText, glow], scaleX: 1.08, scaleY: 1.08, duration: 160, yoyo: true, ease: "Sine.Out" });
-      await this.wait(420);
+      await this.wait(900);
     }
 
-    await this.wait(250);
+    await this.wait(420);
     if (this.wheelOverlay) {
       this.tweens.add({
         targets: this.wheelOverlay,
@@ -1814,187 +1871,36 @@ export default class SlotScene extends Phaser.Scene {
     }
   }
 
-  private async showWheelSpin(value: number, baseWin: number, totalWin: number) {
-    if (this.wheelOverlay) this.wheelOverlay.destroy(true);
-    const width = Number(this.scale.width) || 1280;
-    const height = Number(this.scale.height) || 720;
-    const centerX = width / 2;
-    const centerY = Math.min(height * 0.52, this.frameTop + this.frameH * 0.52);
-    const wheelSize = Math.max(260, Math.min(430, Math.min(width, height) * 0.58));
-    const values = this.createWheelValueSequence(value);
-    const selectedIndex = values.indexOf(value);
-    const labelRadius = wheelSize * 0.28;
-    const labelFont = Math.max(18, Math.min(31, wheelSize * 0.068));
-
-    const blocker = this.add.rectangle(0, 0, width, height, UI_PALETTE.ink, 0.64).setOrigin(0).setInteractive({ useHandCursor: false });
-    const glow = this.add.circle(centerX, centerY, wheelSize * 0.58, UI_PALETTE.bronze, 0.16);
-    const ring = this.add.circle(centerX, centerY, wheelSize * 0.51, UI_PALETTE.darkBrown, 0.84).setStrokeStyle(5, UI_PALETTE.bronze, 0.95);
-    const wheel = this.add.image(0, 0, "shogun_wheel").setDisplaySize(wheelSize, wheelSize);
-    const labels = values.map((multiplier, index) => {
-      const angle = -Math.PI / 2 + (Math.PI * 2 * index) / values.length;
-      const label = this.add.text(Math.cos(angle) * labelRadius, Math.sin(angle) * labelRadius, `${multiplier}x`, {
-        fontFamily: UI_FONT,
-        fontSize: `${labelFont}px`,
-        color: multiplier === value ? UI_HEX.peach : UI_HEX.parchment,
-        stroke: UI_HEX.ink,
-        strokeThickness: Math.max(5, Math.round(labelFont * 0.22)),
-        align: "center",
-      }).setOrigin(0.5);
-      label.setAngle((angle * 180) / Math.PI + 90);
-      return label;
-    });
-    const wheelParts: Phaser.GameObjects.GameObject[] = [wheel as Phaser.GameObjects.GameObject, ...labels];
-    const wheelGroup = this.add.container(centerX, centerY, wheelParts).setScale(0.2).setAlpha(0);
-    const pointerSize = Math.max(44, Math.min(76, wheelSize * 0.16));
-    const pointer = this.add.image(centerX, centerY - wheelSize * 0.55, "shuriken_spin_pin")
-      .setOrigin(0.5)
-      .setDisplaySize(pointerSize, pointerSize);
-    const title = this.add.text(centerX, centerY - wheelSize * 0.7, "SHURIKEN SPINNER", {
-      fontFamily: UI_FONT,
-      fontSize: `${Math.max(34, Math.min(58, width * 0.045))}px`,
-      color: UI_HEX.peach,
-      stroke: UI_HEX.ink,
-      strokeThickness: 8,
-    }).setOrigin(0.5);
-    const resultText = this.add.text(centerX, centerY + wheelSize * 0.66, "SPINNING...", {
-      fontFamily: UI_FONT,
-      fontSize: `${Math.max(26, Math.min(42, width * 0.033))}px`,
-      color: UI_HEX.parchment,
-      stroke: UI_HEX.ink,
-      strokeThickness: 7,
-    }).setOrigin(0.5);
-    const mathText = this.add.text(centerX, centerY + wheelSize * 0.77, `${baseWin.toFixed(2)} x ${value} = ${totalWin.toFixed(2)}`, {
-      fontFamily: BODY_FONT,
-      fontSize: `${Math.max(15, Math.min(22, width * 0.017))}px`,
-      color: UI_HEX.peach,
-      stroke: UI_HEX.ink,
-      strokeThickness: 4,
-    }).setOrigin(0.5).setAlpha(0);
-
-    this.wheelOverlay = this.add.container(0, 0, [blocker, glow, ring, wheelGroup, pointer, title, resultText, mathText]).setDepth(45).setAlpha(0);
-    this.tweens.add({ targets: this.wheelOverlay, alpha: 1, duration: 180, ease: "Sine.Out" });
-    this.tweens.add({ targets: wheelGroup, alpha: 1, scaleX: 1, scaleY: 1, duration: 260, ease: "Back.Out" });
-    this.tweens.add({ targets: glow, alpha: 0.27, scaleX: 1.08, scaleY: 1.08, duration: 340, yoyo: true, repeat: 5, ease: "Sine.InOut" });
-    await this.wait(260);
-
-    const stopAngle = (360 * 5) + ((360 - selectedIndex * (360 / values.length)) % 360);
+  private async pulseWheelSymbols(events: WheelEvent[]) {
+    const targets = events
+      .map((event) => this.symbolViews[event.col]?.[event.row]?.container)
+      .filter((container): container is Phaser.GameObjects.Container => Boolean(container?.active));
+    if (targets.length === 0) return;
     await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: wheelGroup,
-        angle: stopAngle,
-        duration: 1750,
-        ease: "Cubic.Out",
-        onComplete: () => resolve(),
+      let completed = 0;
+      targets.forEach((target, index) => {
+        this.tweens.killTweensOf(target);
+        const baseScale = Number(target.getData("baseScale")) || target.scaleX || 1;
+        target.setScale(baseScale);
+        this.time.delayedCall(index * 120, () => {
+          this.tweens.add({
+            targets: target,
+            scaleX: baseScale * 1.22,
+            scaleY: baseScale * 1.22,
+            duration: 210,
+            yoyo: true,
+            repeat: 2,
+            ease: "Sine.InOut",
+            onComplete: () => {
+              target.setScale(baseScale);
+              completed += 1;
+              if (completed >= targets.length) resolve();
+            },
+          });
+        });
       });
     });
-
-    resultText.setText(`${value}x SHURIKEN BOOST`);
-    await this.animateWheelMultiplierApplication(value, baseWin, totalWin, centerX, centerY, wheelSize, resultText, mathText);
-    await this.wait(460);
-    if (this.wheelOverlay) {
-      this.tweens.add({
-        targets: this.wheelOverlay,
-        alpha: 0,
-        duration: 170,
-        onComplete: () => {
-          if (this.wheelOverlay) this.wheelOverlay.destroy(true);
-          this.wheelOverlay = undefined;
-        },
-      });
-      await this.wait(180);
-    }
-  }
-
-  private createWheelValueSequence(value: number) {
-    const values = WHEEL_VALUES.slice(0);
-    if (values.indexOf(value) === -1) values[3] = value;
-    values.sort((a, b) => a - b);
-    return values;
-  }
-
-  private async animateWheelMultiplierApplication(
-    value: number,
-    baseWin: number,
-    totalWin: number,
-    centerX: number,
-    centerY: number,
-    wheelSize: number,
-    resultText: Phaser.GameObjects.Text,
-    mathText: Phaser.GameObjects.Text,
-  ) {
-    const width = Number(this.scale.width) || 1280;
-    const amountY = centerY + wheelSize * 0.79;
-    const amountFont = Math.max(24, Math.min(42, width * 0.032));
-    const beforeText = this.add.text(centerX - wheelSize * 0.24, amountY, baseWin.toFixed(2), {
-      fontFamily: UI_FONT,
-      fontSize: `${amountFont}px`,
-      color: UI_HEX.beige,
-      stroke: UI_HEX.ink,
-      strokeThickness: 7,
-    }).setOrigin(0.5).setAlpha(0);
-    const arrowText = this.add.text(centerX, amountY, "\u2192", {
-      fontFamily: UI_FONT,
-      fontSize: `${amountFont * 0.9}px`,
-      color: UI_HEX.bronze,
-      stroke: UI_HEX.ink,
-      strokeThickness: 6,
-    }).setOrigin(0.5).setAlpha(0);
-    const afterText = this.add.text(centerX + wheelSize * 0.25, amountY, baseWin.toFixed(2), {
-      fontFamily: UI_FONT,
-      fontSize: `${amountFont}px`,
-      color: UI_HEX.parchment,
-      stroke: UI_HEX.ink,
-      strokeThickness: 8,
-    }).setOrigin(0.5).setAlpha(0);
-    const badge = this.add.text(centerX, centerY - wheelSize * 0.02, `${value}x`, {
-      fontFamily: UI_FONT,
-      fontSize: `${Math.max(30, amountFont * 1.18)}px`,
-      color: UI_HEX.peach,
-      stroke: UI_HEX.ink,
-      strokeThickness: 8,
-    }).setOrigin(0.5).setAlpha(0).setScale(0.55);
-
-    this.wheelOverlay?.add([beforeText, arrowText, afterText, badge]);
-    mathText.setText("BASE WIN");
-    await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: [resultText, mathText, beforeText, arrowText, afterText],
-        alpha: 1,
-        duration: 190,
-        ease: "Sine.Out",
-        onComplete: () => resolve(),
-      });
-    });
-
-    await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: badge,
-        alpha: 1,
-        scaleX: 1,
-        scaleY: 1,
-        duration: 190,
-        ease: "Back.Out",
-        onComplete: () => resolve(),
-      });
-    });
-
-    await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: badge,
-        x: afterText.x,
-        y: afterText.y - amountFont * 0.95,
-        duration: 520,
-        ease: "Cubic.InOut",
-        onComplete: () => {
-          afterText.setText(totalWin.toFixed(2)).setColor(UI_HEX.peach);
-          mathText.setText(`${baseWin.toFixed(2)} x ${value} = ${totalWin.toFixed(2)}`);
-          this.tweens.add({ targets: [afterText, mathText], scaleX: 1.12, scaleY: 1.12, duration: 180, yoyo: true, ease: "Sine.Out" });
-          this.tweens.add({ targets: badge, alpha: 0, scaleX: 1.45, scaleY: 1.45, duration: 210, ease: "Sine.In" });
-          resolve();
-        },
-      });
-    });
-    await this.wait(360);
+    await this.wait(160);
   }
 
   private async playFreeSpinSequence(freeSpins: SpinResult[], totalWin: number, titleText: string) {
@@ -2174,7 +2080,7 @@ export default class SlotScene extends Phaser.Scene {
       stroke: UI_HEX.peach,
       strokeThickness: 6,
     }).setOrigin(0.5);
-    const auto = this.add.text(width / 2, height / 2 + 74, "AUTO PLAY", {
+    const prompt = this.add.text(width / 2, height / 2 + 74, "FREE SPINS STARTING", {
       fontFamily: BODY_FONT,
       fontSize: `${Math.max(16, Math.min(24, width * 0.018))}px`,
       color: UI_HEX.ink,
@@ -2182,7 +2088,7 @@ export default class SlotScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0.5);
 
-    const overlay = this.add.container(0, 0, [...parts, glow, title, spinCount, auto]).setDepth(50).setAlpha(0);
+    const overlay = this.add.container(0, 0, [...parts, glow, title, spinCount, prompt]).setDepth(50).setAlpha(0);
     this.tweens.add({ targets: overlay, alpha: 1, duration: 220, ease: "Sine.Out" });
     this.tweens.add({ targets: [glow, title, spinCount], scaleX: 1.04, scaleY: 1.04, duration: 360, yoyo: true, repeat: 1, ease: "Sine.InOut" });
     await this.wait(1120);
