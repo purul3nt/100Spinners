@@ -5,7 +5,16 @@ const UI_FONT = "Impact, Haettenschweiler, 'Arial Black', sans-serif";
 const BODY_FONT = "'Trebuchet MS', Arial, sans-serif";
 const MAX_WHEEL_MULTIPLIER = Math.max.apply(Math, BONUS_MULTIPLIERS);
 // Regression anchors: "MULTIPLIER WHEEL", "BUY BONUS", `${MAX_WHEEL_MULTIPLIER}x`, BUY_BONUS_PRICE_MULTIPLIER.
-const SPLASH_COLORS = { bg: 0x02030a, panel: 0x321169, gold: 0xfacc15, cyan: 0x38bdf8, white: "#ffffff", cream: "#fef3c7" };
+const SPLASH_COLORS = {
+  bg: 0x211e1c,
+  panel: 0x645d57,
+  panelAlt: 0x3d3430,
+  trim: 0x8c6b53,
+  accent: 0xaa8068,
+  text: "#D8AF8E",
+  body: "#C1B39E",
+  shadow: "#211E1C",
+};
 
 export default class SplashScene extends Phaser.Scene {
   private locked = false;
@@ -78,13 +87,13 @@ export default class SplashScene extends Phaser.Scene {
       secondY = firstY;
     }
 
-    this.content.add(this.featureCard(firstX, firstY, cardW, cardH, "MAX MULTIPLIER", `Multipliers up to ${MAX_WHEEL_MULTIPLIER}x can land in free spins.`, "buy"));
-    this.content.add(this.featureCard(secondX, secondY, cardW, cardH, "MAX WIN", "10,000x", "wheel"));
+    this.content.add(this.featureCard(firstX, firstY, cardW, cardH, "MAX MULTIPLIER", `Multipliers up to ${MAX_WHEEL_MULTIPLIER}x can land in free spins.`, "wheel"));
+    this.content.add(this.featureCard(secondX, secondY, cardW, cardH, "MAX WIN", "10,000x", "buy"));
     const promptY = portrait ? Math.min(height - 34, secondY + cardH / 2 + Math.max(24, height * 0.04)) : Math.min(height - 44, firstY + cardH / 2 + Math.max(34, height * 0.052));
     const prompt = this.add.text(width / 2, promptY, "CLICK TO CONTINUE", {
       fontFamily: UI_FONT,
       fontSize: Math.max(portrait ? 24 : 30, Math.min(portrait ? 42 : 54, width * (portrait ? 0.048 : 0.032))) + "px",
-      color: SPLASH_COLORS.cream,
+      color: SPLASH_COLORS.body,
       stroke: "#111111",
       strokeThickness: portrait ? 5 : 7,
     }).setOrigin(0.5).setShadow(3, 4, "#000000", 3, true, true);
@@ -100,14 +109,15 @@ export default class SplashScene extends Phaser.Scene {
     const container = this.add.container(0, 0);
     const portrait = (Number(this.scale.height) || 720) > (Number(this.scale.width) || 1280) * 1.05;
     const shadow = this.add.rectangle(x + 7, y + 9, width, height, 0x000000, 0.5);
-    const panel = this.add.rectangle(x, y, width, height, SPLASH_COLORS.panel, 0.9).setStrokeStyle(4, SPLASH_COLORS.gold, 0.94);
-    const topTrim = this.add.rectangle(x, y - height / 2 + 10, width * 0.84, Math.max(4, height * 0.016), SPLASH_COLORS.gold, 0.95);
-    const bottomTrim = this.add.rectangle(x, y + height / 2 - 10, width * 0.84, Math.max(4, height * 0.016), SPLASH_COLORS.cyan, 0.78);
+    const panelColor = type === "wheel" ? SPLASH_COLORS.panel : SPLASH_COLORS.panelAlt;
+    const panel = this.add.rectangle(x, y, width, height, panelColor, 0.92).setStrokeStyle(4, SPLASH_COLORS.trim, 0.94);
+    const topTrim = this.add.rectangle(x, y - height / 2 + 10, width * 0.84, Math.max(4, height * 0.016), SPLASH_COLORS.trim, 0.95);
+    const bottomTrim = this.add.rectangle(x, y + height / 2 - 10, width * 0.84, Math.max(4, height * 0.016), SPLASH_COLORS.accent, 0.78);
     const visualSize = Math.min(width * (portrait ? 0.24 : 0.42), height * (portrait ? 0.32 : 0.38));
     const visualY = y - height * (portrait ? 0.24 : 0.22);
     const accent = type === "wheel"
       ? this.add.image(x, visualY - visualSize * 0.48, "shuriken_spin_pin").setDisplaySize(visualSize * 0.28, visualSize * 0.28).setOrigin(0.5)
-      : this.add.rectangle(x, visualY, visualSize * 0.82, visualSize * 0.82, 0x111111, 0.18).setStrokeStyle(3, SPLASH_COLORS.gold, 0.72).setAngle(45);
+      : this.add.rectangle(x, visualY, visualSize * 0.82, visualSize * 0.82, SPLASH_COLORS.bg, 0.18).setStrokeStyle(3, SPLASH_COLORS.trim, 0.72).setAngle(45);
     const visual = type === "wheel"
       ? this.add.image(x, visualY, "shogun_wheel").setDisplaySize(visualSize, visualSize)
       : this.add.image(x, visualY, "splash_bonus_symbol").setDisplaySize(visualSize, visualSize);
@@ -115,16 +125,16 @@ export default class SplashScene extends Phaser.Scene {
       ? this.add.text(x + visualSize * 0.34, visualY + visualSize * 0.3, `${MAX_WHEEL_MULTIPLIER}x`, {
         fontFamily: UI_FONT,
         fontSize: Math.max(18, visualSize * 0.27) + "px",
-        color: SPLASH_COLORS.cream,
-        stroke: "#4c1d95",
+        color: SPLASH_COLORS.body,
+        stroke: SPLASH_COLORS.shadow,
         strokeThickness: portrait ? 4 : 6,
       }).setOrigin(0.5).setShadow(2, 3, "#000000", 2, true, true)
       : undefined;
     const title = this.add.text(x, y + height * (portrait ? 0.06 : 0.12), titleText, {
       fontFamily: UI_FONT,
       fontSize: Math.max(portrait ? 22 : 26, Math.min(portrait ? 34 : 44, width * (portrait ? 0.082 : 0.1))) + "px",
-      color: "#facc15",
-      stroke: "#111111",
+      color: SPLASH_COLORS.text,
+      stroke: SPLASH_COLORS.shadow,
       strokeThickness: portrait ? 5 : 6,
       align: "center",
     }).setOrigin(0.5).setShadow(2, 3, "#000000", 2, true, true);
@@ -132,7 +142,7 @@ export default class SplashScene extends Phaser.Scene {
     const body = this.add.text(x, y + height * (isHighlight ? (portrait ? 0.25 : 0.3) : (portrait ? 0.24 : 0.31)), bodyText, {
       fontFamily: isHighlight ? UI_FONT : BODY_FONT,
       fontSize: isHighlight ? Math.max(portrait ? 40 : 52, Math.min(portrait ? 58 : 76, width * (portrait ? 0.132 : 0.158))) + "px" : Math.max(portrait ? 13 : 16, Math.min(portrait ? 18 : 24, width * (portrait ? 0.038 : 0.048))) + "px",
-      color: isHighlight ? "#facc15" : SPLASH_COLORS.white,
+      color: isHighlight ? SPLASH_COLORS.text : SPLASH_COLORS.body,
       stroke: "#000000",
       strokeThickness: isHighlight ? (portrait ? 7 : 9) : 3,
       align: "center",

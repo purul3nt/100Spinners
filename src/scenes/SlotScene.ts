@@ -622,7 +622,7 @@ export default class SlotScene extends Phaser.Scene {
     const reelBounds = this.getReelContentBounds();
     const machineBounds = this.getMachineFrameBounds(width, height);
     this.machineFrameImage.setPosition(machineBounds.centerX, machineBounds.centerY).setDisplaySize(machineBounds.width, machineBounds.height);
-    this.drawMachinePanel(reelBounds);
+    this.drawMachinePanel(machineBounds);
     this.drawReelFrameBorder(reelBounds);
 
     this.layoutBaboonFooter(width, height);
@@ -748,21 +748,13 @@ export default class SlotScene extends Phaser.Scene {
     this.machinePanel.clear();
     const radius = Math.max(8, 14 * this.scaleFactor);
     this.machinePanel.fillStyle(0x1a1d24, 0.42);
-    this.machinePanel.fillRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, radius);
+    this.machinePanel.fillRoundedRect(bounds.left, bounds.top - 10, bounds.width, bounds.height, radius);
   }
 
   private drawReelFrameBorder(bounds: { left: number; top: number; width: number; height: number }) {
     if (!this.reelFrameBorder) return;
     const g = this.reelFrameBorder;
     g.clear();
-    // Outer halo: a faint white stroke a few px out, drawn first.
-    const halo = Math.max(2, 4 * this.scaleFactor);
-    const core = Math.max(1, 2 * this.scaleFactor);
-    const radius = Math.max(8, 14 * this.scaleFactor);
-    g.lineStyle(halo, 0xffffff, 0.22);
-    g.strokeRoundedRect(bounds.left - halo, bounds.top - halo, bounds.width + halo * 2, bounds.height + halo * 2, radius + halo);
-    g.lineStyle(core, 0xffffff, 0.85);
-    g.strokeRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, radius);
     g.lineStyle(Math.max(1, 2 * this.scaleFactor), 0x1f2329, 0.22);
     for (let col = 1; col < COLS; col++) {
       const x = Phaser.Math.Linear(this.cellX(col - 1), this.cellX(col), 0.5);
