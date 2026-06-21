@@ -1117,7 +1117,7 @@ export default class SlotScene extends Phaser.Scene {
     let label: Phaser.GameObjects.Text | undefined;
     let image: Phaser.GameObjects.Image | undefined;
 
-    const assetKey = this.getRenderableSymbolAssetKey(cell.code);
+    const assetKey = this.getRenderableSymbolAssetKey(cell.code, cell.wheelColor);
     if (assetKey && this.textures.exists(assetKey)) {
       image = this.add.image(0, 0, assetKey).setOrigin(0.5);
       image.setScale(this.getSymbolImageScale(image, cell.code));
@@ -1496,8 +1496,9 @@ export default class SlotScene extends Phaser.Scene {
   ) {
     reel.removeAll(true);
     for (let row = -2; row < ROWS + 2; row++) {
-      const code = row >= 0 && row < ROWS ? finalGrid[col][row].code : this.randomSpinCode();
-      reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap, false));
+      const cell = row >= 0 && row < ROWS ? finalGrid[col][row] : undefined;
+      const code = cell?.code ?? this.randomSpinCode();
+      reel.add(this.createSpinSymbol(code, this.cellX(col), topY + row * rowGap, false, cell?.wheelColor));
     }
   }
 
@@ -1509,8 +1510,8 @@ export default class SlotScene extends Phaser.Scene {
     return [this.randomSpinCode(), ...codes.slice(0, codes.length - 1)];
   }
 
-  private createSpinSymbol(code: SymbolCode, x: number, y: number, blurred = true) {
-    const assetKey = this.getRenderableSymbolAssetKey(code);
+  private createSpinSymbol(code: SymbolCode, x: number, y: number, blurred = true, wheelColor?: CellResult["wheelColor"]) {
+    const assetKey = this.getRenderableSymbolAssetKey(code, wheelColor);
     if (assetKey && this.textures.exists(assetKey)) {
       const image = this.add.image(0, 0, assetKey).setOrigin(0.5);
       const scale = this.getSymbolImageScale(image, code) * this.scaleFactor;
@@ -1544,8 +1545,10 @@ export default class SlotScene extends Phaser.Scene {
     return Math.min(maxW / image.width, maxH / image.height) * SYMBOL_IMAGE_SCALE;
   }
 
-  private getRenderableSymbolAssetKey(code: SymbolCode) {
-    const baseKey = code === "W1" ? "shogun_wheel" : SYMBOL_IMAGE_KEYS[code];
+  private getRenderableSymbolAssetKey(code: SymbolCode, wheelColor?: CellResult["wheelColor"]) {
+    const baseKey = code === "W1"
+      ? wheelColor === "red" ? "shogun_shuriken_red" : "shogun_shuriken_blue"
+      : SYMBOL_IMAGE_KEYS[code];
     if (code !== "L5" || !baseKey || !this.textures.exists(baseKey)) return baseKey;
     return this.ensureTenSymbolGreyTexture(baseKey);
   }
@@ -1834,6 +1837,8 @@ export default class SlotScene extends Phaser.Scene {
     for (let index = 0; index < events.length; index++) {
       const event = events[index];
       const color = event.color === "red" ? 0xff5b45 : 0x46b9ff;
+      wheel.setTexture(event.color === "red" ? "shogun_shuriken_red" : "shogun_shuriken_blue");
+      wheel.setDisplaySize(wheelSize, wheelSize);
       ring.setStrokeStyle(7, color, 0.95);
       title.setText(`${event.color.toUpperCase()} SHURIKEN`);
       const outcomeText = this.formatWheelOutcome(event.outcome);

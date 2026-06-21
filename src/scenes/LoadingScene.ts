@@ -158,7 +158,9 @@ export default class LoadingScene extends Phaser.Scene {
     this.load.image("bonus_background", `${gameBase}/bonus_background.jpg?v=shogun-bonus-game-background-mobile-1`);
     SHOGUN_HIGH_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_high/${key}.png?v=shogun-symbols-4`));
     SHOGUN_LOW_SYMBOLS.forEach((key) => this.load.image(`shogun_${key}`, `src/assets/game/symbols_low/${key}.png?v=shogun-low-round-restore-1`));
-    this.load.image("shogun_wheel", "src/assets/game/symbols_special/shuriken_wheel.png?v=shogun-wheel-1");
+    this.load.image("shogun_wheel", "src/assets/game/symbols_special/shuriken_blue.png?v=shuriken-art-blue-1");
+    this.load.image("shogun_shuriken_blue", "src/assets/game/symbols_special/shuriken_blue.png?v=shuriken-art-blue-1");
+    this.load.image("shogun_shuriken_red", "src/assets/game/symbols_special/shuriken_red.png?v=shuriken-art-red-1");
     this.load.image("shuriken_spin_pin", "src/assets/game/shuriken_spin_pin.png?v=gold-triangle-1");
     SAMURAI_IDLE_FRAME_FILES.forEach((file) => {
       const frame = file.match(/(\d+)\.png$/)?.[1] || file;
