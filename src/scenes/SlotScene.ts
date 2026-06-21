@@ -391,7 +391,7 @@ export default class SlotScene extends Phaser.Scene {
     this.menuButtonBg = this.add.rectangle(0, 0, 58, 58, 0x151515, 0.92)
       .setStrokeStyle(0, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
-    const menuBars = [-20, 0, 20].map((y) => this.add.rectangle(0, y, 73, 13, 0xffffff, 1).setOrigin(0.5));
+    const menuBars = [-20, 0, 20].map((y) => this.add.rectangle(12, y, 73, 13, 0xffffff, 1).setOrigin(0.5));
     this.menuButton = this.add.container(0, 0, [this.menuButtonBg, ...menuBars]).setDepth(70);
     this.menuButtonBg.on("pointerdown", () => this.showRulesMenu());
     this.menuButtonBg.on("pointerover", () => this.menuButton.setScale(1.05));
@@ -686,7 +686,7 @@ export default class SlotScene extends Phaser.Scene {
     this.betPanel.setVisible(!portrait).setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
     const spinSize = portrait ? Math.min(264, Math.max(246, width * 0.676)) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
-    const spinX = portrait ? width / 2 + 5 : panelX + panelW * 0.22;
+    const spinX = portrait ? width / 2 : panelX + panelW * 0.22;
     const spinY = portrait ? barTop + barH * 0.48 : panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
     this.spinButtonBg.setRadius(spinSize / 2).setFillStyle(0x242424, 0.98).setStrokeStyle(Math.max(7, spinSize * 0.085), 0xffffff, 1);
@@ -699,14 +699,15 @@ export default class SlotScene extends Phaser.Scene {
     this.betText.setPosition(betTextX, betTextY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 26 : compactLandscape ? 14 : 19) : (portrait ? 26 : compactLandscape ? 16 : 22)).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
 
     const sideOffset = portrait ? width * 0.212 : Math.max(80, spinSize * 0.82);
+    const plusOffset = portrait ? Math.max(155, spinSize * 0.59) : sideOffset;
     const minusX = portrait ? spinX - sideOffset : panelX - panelW * 0.03;
-    const plusX = portrait ? spinX + sideOffset : panelX - panelW * 0.03;
+    const plusX = portrait ? spinX + plusOffset : panelX - panelW * 0.03;
     this.betMinusButton.setVisible(false);
     this.betPlusButton.setVisible(false);
     this.betMinusBg.setVisible(portrait).setPosition(minusX, spinY).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
     this.betPlusBg.setVisible(portrait).setPosition(plusX, spinY).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
-    this.betDownText.setText(portrait ? "-" : "\u25BC").setPosition(portrait ? minusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY + panelH * 0.22).setFontSize(portrait ? 84 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
-    this.betUpText.setText(portrait ? "+" : "\u25B2").setPosition(portrait ? plusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY - panelH * 0.22).setFontSize(portrait ? 84 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    this.betDownText.setDepth(portrait ? 78 : 72).setText(portrait ? "-" : "\u25BC").setPosition(portrait ? minusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY + panelH * 0.22).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    this.betUpText.setDepth(portrait ? 78 : 72).setText(portrait ? "+" : "\u25B2").setPosition(portrait ? plusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY - panelH * 0.22).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
     if (!portrait) {
       this.betMinusBg.setVisible(false);
       this.betPlusBg.setVisible(false);
