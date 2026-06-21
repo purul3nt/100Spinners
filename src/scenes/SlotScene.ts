@@ -226,6 +226,8 @@ export default class SlotScene extends Phaser.Scene {
   private buyButtonText!: Phaser.GameObjects.Text;
   private menuButton!: Phaser.GameObjects.Container;
   private menuButtonBg!: Phaser.GameObjects.Rectangle;
+  private betMinusControl!: Phaser.GameObjects.Container;
+  private betPlusControl!: Phaser.GameObjects.Container;
   private betUpText!: Phaser.GameObjects.Text;
   private betDownText!: Phaser.GameObjects.Text;
   private betMinusBg!: Phaser.GameObjects.Rectangle;
@@ -361,6 +363,8 @@ export default class SlotScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(72).setInteractive({ useHandCursor: true });
     this.betUpText.on("pointerdown", () => this.adjustBet(1));
     this.betDownText.on("pointerdown", () => this.adjustBet(-1));
+    this.betMinusControl = this.add.container(0, 0, [this.betMinusBg, this.betDownText]).setDepth(78).setVisible(false);
+    this.betPlusControl = this.add.container(0, 0, [this.betPlusBg, this.betUpText]).setDepth(78).setVisible(false);
 
     this.autoButtonBg = this.add.circle(0, 0, 28, 0x242424, 0.98)
       .setInteractive({ useHandCursor: true });
@@ -392,7 +396,7 @@ export default class SlotScene extends Phaser.Scene {
     this.menuButtonBg = this.add.rectangle(0, 0, 58, 58, 0x151515, 0.92)
       .setStrokeStyle(0, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
-    const menuBars = [-20, 0, 20].map((y) => this.add.rectangle(12, y, 73, 13, 0xffffff, 1).setOrigin(0.5));
+    const menuBars = [-20, 0, 20].map((y) => this.add.rectangle(0, y, 73, 13, 0xffffff, 1).setOrigin(0.5));
     this.menuButton = this.add.container(0, 0, [this.menuButtonBg, ...menuBars]).setDepth(70);
     this.menuButtonBg.on("pointerdown", () => this.showRulesMenu());
     this.menuButtonBg.on("pointerover", () => this.menuButton.setScale(1.05));
@@ -705,14 +709,12 @@ export default class SlotScene extends Phaser.Scene {
     const plusX = portrait ? spinX + plusOffset : panelX - panelW * 0.03;
     this.betMinusButton.setVisible(false);
     this.betPlusButton.setVisible(false);
-    this.betMinusBg.setVisible(portrait).setPosition(minusX, spinY).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
-    this.betPlusBg.setVisible(portrait).setPosition(plusX, spinY).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
-    this.betDownText.setDepth(portrait ? 78 : 72).setText(portrait ? "-" : "\u25BC").setPosition(portrait ? minusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY + panelH * 0.22).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
-    this.betUpText.setDepth(portrait ? 78 : 72).setText(portrait ? "+" : "\u25B2").setPosition(portrait ? plusX : panelX - panelW * 0.03, portrait ? spinY - 2 : panelY - panelH * 0.22).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
-    if (!portrait) {
-      this.betMinusBg.setVisible(false);
-      this.betPlusBg.setVisible(false);
-    }
+    this.betMinusControl.setVisible(true).setPosition(minusX, portrait ? spinY : panelY + panelH * 0.22);
+    this.betPlusControl.setVisible(true).setPosition(plusX, portrait ? spinY : panelY - panelH * 0.22);
+    this.betMinusBg.setVisible(portrait).setPosition(0, 0).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    this.betPlusBg.setVisible(portrait).setPosition(0, 0).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    this.betDownText.setText(portrait ? "-" : "\u25BC").setPosition(0, 0).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    this.betUpText.setText(portrait ? "+" : "\u25B2").setPosition(0, 0).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
 
     const autoSize = portrait ? 116 : spinSize * 0.58;
     this.autoButtonShell.setPosition(portrait ? width - 56 : panelX + panelW * 0.43, portrait ? barTop + barH * 0.6 : spinY).setScale(1);
@@ -730,7 +732,7 @@ export default class SlotScene extends Phaser.Scene {
     const menuX = portrait ? width * 0.098 : buyX + buySize * 1.18;
     const menuY = portrait ? barTop + barH * 0.595 : leftY;
     this.menuButton.setPosition(menuX, menuY);
-    this.menuButtonBg.setPosition(portrait ? -12 : 0, portrait ? -12 : 0);
+    this.menuButtonBg.setPosition(0, 0);
     this.menuButtonBg.setSize(portrait ? 130 : compactLandscape ? 44 : 58, portrait ? 130 : compactLandscape ? 44 : 58).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
 
     this.balanceText.setPosition(portrait ? width * 0.255 : buyX + buySize * 2.05, portrait ? height - 42 : leftY).setFontSize(portrait ? 26 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
