@@ -1967,7 +1967,7 @@ export default class SlotScene extends Phaser.Scene {
     }).setOrigin(0.5).setVisible(false);
     this.bonusCollectText = this.add.text(0, 0, `TOTAL WIN\n\u20AC${this.formatMoney(collected)}`, {
       fontFamily: BODY_FONT,
-      fontSize: `${portrait ? 17 : 24}px`,
+      fontSize: `${portrait ? 26 : 24}px`,
       color: "#ffffff",
       stroke: "#000000",
       strokeThickness: 3,
@@ -2021,8 +2021,8 @@ export default class SlotScene extends Phaser.Scene {
     const midY = barTop + barH * 0.52;
     const panelW = portrait ? Math.min(width * 0.28, 126) : Math.min(220, width * 0.14);
     const panelH = portrait ? 45 : Math.min(64, barH * 0.62);
-    const x = portrait ? width * 0.365 : menuX + Math.min(270, width * 0.18);
-    const y = portrait ? height - 27 : midY + 2;
+    const x = portrait ? width * 0.43 : menuX + Math.min(270, width * 0.18);
+    const y = portrait ? height - 42 : midY + 2;
 
     this.bonusCollectDisplay.setPosition(x, y);
     this.bonusCollectPanel.setSize(panelW, panelH).setFillStyle(UI_PALETTE.darkBrown, 0).setVisible(false);
@@ -2034,7 +2034,7 @@ export default class SlotScene extends Phaser.Scene {
       .setVisible(false);
     this.bonusCollectText
       .setPosition(-panelW / 2, 0)
-      .setFontSize(portrait ? 17 : 24)
+      .setFontSize(portrait ? 26 : 24)
       .setOrigin(0, 0.5)
       .setAlign("left");
   }
