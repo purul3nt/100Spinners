@@ -199,6 +199,8 @@ export default class SlotScene extends Phaser.Scene {
   private reelMaskShapes: Phaser.GameObjects.Graphics[] = [];
   private reelMasks: Phaser.Display.Masks.GeometryMask[] = [];
   private lineGraphics!: Phaser.GameObjects.Graphics;
+  private machinePanel!: Phaser.GameObjects.Graphics;
+  private machineFrameImage!: Phaser.GameObjects.Image;
   private reelFrameBorder!: Phaser.GameObjects.Graphics;
   private titleText!: Phaser.GameObjects.Text;
   private balanceText!: Phaser.GameObjects.Text;
@@ -225,6 +227,8 @@ export default class SlotScene extends Phaser.Scene {
   private menuButtonBg!: Phaser.GameObjects.Rectangle;
   private betUpText!: Phaser.GameObjects.Text;
   private betDownText!: Phaser.GameObjects.Text;
+  private betMinusBg!: Phaser.GameObjects.Rectangle;
+  private betPlusBg!: Phaser.GameObjects.Rectangle;
   private betMinusButton!: Phaser.GameObjects.Image;
   private betPlusButton!: Phaser.GameObjects.Image;
   private autoButtonBg!: Phaser.GameObjects.Arc;
@@ -335,6 +339,10 @@ export default class SlotScene extends Phaser.Scene {
     this.betPlusButton.on("pointerdown", () => this.adjustBet(1));
     this.betMinusButton.setVisible(false);
     this.betPlusButton.setVisible(false);
+    this.betMinusBg = this.add.rectangle(0, 0, 38, 33, 0x5e5968, 0.94).setDepth(67).setVisible(false).setInteractive({ useHandCursor: true });
+    this.betPlusBg = this.add.rectangle(0, 0, 38, 33, 0x5e5968, 0.94).setDepth(67).setVisible(false).setInteractive({ useHandCursor: true });
+    this.betMinusBg.on("pointerdown", () => this.adjustBet(-1));
+    this.betPlusBg.on("pointerdown", () => this.adjustBet(1));
 
     this.betUpText = this.add.text(0, 0, "\u25B2", {
       fontFamily: "Arial Black, Arial, sans-serif",
@@ -438,6 +446,8 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private createBoard() {
+    this.machinePanel = this.add.graphics().setDepth(1.2);
+    this.machineFrameImage = this.add.image(0, 0, "shogun_reel_frame").setOrigin(0.5).setDepth(1.35);
     // Thin glowing white border around the reel area, matching the
     // Baboon Bonanza reference style. Sits at the same depth band as the
     // previous boardFrame so reels/UI ordering is unchanged.
@@ -496,18 +506,18 @@ export default class SlotScene extends Phaser.Scene {
     const footerTop = this.uiBar ? this.uiBar.y : height;
     const availableRight = Math.max(0, width - boardRight);
     const targetHeight = portrait
-      ? Math.min(height * 0.38, width * 0.88, this.frameH * 1.36)
+      ? Math.min(height * 0.3, width * 0.76, this.frameH * 1.18)
       : Math.min(this.frameH * 1.06, height * 0.72, Math.max(360, availableRight * 1.55));
     const scale = (targetHeight / SAMURAI_MOOD_BASE_HEIGHT[this.samuraiMood]) * SAMURAI_MOOD_SCALE[this.samuraiMood];
     const x = portrait
       ? width / 2
       : (availableRight > 120 ? boardRight + Math.max(availableRight * 0.38, this.frameW * 0.055) : this.frameLeft + this.frameW * 0.92);
     const y = portrait
-      ? Math.min(footerTop - targetHeight * 0.04, boardBottom + targetHeight * 0.08)
+      ? Math.max(height * 0.18, this.frameTop + this.frameH * 0.08)
       : Math.min(footerTop + targetHeight * 0.32, boardBottom + targetHeight * 0.32);
     this.samuraiFx
       .setVisible(true)
-      .setAlpha(portrait ? 0.78 : 0.86)
+      .setAlpha(portrait ? 0.92 : 0.86)
       .setPosition(
         x + this.frameW * 0.035 * SAMURAI_MOOD_X_OFFSET[this.samuraiMood],
         y + this.frameH * 0.035 * SAMURAI_MOOD_Y_OFFSET[this.samuraiMood],
@@ -570,15 +580,15 @@ export default class SlotScene extends Phaser.Scene {
     const portrait = height > width * 1.05;
     const compactLandscape = !portrait && height < 520;
     const machineScale = this.getMachineImageScale(width, height);
-    const machineWidthBudget = portrait ? width * 0.96 : width * 0.94;
+    const machineWidthBudget = portrait ? width * 0.985 : width * 0.94;
     const frameWidthScale = machineWidthBudget / (REEL_FRAME_BASE_W * machineScale);
-    const frameHeightBudget = height * (portrait ? 0.42 : compactLandscape ? 0.52 : 0.62);
+    const frameHeightBudget = height * (portrait ? 0.46 : compactLandscape ? 0.52 : 0.62);
     this.scaleFactor = Math.min(1, frameWidthScale, frameHeightBudget / REEL_FRAME_BASE_H);
     this.frameW = REEL_FRAME_BASE_W * this.scaleFactor;
     this.frameH = REEL_FRAME_BASE_H * this.scaleFactor;
     this.frameLeft = width / 2 - this.frameW / 2;
     const firstRowY = portrait
-      ? Math.min(height * 0.36, Math.max(height * 0.33, 278))
+      ? Math.min(height * 0.38, Math.max(height * 0.35, 286))
       : compactLandscape
         ? Math.max(height * 0.36, 136)
         : Math.max(height * 0.28, Math.max(166, height * 0.075 + 112));
@@ -609,7 +619,11 @@ export default class SlotScene extends Phaser.Scene {
     }
     this.scaleBackground(width, height);
     this.layoutCherryBlossomParticles(width, height);
-    this.drawReelFrameBorder(this.getReelContentBounds());
+    const reelBounds = this.getReelContentBounds();
+    const machineBounds = this.getMachineFrameBounds(width, height);
+    this.machineFrameImage.setPosition(machineBounds.centerX, machineBounds.centerY).setDisplaySize(machineBounds.width, machineBounds.height);
+    this.drawMachinePanel(reelBounds);
+    this.drawReelFrameBorder(reelBounds);
 
     this.layoutBaboonFooter(width, height);
     this.layoutBonusCollectDisplay(width, height);
@@ -668,49 +682,55 @@ export default class SlotScene extends Phaser.Scene {
     const panelH = portrait ? 58 : compactLandscape ? 58 : Math.min(86, Math.max(76, height * 0.078));
     const panelRight = portrait ? 0 : compactLandscape ? Math.max(30, width * 0.045) : Math.max(90, width * 0.052);
     const panelX = portrait ? width / 2 : width - panelRight - panelW / 2;
-    const panelY = portrait ? barTop + barH - 62 : barTop + barH * (compactLandscape ? 0.56 : 0.52);
-    this.betPanel.setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
+    const panelY = portrait ? height - 27 : barTop + barH * (compactLandscape ? 0.56 : 0.52);
+    this.betPanel.setVisible(!portrait).setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
     const spinSize = portrait ? Math.min(120, width * 0.28) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
     const spinX = portrait ? width / 2 : panelX + panelW * 0.22;
-    const spinY = portrait ? panelY - 3 : panelY;
+    const spinY = portrait ? barTop + barH * 0.43 : panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
     this.spinButtonBg.setRadius(spinSize / 2).setFillStyle(0x242424, 0.98).setStrokeStyle(Math.max(7, spinSize * 0.085), 0xffffff, 1);
     this.spinButtonText.setFontSize(Math.max(38, spinSize * 0.58));
     this.spinHitZone.setPosition(spinX - spinSize / 2, spinY - spinSize / 2).setSize(spinSize, spinSize);
     this.spinHitZone.setInteractive(new Phaser.Geom.Rectangle(0, 0, spinSize, spinSize), Phaser.Geom.Rectangle.Contains);
 
-    const betTextX = portrait ? spinX - panelW * 0.18 : panelX - panelW * 0.37;
-    const betTextY = portrait ? spinY - spinSize * 0.72 : panelY;
-    this.betText.setPosition(portrait ? spinX : betTextX, betTextY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 11 : compactLandscape ? 14 : 19) : (portrait ? 13 : compactLandscape ? 16 : 22)).setOrigin(portrait ? 0.5 : 0, 0.5);
-    // On portrait, place +/- arrows to the LEFT of the spin button so they
-    // never collide with the larger spin circle.
-    const arrowX = portrait ? spinX - spinSize * 0.62 : panelX - panelW * 0.03;
-    this.betUpText.setPosition(arrowX, betTextY - (portrait ? 10 : panelH * 0.22)).setFontSize(portrait ? 17 : compactLandscape ? 20 : 28);
-    this.betDownText.setPosition(arrowX, betTextY + (portrait ? 10 : panelH * 0.22)).setFontSize(portrait ? 17 : compactLandscape ? 20 : 28);
+    const betTextX = portrait ? width * 0.56 : panelX - panelW * 0.37;
+    const betTextY = portrait ? height - 27 : panelY;
+    this.betText.setPosition(betTextX, betTextY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 10 : compactLandscape ? 14 : 19) : (portrait ? 11 : compactLandscape ? 16 : 22)).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
 
-    // Autoplay sits to the right of the spin on portrait with an explicit
-    // gap so it never overlaps the now-larger spin button.
+    const sideOffset = Math.max(70, spinSize * 0.76);
+    const minusX = portrait ? spinX - sideOffset : panelX - panelW * 0.03;
+    const plusX = portrait ? spinX + sideOffset : panelX - panelW * 0.03;
+    this.betMinusButton.setVisible(false);
+    this.betPlusButton.setVisible(false);
+    this.betMinusBg.setVisible(portrait).setPosition(minusX, spinY).setSize(portrait ? 42 : 1, portrait ? 34 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    this.betPlusBg.setVisible(portrait).setPosition(plusX, spinY).setSize(portrait ? 42 : 1, portrait ? 34 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    this.betDownText.setText(portrait ? "-" : "\u25BC").setPosition(minusX, portrait ? spinY - 1 : panelY + panelH * 0.22).setFontSize(portrait ? 34 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    this.betUpText.setText(portrait ? "+" : "\u25B2").setPosition(plusX, portrait ? spinY - 1 : panelY - panelH * 0.22).setFontSize(portrait ? 30 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    if (!portrait) {
+      this.betMinusBg.setVisible(false);
+      this.betPlusBg.setVisible(false);
+    }
+
     const autoSize = portrait ? spinSize * 0.42 : spinSize * 0.58;
-    const autoGap = portrait ? 12 : 4;
-    this.autoButtonShell.setPosition(portrait ? spinX + spinSize / 2 + autoGap + autoSize / 2 : panelX + panelW * 0.43, spinY).setScale(1);
+    this.autoButtonShell.setPosition(portrait ? width - Math.max(26, width * 0.072) : panelX + panelW * 0.43, portrait ? barTop + barH * 0.58 : spinY).setScale(1);
     this.autoButtonBg.setRadius(autoSize / 2).setFillStyle(0x242424, 0.98);
     this.autoButtonText.setFontSize(Math.max(23, autoSize * 0.6));
 
-    const buySize = portrait ? Math.min(78, width * 0.18) : compactLandscape ? Math.min(48, height * 0.12) : Math.min(68, height * 0.064);
+    const buySize = portrait ? Math.min(58, width * 0.145) : compactLandscape ? Math.min(48, height * 0.12) : Math.min(68, height * 0.064);
     const clusterLeft = portrait ? Math.max(26, width * 0.08) : compactLandscape ? Math.max(96, width * 0.27) : Math.max(276, width * 0.152);
     const buyX = clusterLeft + buySize / 2;
-    const leftY = portrait ? barTop + Math.max(44, barH * 0.26) : panelY;
+    const leftY = portrait ? barTop + Math.max(35, barH * 0.23) : panelY;
     this.buyButton.setPosition(buyX, leftY).setScale(1);
     this.buyButtonBg.setRadius(buySize / 2).setFillStyle(portrait ? 0xfacc15 : 0xf2d7f0, portrait ? 1 : 1).setStrokeStyle(3, 0x111111, 1);
-    this.buyButtonText.setFontSize(Math.max(11, buySize * 0.19)).setColor(portrait ? "#111111" : "#111111");
+    this.buyButtonText.setText(portrait ? "BUY\nBONUS" : "BUY").setFontSize(Math.max(9, buySize * 0.17)).setColor("#111111").setRotation(portrait ? -0.55 : 0);
 
     const menuX = portrait ? buyX : buyX + buySize * 1.18;
-    const menuY = portrait ? leftY + buySize * 1.18 : leftY;
+    const menuY = portrait ? barTop + barH * 0.58 : leftY;
     this.menuButton.setPosition(menuX, menuY);
     this.menuButtonBg.setSize(portrait ? 42 : compactLandscape ? 44 : 58, portrait ? 42 : compactLandscape ? 44 : 58);
 
-    this.balanceText.setPosition(portrait ? menuX + buySize * 0.88 : buyX + buySize * 2.05, portrait ? menuY : leftY).setFontSize(portrait ? 11 : compactLandscape ? 16 : 24).setOrigin(0, 0.5);
+    this.balanceText.setPosition(portrait ? width * 0.26 : buyX + buySize * 2.05, portrait ? height - 27 : leftY).setFontSize(portrait ? 11 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
     this.winText.setVisible(false);
   }
 
@@ -719,6 +739,36 @@ export default class SlotScene extends Phaser.Scene {
     this.grid = result.grid;
     this.renderGrid([]);
     this.drawPaylines([]);
+  }
+
+  private drawMachinePanel(bounds: { left: number; top: number; width: number; height: number }) {
+    if (!this.machinePanel) return;
+    const heightPx = Number(this.scale.height) || 720;
+    const widthPx = Number(this.scale.width) || 1280;
+    const portrait = heightPx > widthPx * 1.05;
+    const footerTop = portrait ? heightPx - Math.max(170, heightPx * 0.21) : (this.uiBar ? this.uiBar.y : heightPx);
+    const padX = Math.max(8, bounds.width * (portrait ? 0.035 : 0.025));
+    const padTop = Math.max(8, bounds.height * (portrait ? 0.16 : 0.08));
+    const padBottom = portrait ? Math.max(bounds.height * 0.18, footerTop - (bounds.top + bounds.height) - Math.max(8, heightPx * 0.01)) : Math.max(10, bounds.height * 0.1);
+    const left = bounds.left - padX;
+    const top = bounds.top - padTop;
+    const width = bounds.width + padX * 2;
+    const height = bounds.height + padTop + padBottom;
+    const radius = Math.max(10, Math.min(22, width * 0.035));
+
+    this.machinePanel.clear();
+    this.machinePanel.fillStyle(0x07070d, 0.72);
+    this.machinePanel.fillRoundedRect(left, top, width, height, radius);
+    this.machinePanel.lineStyle(Math.max(3, width * 0.01), 0xf6b832, 0.88);
+    this.machinePanel.strokeRoundedRect(left, top, width, height, radius);
+    this.machinePanel.lineStyle(Math.max(1, width * 0.004), 0xffffff, 0.5);
+    this.machinePanel.strokeRoundedRect(left + 4, top + 4, width - 8, height - 8, Math.max(6, radius - 4));
+    this.machinePanel.fillStyle(0x111827, 0.54);
+    this.machinePanel.fillRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, Math.max(8, radius - 6));
+    this.machinePanel.fillStyle(0xfacc15, 0.92);
+    this.machinePanel.fillRect(left + width * 0.08, top + Math.max(7, height * 0.035), width * 0.84, Math.max(3, height * 0.012));
+    this.machinePanel.fillStyle(0x38bdf8, 0.72);
+    this.machinePanel.fillRect(left + width * 0.08, top + height - Math.max(10, height * 0.05), width * 0.84, Math.max(3, height * 0.012));
   }
 
   private drawReelFrameBorder(bounds: { left: number; top: number; width: number; height: number }) {
