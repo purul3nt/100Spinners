@@ -622,7 +622,7 @@ export default class SlotScene extends Phaser.Scene {
     const reelBounds = this.getReelContentBounds();
     const machineBounds = this.getMachineFrameBounds(width, height);
     this.machineFrameImage.setPosition(machineBounds.centerX, machineBounds.centerY).setDisplaySize(machineBounds.width, machineBounds.height);
-    this.drawMachinePanel(machineBounds);
+    this.machinePanel.clear();
     this.drawReelFrameBorder(reelBounds);
 
     this.layoutBaboonFooter(width, height);
@@ -741,14 +741,6 @@ export default class SlotScene extends Phaser.Scene {
     this.grid = result.grid;
     this.renderGrid([]);
     this.drawPaylines([]);
-  }
-
-  private drawMachinePanel(bounds: { left: number; top: number; width: number; height: number }) {
-    if (!this.machinePanel) return;
-    this.machinePanel.clear();
-    const radius = Math.max(8, 14 * this.scaleFactor);
-    this.machinePanel.fillStyle(0x1a1d24, 0.42);
-    this.machinePanel.fillRoundedRect(bounds.left, bounds.top - 10, bounds.width, bounds.height, radius);
   }
 
   private drawReelFrameBorder(bounds: { left: number; top: number; width: number; height: number }) {
