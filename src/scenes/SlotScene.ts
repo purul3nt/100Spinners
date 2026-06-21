@@ -76,6 +76,7 @@ const REEL_FRAME_H = 768;
 const REEL_FRAME_ASPECT = REEL_FRAME_W / REEL_FRAME_H;
 const REEL_FRAME_BASE_H = ROWS * CELL + 96;
 const REEL_FRAME_BASE_W = REEL_FRAME_BASE_H * REEL_FRAME_ASPECT;
+const MACHINE_IMAGE_SCALE = 1.15;
 const REEL_CENTER_X = [184, 449, 704, 949, 1198].map((x) => x / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
@@ -617,7 +618,7 @@ export default class SlotScene extends Phaser.Scene {
     this.layoutCherryBlossomParticles(width, height);
     this.reelFrame
       .setPosition(width / 2, this.frameTop + this.frameH / 2)
-      .setDisplaySize(this.frameW, this.frameH);
+      .setDisplaySize(this.frameW * MACHINE_IMAGE_SCALE, this.frameH * MACHINE_IMAGE_SCALE);
     this.drawReelBackingTint();
 
     this.layoutBaboonFooter(width, height);
