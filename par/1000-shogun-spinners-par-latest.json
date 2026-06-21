@@ -36,7 +36,7 @@
         "confirms PAR constants match live math constants for pay scales, strip extensions, cash scale, and base caps",
         "checks paid-spin RTP, base RTP, total hit rate, and buy-bonus return remain in tuned ranges",
         "runs independent core parity for payline scoring, scaled pays, wheel event ordering, base Shuriken cash, and base paid-win cap",
-        "reconstructs 2,500 full paid spins and 500 direct feature buys from emitted grids, including sequential bonus meters and free-spin totals"
+        "reconstructs 2,500 full paid spins and 500 direct feature buys from emitted grids, including per-spin bonus meters and free-spin totals"
       ]
     },
     "tailAudit": {
@@ -403,7 +403,7 @@
     "bonusTier1RedCellChance": 0.006,
     "bonusTier2RedCellChance": 0.018,
     "bonusTier3RedCellChance": 0.08333333333333333,
-    "bonusFeaturePayScale": 0.42,
+    "bonusFeaturePayScale": 2.77,
     "v1PayScale": 4.3,
     "blueWheelKindWeights": [
       72,

@@ -143,6 +143,26 @@ assert.equal(
   math.roundMoney((10 + 5) * math.BASE_WHEEL_CASH_SCALE),
   "base non-bonus Shuriken outcomes should award standalone cash",
 );
+const payingShurikenGrid = [
+  [{ code: "H1" }, { code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "add", value: 10 } }, { code: "L2" }, { code: "L3" }],
+  [{ code: "H1" }, { code: "L2" }, { code: "L3" }, { code: "L4" }],
+  [{ code: "H1" }, { code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "multiply", value: 5 } }, { code: "L4" }, { code: "L5" }],
+  [{ code: "L5" }, { code: "L4" }, { code: "L3" }, { code: "L2" }],
+  [{ code: "L4" }, { code: "L5" }, { code: "L2" }, { code: "L1" }],
+];
+const payingShurikenScore = math.scoreGrid(payingShurikenGrid, 1);
+const payingShurikenResolved = math.resolveWheelEvents(payingShurikenGrid, 0);
+assert.equal(payingShurikenResolved.meter, 50, "multiple Shurikens in one spin should add/multiply into one local spin meter");
+assert.equal(
+  payingShurikenScore.lineWins.reduce((sum, win) => math.roundMoney(sum + win.amount), 0),
+  payingShurikenScore.baseWin,
+  "Shuriken outcomes should not change line win amounts",
+);
+assert.equal(
+  math.roundMoney(payingShurikenScore.baseWin + math.roundMoney(payingShurikenScore.baseWin * payingShurikenResolved.meter)),
+  math.roundMoney(payingShurikenScore.baseWin * 51),
+  "total paid spin model should keep line win and Shuriken win separate",
+);
 const cappedBaseWheel = math.resolveWheelEvents([
   [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "add", value: 100 } }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
   [{ code: "L1" }, { code: "L2" }, { code: "L3" }, { code: "L4" }],
@@ -153,14 +173,14 @@ const cappedBaseWheel = math.resolveWheelEvents([
 assert.equal(cappedBaseWheel.meter, 100, "base wheel meter should cap at 100x");
 assert.ok(!mathSource.includes("WHEEL_EVENT_CHANCE"), "wheel spins should not use the removed random gate");
 assert.ok(
-    slotSceneSource.includes("Blue Wicked Wheels appear in the base game") &&
-    slotSceneSource.includes("Red Wicked Wheels appear in free spins") &&
+    slotSceneSource.includes("Blue Shurikens appear in the base game") &&
+    slotSceneSource.includes("Red Shurikens appear in free spins") &&
     slotSceneSource.includes("Base-game non-bonus Shuriken outcomes can award cash"),
-  "rules should describe Blue/Red Wicked Wheels and base Shuriken cash",
+  "rules should describe Blue/Red Shurikens and base Shuriken cash",
 );
 assert.ok(
-  slotSceneSource.includes("SHURIKEN ${wheelCashText}"),
-  "wheel sequence should present standalone Shuriken cash hits",
+  slotSceneSource.includes('resultText.setText("SHURIKEN WIN");'),
+  "wheel sequence should present standalone Shuriken wins",
 );
 const wheelSymbolPulseIndex = slotSceneSource.indexOf("await this.pulseWheelSymbols(events);");
 const wheelOverlayIndex = slotSceneSource.indexOf("this.wheelOverlay = this.add.container", wheelSymbolPulseIndex);
@@ -173,6 +193,10 @@ assert.ok(wheelOverlayIndex > wheelSymbolPulseIndex, "wheel overlay should appea
 assert.ok(wheelSpinDurationIndex > wheelOverlayIndex, "wheel spin should happen after enlarged wheel appears");
 assert.ok(wheelResultIndex > wheelSpinDurationIndex, "wheel result should show after the wheel spin");
 assert.ok(paidSpinBalanceCreditIndex > paidSpinWheelCallIndex, "paid spin balance credit should happen after wheel presentation");
+assert.ok(
+  slotSceneSource.indexOf("this.lastWin = paidSpinWin;") > paidSpinWheelCallIndex,
+  "paid spin WIN total should update after wheel presentation",
+);
 assert.ok(
   !slotSceneSource.includes("BASE WIN") &&
     !slotSceneSource.includes("animateWheelMultiplierApplication") &&

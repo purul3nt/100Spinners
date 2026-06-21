@@ -79,7 +79,8 @@ const REEL_FRAME_BASE_W = REEL_FRAME_BASE_H * REEL_FRAME_ASPECT;
 const MACHINE_IMAGE_SCALE = 1.15;
 const PORTRAIT_MACHINE_IMAGE_SCALE = 1.02;
 const MACHINE_IMAGE_X_SCALE = 0.9;
-const REEL_CENTER_X = [194, 449, 704, 949, 1188].map((x) => x / REEL_FRAME_W);
+const REEL_ART_CENTER_X = [184, 449, 704, 949, 1198];
+const REEL_CENTER_X = REEL_ART_CENTER_X.map((x) => (REEL_FRAME_W / 2 + (x - REEL_FRAME_W / 2) * MACHINE_IMAGE_X_SCALE) / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
 const CHERRY_BLOSSOM_PETAL_KEY = "generated_cherry_blossom_petal";
@@ -711,8 +712,10 @@ export default class SlotScene extends Phaser.Scene {
     this.betPlusButton.setVisible(false);
     this.betMinusControl.setVisible(true).setPosition(minusX, portrait ? spinY : panelY + panelH * 0.22);
     this.betPlusControl.setVisible(true).setPosition(plusX, portrait ? spinY : panelY - panelH * 0.22);
-    this.betMinusBg.setVisible(portrait).setPosition(0, 0).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
-    this.betPlusBg.setVisible(portrait).setPosition(0, 0).setSize(portrait ? 104 : 1, portrait ? 84 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    const betControlW = portrait ? 104 : 1;
+    const betControlH = portrait ? 84 : 1;
+    this.betMinusBg.setVisible(portrait).setPosition(-betControlW / 2, -betControlH / 2).setSize(betControlW, betControlH).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
+    this.betPlusBg.setVisible(portrait).setPosition(-betControlW / 2, -betControlH / 2).setSize(betControlW, betControlH).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
     this.betDownText.setText(portrait ? "-" : "\u25BC").setPosition(0, 0).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
     this.betUpText.setText(portrait ? "+" : "\u25B2").setPosition(0, 0).setFontSize(portrait ? 68 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
 
@@ -731,9 +734,17 @@ export default class SlotScene extends Phaser.Scene {
 
     const menuX = portrait ? width * 0.098 : buyX + buySize * 1.18;
     const menuY = portrait ? barTop + barH * 0.595 : leftY;
+    const menuSize = portrait ? 130 : compactLandscape ? 31 : 41;
     this.menuButton.setPosition(menuX, menuY);
-    this.menuButtonBg.setPosition(0, 0);
-    this.menuButtonBg.setSize(portrait ? 130 : compactLandscape ? 44 : 58, portrait ? 130 : compactLandscape ? 44 : 58).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
+    this.menuButtonBg.setPosition(-menuSize / 2, -menuSize / 2);
+    this.menuButtonBg.setSize(menuSize, menuSize).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
+    this.menuButton.list.slice(1).forEach((bar, index) => {
+      const rect = bar as Phaser.GameObjects.Rectangle;
+      rect
+        .setPosition(0, (index - 1) * menuSize * 0.19)
+        .setSize(menuSize * 0.56, Math.max(4, menuSize * 0.1))
+        .setOrigin(0.5);
+    });
 
     this.balanceText.setPosition(portrait ? width * 0.255 : buyX + buySize * 2.05, portrait ? height - 42 : leftY).setFontSize(portrait ? 26 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
     this.winText.setVisible(false);
@@ -773,17 +784,18 @@ export default class SlotScene extends Phaser.Scene {
     await this.animateReelSpin(result.grid);
     this.grid = result.grid;
     const paidSpinWin = Math.max(0, result.totalWin - result.bonusWin);
-    this.lastWin = paidSpinWin;
+    this.lastWin = result.baseWin;
     this.renderGrid(result.lineWins);
     this.drawPaylines([]);
     this.updateHud();
     await this.presentWins(result.lineWins);
 
     if (result.wheelEvents.length > 0) {
-      await this.showWheelSequence(result.wheelEvents, result.baseWin, paidSpinWin, result.baseWheelCashWin);
+      await this.showWheelSequence(result.wheelEvents, result.shurikenWin);
     }
+    this.lastWin = paidSpinWin;
     this.balance += paidSpinWin;
-    this.currentMultiplierMeter = result.multiplierMeter;
+    this.currentMultiplierMeter = 0;
     this.updateHud();
 
     if (result.bonusTriggered && result.freeSpins) {
@@ -947,9 +959,9 @@ export default class SlotScene extends Phaser.Scene {
     const rulesBody = "5 reel, 4 row line-pay slot with 14 fixed paylines.\n\n" +
       "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
-      "Shurikens can land on reels 1, 3, and 5. Each Shuriken activates a Wicked Wheel at that position, resolving left to right.\n\n" +
-      "Blue Wicked Wheels appear in the base game. Red Wicked Wheels appear in free spins. Base-game non-bonus Shuriken outcomes can award cash and can add to or multiply the multiplier meter.\n\n" +
-      `Bonus Shuriken outcomes from Blue Wheels award stronger free-spin tiers: 1, 2, or 3 outcomes trigger free-spin levels with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
+      "Shurikens can land on reels 1, 3, and 5. Each Shuriken activates at that position, resolving left to right.\n\n" +
+      "Blue Shurikens appear in the base game. Red Shurikens appear in free spins. Base-game non-bonus Shuriken outcomes can award cash and can add to or multiply the current spin's Shuriken win.\n\n" +
+      `Bonus Shuriken outcomes from Blue Shurikens award stronger free-spin tiers: 1, 2, or 3 outcomes trigger free-spin levels with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
       "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
@@ -958,14 +970,14 @@ export default class SlotScene extends Phaser.Scene {
       lineSpacing: portrait ? 4 : 6,
       wordWrap: { width: rulesW },
     }).setOrigin(0, 0);
-    const wheelTitle = this.add.text(rulesLeft, rulesTop + rulesText.height + 30, "WICKED WHEEL OUTCOMES", {
+    const wheelTitle = this.add.text(rulesLeft, rulesTop + rulesText.height + 30, "SHURIKEN OUTCOMES", {
       fontFamily: UI_FONT,
       fontSize: `${portrait ? 20 : 24}px`,
       color: UI_HEX.green,
       stroke: UI_HEX.peach,
       strokeThickness: 2,
     }).setOrigin(0, 0);
-    const wheelText = this.add.text(rulesLeft, wheelTitle.y + 34, "Examples: +5x, +10x, +50x, x2, x5, x10, or Bonus Shuriken. Red Wheel add values can reach +1000x.", {
+    const wheelText = this.add.text(rulesLeft, wheelTitle.y + 34, "Examples: +5x, +10x, +50x, x2, x5, x10, or Bonus Shuriken. Red Shuriken add values can reach +1000x.", {
       fontFamily: BODY_FONT,
       fontSize: `${portrait ? 14 : 15}px`,
       color: UI_HEX.ink,
@@ -1761,7 +1773,7 @@ export default class SlotScene extends Phaser.Scene {
     this.updateHud();
   }
 
-  private async showWheelSequence(events: WheelEvent[], baseWin: number, totalWin: number, wheelCashWin = 0) {
+  private async showWheelSequence(events: WheelEvent[], shurikenWin = 0) {
     if (this.wheelOverlay) this.wheelOverlay.destroy(true);
     await this.pulseWheelSymbols(events);
     const width = Number(this.scale.width) || 1280;
@@ -1792,7 +1804,7 @@ export default class SlotScene extends Phaser.Scene {
     const pointer = this.add.image(centerX, centerY - wheelSize * 0.55, "shuriken_spin_pin")
       .setOrigin(0.5)
       .setDisplaySize(Math.max(44, Math.min(76, wheelSize * 0.16)), Math.max(44, Math.min(76, wheelSize * 0.16)));
-    const title = this.add.text(centerX, centerY - wheelSize * 0.7, "WICKED WHEEL", {
+    const title = this.add.text(centerX, centerY - wheelSize * 0.7, "SHURIKEN", {
       fontFamily: UI_FONT,
       fontSize: `${Math.max(32, Math.min(56, width * 0.044))}px`,
       color: UI_HEX.peach,
@@ -1823,7 +1835,7 @@ export default class SlotScene extends Phaser.Scene {
       const event = events[index];
       const color = event.color === "red" ? 0xff5b45 : 0x46b9ff;
       ring.setStrokeStyle(7, color, 0.95);
-      title.setText(`${event.color.toUpperCase()} WICKED WHEEL`);
+      title.setText(`${event.color.toUpperCase()} SHURIKEN`);
       const outcomeText = this.formatWheelOutcome(event.outcome);
       const selectedIndex = Math.max(0, previewValues.indexOf(outcomeText));
       const stopAngle = (360 * 3) + ((360 - selectedIndex * (360 / previewValues.length)) % 360);
@@ -1842,10 +1854,16 @@ export default class SlotScene extends Phaser.Scene {
         ? `BONUS SHURIKEN ${index + 1}/${events.length}`
         : `WINNING MULTIPLIER ${outcomeText}`;
       resultText.setText(outcomeCopy);
-      const wheelCashText = wheelCashWin > 0 ? `CASH ${wheelCashWin.toFixed(2)}` : "";
-      meterText.setText(wheelCashWin > 0 ? `SHURIKEN ${wheelCashText}` : `${event.meterAfter}x`);
+      meterText.setText(`${event.meterAfter}x`);
       this.tweens.add({ targets: [resultText, meterText, glow], scaleX: 1.08, scaleY: 1.08, duration: 160, yoyo: true, ease: "Sine.Out" });
       await this.wait(900);
+    }
+
+    if (shurikenWin > 0) {
+      resultText.setText("SHURIKEN WIN");
+      meterText.setText(`${shurikenWin.toFixed(2)}x`);
+      this.tweens.add({ targets: [resultText, meterText, glow], scaleX: 1.1, scaleY: 1.1, duration: 180, yoyo: true, ease: "Sine.Out" });
+      await this.wait(820);
     }
 
     await this.wait(420);
@@ -1920,18 +1938,22 @@ export default class SlotScene extends Phaser.Scene {
         await this.animateReelSpin(spin.grid);
 
         this.grid = spin.grid;
-        this.lastWin = spin.totalWin;
-        collected += spin.totalWin;
-        this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length, spin.totalWin > 0);
+        this.currentMultiplierMeter = 0;
+        this.lastWin = spin.baseWin;
+        this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length);
         this.renderGrid(spin.lineWins);
         this.drawPaylines([]);
         this.updateHud();
-        await this.presentWins(spin.lineWins, spin.multiplierMeter > 0 ? spin.multiplierMeter : 1);
+        await this.presentWins(spin.lineWins);
 
         if (spin.wheelEvents.length > 0) {
-          await this.showWheelSequence(spin.wheelEvents, spin.baseWin, spin.totalWin);
+          await this.showWheelSequence(spin.wheelEvents, spin.shurikenWin);
         }
 
+        this.lastWin = spin.totalWin;
+        collected += spin.totalWin;
+        this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length, spin.totalWin > 0);
+        this.updateHud();
         this.flashStatus(spin.totalWin > 0 ? `Free spin win ${spin.totalWin.toFixed(2)}x` : "Free spin no win");
         await this.wait(spin.totalWin > 0 ? 680 : 360);
       }
@@ -2027,7 +2049,7 @@ export default class SlotScene extends Phaser.Scene {
     const panelW = portrait ? Math.min(width * 0.28, 126) : Math.min(220, width * 0.14);
     const panelH = portrait ? 45 : Math.min(64, barH * 0.62);
     const x = portrait ? width * 0.43 : menuX + Math.min(270, width * 0.18);
-    const y = portrait ? height - 42 : midY + 2;
+    const y = portrait ? height - 45 : midY - 1;
 
     this.bonusCollectDisplay.setPosition(x, y);
     this.bonusCollectPanel.setSize(panelW, panelH).setFillStyle(UI_PALETTE.darkBrown, 0).setVisible(false);

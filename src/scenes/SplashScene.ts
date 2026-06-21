@@ -113,8 +113,9 @@ export default class SplashScene extends Phaser.Scene {
     const panel = this.add.rectangle(x, y, width, height, panelColor, 0.92).setStrokeStyle(4, SPLASH_COLORS.trim, 0.94);
     const topTrim = this.add.rectangle(x, y - height / 2 + 10, width * 0.84, Math.max(4, height * 0.016), SPLASH_COLORS.trim, 0.95);
     const bottomTrim = this.add.rectangle(x, y + height / 2 - 10, width * 0.84, Math.max(4, height * 0.016), SPLASH_COLORS.accent, 0.78);
-    const visualSize = Math.min(width * (portrait ? 0.24 : 0.42), height * (portrait ? 0.32 : 0.38));
-    const visualY = y - height * (portrait ? 0.24 : 0.22);
+    const componentScale = 1.5;
+    const visualSize = Math.min(width * (portrait ? 0.24 : 0.42), height * (portrait ? 0.32 : 0.38)) * componentScale;
+    const visualY = y - height * (portrait ? 0.27 : 0.26);
     const accent = type === "wheel"
       ? this.add.image(x, visualY - visualSize * 0.48, "shuriken_spin_pin").setDisplaySize(visualSize * 0.28, visualSize * 0.28).setOrigin(0.5)
       : this.add.rectangle(x, visualY, visualSize * 0.82, visualSize * 0.82, SPLASH_COLORS.bg, 0.18).setStrokeStyle(3, SPLASH_COLORS.trim, 0.72).setAngle(45);
@@ -132,7 +133,7 @@ export default class SplashScene extends Phaser.Scene {
       : undefined;
     const title = this.add.text(x, y + height * (portrait ? 0.06 : 0.12), titleText, {
       fontFamily: UI_FONT,
-      fontSize: Math.max(portrait ? 22 : 26, Math.min(portrait ? 34 : 44, width * (portrait ? 0.082 : 0.1))) + "px",
+      fontSize: Math.max(portrait ? 22 : 26, Math.min(portrait ? 34 : 44, width * (portrait ? 0.082 : 0.1))) * componentScale + "px",
       color: SPLASH_COLORS.text,
       stroke: SPLASH_COLORS.shadow,
       strokeThickness: portrait ? 5 : 6,
@@ -141,7 +142,7 @@ export default class SplashScene extends Phaser.Scene {
     const isHighlight = titleText === "MAX WIN";
     const body = this.add.text(x, y + height * (isHighlight ? (portrait ? 0.25 : 0.3) : (portrait ? 0.24 : 0.31)), bodyText, {
       fontFamily: isHighlight ? UI_FONT : BODY_FONT,
-      fontSize: isHighlight ? Math.max(portrait ? 40 : 52, Math.min(portrait ? 58 : 76, width * (portrait ? 0.132 : 0.158))) + "px" : Math.max(portrait ? 13 : 16, Math.min(portrait ? 18 : 24, width * (portrait ? 0.038 : 0.048))) + "px",
+      fontSize: isHighlight ? Math.max(portrait ? 40 : 52, Math.min(portrait ? 58 : 76, width * (portrait ? 0.132 : 0.158))) * componentScale + "px" : Math.max(portrait ? 13 : 16, Math.min(portrait ? 18 : 24, width * (portrait ? 0.038 : 0.048))) * componentScale + "px",
       color: isHighlight ? SPLASH_COLORS.text : SPLASH_COLORS.body,
       stroke: "#000000",
       strokeThickness: isHighlight ? (portrait ? 7 : 9) : 3,

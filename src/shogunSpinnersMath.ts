@@ -51,6 +51,7 @@ export type SpinResult = {
   lineWins: LineWin[];
   baseWin: number;
   baseWheelCashWin: number;
+  shurikenWin: number;
   wheelMultiplier: number;
   multiplierMeter: number;
   wheelEvents: WheelEvent[];
@@ -74,7 +75,7 @@ export const BONUS_TIER_1_BLUE_CELL_CHANCE = 0.011;
 export const BONUS_TIER_1_RED_CELL_CHANCE = 0.006;
 export const BONUS_TIER_2_RED_CELL_CHANCE = 0.018;
 export const BONUS_TIER_3_RED_CELL_CHANCE = 1 / (SHURIKEN_REELS.length * ROWS);
-export const BONUS_FEATURE_PAY_SCALE = 0.42;
+export const BONUS_FEATURE_PAY_SCALE = 2.77;
 export const V1_PAY_SCALE = 4.3;
 export const BASE_WHEEL_CASH_SCALE = 0.05;
 
@@ -322,9 +323,10 @@ export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResul
   const resolved = resolveWheelEvents(grid, 0, BASE_GAME_MAX_WHEEL_METER);
   const baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
   const bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
-  const lineWinWithMeter = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : scored.baseWin;
-  const uncappedPaidSpinWin = roundMoney(lineWinWithMeter + baseWheelCashWin);
+  const lineShurikenWin = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : 0;
+  const uncappedPaidSpinWin = roundMoney(scored.baseWin + lineShurikenWin + baseWheelCashWin);
   const paidSpinWin = roundMoney(Math.min(uncappedPaidSpinWin, bet * BASE_GAME_MAX_WIN_MULTIPLIER));
+  const shurikenWin = roundMoney(Math.max(0, paidSpinWin - scored.baseWin));
   let bonusWin = 0;
   let freeSpins: SpinResult[] | undefined;
   if (bonusTier > 0) {
@@ -337,6 +339,7 @@ export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResul
     lineWins: scored.lineWins,
     baseWin: scored.baseWin,
     baseWheelCashWin,
+    shurikenWin,
     wheelMultiplier: resolved.meter,
     multiplierMeter: resolved.meter,
     wheelEvents: resolved.events,
@@ -351,23 +354,23 @@ export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResul
 export function playBonusFeature(random = Math.random, bet = DEFAULT_BET, tier: BonusTier = 1): { totalWin: number; freeSpins: SpinResult[]; bonusTier: BonusTier } {
   const freeSpins: SpinResult[] = [];
   let totalWin = 0;
-  let meter = 0;
   for (let i = 0; i < FREE_SPINS; i++) {
     const grid = createGrid(random, tier);
     const scored = scoreGrid(grid, bet);
-    const resolved = resolveWheelEvents(grid, meter);
-    meter = resolved.meter;
+    const resolved = resolveWheelEvents(grid, 0);
     const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * BONUS_FEATURE_PAY_SCALE) }));
     const bonusBaseWin = roundMoney(scaledLineWins.reduce((sum, win) => sum + win.amount, 0));
-    const spinTotal = roundMoney(bonusBaseWin > 0 && meter > 0 ? bonusBaseWin * meter : bonusBaseWin);
+    const shurikenWin = bonusBaseWin > 0 && resolved.meter > 0 ? roundMoney(bonusBaseWin * resolved.meter) : 0;
+    const spinTotal = roundMoney(bonusBaseWin + shurikenWin);
     totalWin = roundMoney(totalWin + spinTotal);
     freeSpins.push({
       grid,
       lineWins: scaledLineWins,
       baseWin: bonusBaseWin,
       baseWheelCashWin: 0,
-      wheelMultiplier: meter,
-      multiplierMeter: meter,
+      shurikenWin,
+      wheelMultiplier: resolved.meter,
+      multiplierMeter: resolved.meter,
       wheelEvents: resolved.events,
       bonusTier: tier,
       totalWin: spinTotal,

@@ -70,38 +70,51 @@ function assertBonusDisplayParity(spin, bet = 1, label = "bonus free spin") {
   assert.equal(spin.baseWin, paytableTotal, `${label}: baseWin should equal summed paytable wins`);
 
   const displayedWin = spin.totalWin;
-  const expectedDisplayedWin = spin.baseWin > 0 && spin.multiplierMeter > 0
+  const expectedShurikenWin = spin.baseWin > 0 && spin.multiplierMeter > 0
     ? math.roundMoney(spin.baseWin * spin.multiplierMeter)
-    : spin.baseWin;
+    : 0;
+  const expectedDisplayedWin = math.roundMoney(spin.baseWin + expectedShurikenWin);
+  assert.equal(
+    spin.shurikenWin,
+    expectedShurikenWin,
+    `${label}: shuriken win should be separate from base line win`,
+  );
   assert.equal(
     displayedWin,
     expectedDisplayedWin,
-    `${label}: displayed WIN should equal payline/paytable win after active bonus meter`,
+    `${label}: displayed WIN should equal base line win plus separate shuriken win`,
   );
 
-  const animationMultiplier = spin.multiplierMeter > 0 ? spin.multiplierMeter : 1;
   const animatedWinTotal = spin.lineWins.reduce(
-    (sum, win) => math.roundMoney(sum + math.roundMoney(win.amount * animationMultiplier)),
+    (sum, win) => math.roundMoney(sum + win.amount),
     0,
   );
   assert.equal(
     animatedWinTotal,
-    expectedDisplayedWin,
-    `${label}: winning animation callouts should sum to displayed WIN after active bonus meter`,
+    spin.baseWin,
+    `${label}: line-winning animation callouts should not include shuriken win`,
   );
 }
 
 assert.ok(
-  slotSceneSource.includes("this.lastWin = spin.totalWin;") &&
+  slotSceneSource.includes("this.lastWin = spin.baseWin;") &&
     slotSceneSource.includes("this.winText.setText(`WIN ${this.lastWin.toFixed(2)}`);"),
-  "SlotScene should display each bonus spin's spin.totalWin through the WIN field",
+  "SlotScene should display each bonus spin's base line win before shuriken presentation",
 );
 
 assert.ok(
-  slotSceneSource.includes("private async presentWins(wins: LineWin[], presentationMultiplier = 1)") &&
-    slotSceneSource.includes("amount: this.roundMoney(win.amount * presentationMultiplier)") &&
-    slotSceneSource.includes("await this.presentWins(spin.lineWins, spin.multiplierMeter > 0 ? spin.multiplierMeter : 1);"),
-  "SlotScene should pass the active bonus meter into winning animation callouts",
+  slotSceneSource.includes("await this.presentWins(spin.lineWins);") &&
+    slotSceneSource.includes("await this.showWheelSequence(spin.wheelEvents, spin.shurikenWin);"),
+  "SlotScene should present line wins separately from shuriken wins",
+);
+
+const bonusCollectBeforeIndex = slotSceneSource.indexOf("this.updateBonusCollectDisplay(collected, index + 1, freeSpins.length);");
+const bonusPresentIndex = slotSceneSource.indexOf("await this.presentWins(spin.lineWins);", bonusCollectBeforeIndex);
+const bonusWheelIndex = slotSceneSource.indexOf("await this.showWheelSequence(spin.wheelEvents, spin.shurikenWin);", bonusPresentIndex);
+const bonusCollectAfterIndex = slotSceneSource.indexOf("collected += spin.totalWin;", bonusWheelIndex);
+assert.ok(
+  bonusCollectBeforeIndex > 0 && bonusPresentIndex > bonusCollectBeforeIndex && bonusWheelIndex > bonusPresentIndex && bonusCollectAfterIndex > bonusWheelIndex,
+  "bonus total win should increment after line and shuriken presentation",
 );
 
 const noMeterGrid = [
@@ -115,6 +128,7 @@ const noMeterScore = math.scoreGrid(noMeterGrid, 1);
 assertBonusDisplayParity({
   lineWins: noMeterScore.lineWins.map((win) => ({ ...win, amount: math.roundMoney(win.amount * math.BONUS_FEATURE_PAY_SCALE) })),
   baseWin: math.roundMoney(noMeterScore.baseWin * math.BONUS_FEATURE_PAY_SCALE),
+  shurikenWin: 0,
   multiplierMeter: 0,
   totalWin: math.roundMoney(noMeterScore.baseWin * math.BONUS_FEATURE_PAY_SCALE),
 }, 1, "hand-authored no-meter bonus spin");
@@ -132,6 +146,11 @@ for (let featureIndex = 0; featureIndex < sampledFeatures; featureIndex++) {
     sampledFreeSpins++;
     if (spin.baseWin > 0) sampledPayingFreeSpins++;
     if (spin.baseWin > 0 && spin.multiplierMeter > 0) sampledMeteredPayingFreeSpins++;
+    assert.equal(
+      spin.multiplierMeter,
+      math.resolveWheelEvents(spin.grid, 0).meter,
+      `feature ${featureIndex} spin ${spinIndex}: shuriken meter should reset at the start of each free spin`,
+    );
     assertBonusDisplayParity(spin, 1, `feature ${featureIndex} spin ${spinIndex}`);
   }
   const summedDisplayed = feature.freeSpins.reduce((sum, spin) => math.roundMoney(sum + spin.totalWin), 0);
@@ -150,8 +169,10 @@ console.log(JSON.stringify({
   checks: [
     "bonus payline win equals bonus-scaled paytable win",
     "bonus baseWin equals summed paylines",
-    "displayed WIN equals bonus payline/paytable win after meter",
-    "winning animation callouts sum to displayed WIN after meter",
+    "displayed WIN equals base line win plus separate shuriken win",
+    "line-winning animation callouts exclude shuriken win",
+    "free-spin shuriken meters reset per spin",
+    "TOTAL WIN increments after line and shuriken presentation",
     "TOTAL WIN equals summed displayed free-spin wins",
   ],
 }, null, 2));
