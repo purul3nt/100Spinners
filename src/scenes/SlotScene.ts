@@ -391,7 +391,7 @@ export default class SlotScene extends Phaser.Scene {
     this.menuButtonBg = this.add.rectangle(0, 0, 58, 58, 0x151515, 0.92)
       .setStrokeStyle(0, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
-    const menuBars = [-7, 0, 7].map((y) => this.add.rectangle(0, y, 22, 3, 0xffffff, 1).setOrigin(0.5));
+    const menuBars = [-33, 0, 33].map((y) => this.add.rectangle(0, y, 73, 13, 0xffffff, 1).setOrigin(0.5));
     this.menuButton = this.add.container(0, 0, [this.menuButtonBg, ...menuBars]).setDepth(70);
     this.menuButtonBg.on("pointerdown", () => this.showRulesMenu());
     this.menuButtonBg.on("pointerover", () => this.menuButton.setScale(1.05));
@@ -674,9 +674,9 @@ export default class SlotScene extends Phaser.Scene {
   private layoutBaboonFooter(width: number, height: number) {
     const portrait = height > width;
     const compactLandscape = !portrait && height < 520;
-    const barH = portrait ? Math.max(154, height * 0.18) : compactLandscape ? Math.max(78, height * 0.2) : Math.max(108, height * 0.11);
+    const barH = portrait ? Math.max(186, height * 0.22) : compactLandscape ? Math.max(78, height * 0.2) : Math.max(108, height * 0.11);
     const barTop = height - barH;
-    this.uiBar.setPosition(0, barTop).setSize(width, barH).setFillStyle(portrait ? 0x05050a : 0x050505, portrait ? 0.34 : 0.76);
+    this.uiBar.setPosition(0, barTop).setSize(width, barH).setFillStyle(portrait ? 0x05050a : 0x050505, portrait ? 0.58 : 0.76);
 
     const panelW = portrait ? Math.min(width * 0.72, 300) : compactLandscape ? Math.min(280, width * 0.36) : Math.min(410, width * 0.235);
     const panelH = portrait ? 58 : compactLandscape ? 58 : Math.min(86, Math.max(76, height * 0.078));
@@ -685,52 +685,52 @@ export default class SlotScene extends Phaser.Scene {
     const panelY = portrait ? height - 27 : barTop + barH * (compactLandscape ? 0.56 : 0.52);
     this.betPanel.setVisible(!portrait).setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
-    const spinSize = portrait ? Math.min(96, Math.max(84, width * 0.18)) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
+    const spinSize = portrait ? Math.min(184, Math.max(168, width * 0.188)) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
     const spinX = portrait ? width / 2 : panelX + panelW * 0.22;
-    const spinY = portrait ? barTop + barH * 0.43 : panelY;
+    const spinY = portrait ? barTop + barH * 0.65 : panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
     this.spinButtonBg.setRadius(spinSize / 2).setFillStyle(0x242424, 0.98).setStrokeStyle(Math.max(7, spinSize * 0.085), 0xffffff, 1);
-    this.spinButtonText.setFontSize(Math.max(38, spinSize * 0.58));
+    this.spinButtonText.setFontSize(Math.max(38, spinSize * 0.4));
     this.spinHitZone.setPosition(spinX - spinSize / 2, spinY - spinSize / 2).setSize(spinSize, spinSize);
     this.spinHitZone.setInteractive(new Phaser.Geom.Rectangle(0, 0, spinSize, spinSize), Phaser.Geom.Rectangle.Contains);
 
     const betTextX = portrait ? width * 0.5 : panelX - panelW * 0.37;
-    const betTextY = portrait ? height - 27 : panelY;
+    const betTextY = portrait ? barTop + barH * 0.36 : panelY;
     this.betText.setPosition(betTextX, betTextY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 10 : compactLandscape ? 14 : 19) : (portrait ? 10 : compactLandscape ? 16 : 22)).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
 
-    const sideOffset = Math.max(64, spinSize * 0.72);
+    const sideOffset = Math.max(80, spinSize * 0.82);
     const minusX = portrait ? spinX - sideOffset : panelX - panelW * 0.03;
     const plusX = portrait ? spinX + sideOffset : panelX - panelW * 0.03;
     this.betMinusButton.setVisible(false);
     this.betPlusButton.setVisible(false);
-    this.betMinusBg.setVisible(portrait).setPosition(minusX, spinY).setSize(portrait ? 38 : 1, portrait ? 33 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
-    this.betPlusBg.setVisible(portrait).setPosition(plusX, spinY).setSize(portrait ? 38 : 1, portrait ? 33 : 1).setFillStyle(0x5e5968, portrait ? 0.94 : 0);
-    this.betDownText.setText(portrait ? "-" : "\u25BC").setPosition(minusX, portrait ? spinY - 1 : panelY + panelH * 0.22).setFontSize(portrait ? 34 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
-    this.betUpText.setText(portrait ? "+" : "\u25B2").setPosition(plusX, portrait ? spinY - 1 : panelY - panelH * 0.22).setFontSize(portrait ? 30 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    this.betMinusBg.setVisible(false).setPosition(minusX, spinY).setSize(1, 1).setFillStyle(0x5e5968, 0);
+    this.betPlusBg.setVisible(false).setPosition(plusX, spinY).setSize(1, 1).setFillStyle(0x5e5968, 0);
+    this.betDownText.setText(portrait ? "\u25BC" : "\u25BC").setPosition(portrait ? width * 0.592 : panelX - panelW * 0.03, portrait ? barTop + barH * 0.42 : panelY + panelH * 0.22).setFontSize(portrait ? 46 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
+    this.betUpText.setText(portrait ? "\u25B2" : "\u25B2").setPosition(portrait ? width * 0.592 : panelX - panelW * 0.03, portrait ? barTop + barH * 0.335 : panelY - panelH * 0.22).setFontSize(portrait ? 46 : compactLandscape ? 20 : 28).setColor("#ffffff").setOrigin(0.5);
     if (!portrait) {
       this.betMinusBg.setVisible(false);
       this.betPlusBg.setVisible(false);
     }
 
-    const autoSize = portrait ? 38 : spinSize * 0.58;
-    this.autoButtonShell.setPosition(portrait ? width - 28 : panelX + panelW * 0.43, portrait ? barTop + 91 : spinY).setScale(1);
+    const autoSize = portrait ? 40 : spinSize * 0.58;
+    this.autoButtonShell.setPosition(portrait ? spinX + spinSize * 0.43 : panelX + panelW * 0.43, spinY).setScale(1);
     this.autoButtonBg.setRadius(autoSize / 2).setFillStyle(portrait ? 0x5e5968 : 0x242424, portrait ? 0.86 : 0.98);
     this.autoButtonText.setFontSize(portrait ? 23 : Math.max(23, autoSize * 0.6));
 
-    const buySize = portrait ? 46 : compactLandscape ? Math.min(48, height * 0.12) : Math.min(68, height * 0.064);
+    const buySize = portrait ? 104 : compactLandscape ? Math.min(48, height * 0.12) : Math.min(68, height * 0.064);
     const clusterLeft = portrait ? Math.max(26, width * 0.08) : compactLandscape ? Math.max(96, width * 0.27) : Math.max(276, width * 0.152);
-    const buyX = portrait ? 34 : clusterLeft + buySize / 2;
+    const buyX = portrait ? width * 0.136 : clusterLeft + buySize / 2;
     const leftY = portrait ? barTop + Math.max(35, barH * 0.23) : panelY;
-    this.buyButton.setPosition(buyX, portrait ? barTop + 31 : leftY).setScale(1);
+    this.buyButton.setPosition(buyX, portrait ? barTop + barH * 0.26 : leftY).setScale(1);
     this.buyButtonBg.setRadius(buySize / 2).setFillStyle(portrait ? 0xfacc15 : 0xf2d7f0, portrait ? 1 : 1).setStrokeStyle(3, 0x111111, 1);
-    this.buyButtonText.setText(portrait ? "BUY\nBONUS" : "BUY").setFontSize(portrait ? 9 : Math.max(12, buySize * 0.19)).setColor("#111111").setStroke("#ffffff", 1).setRotation(portrait ? -0.55 : 0);
+    this.buyButtonText.setText(portrait ? "BUY\nBONUS" : "BUY").setFontSize(portrait ? 22 : Math.max(12, buySize * 0.19)).setColor("#111111").setStroke("#ffffff", 1).setRotation(portrait ? -0.55 : 0);
 
-    const menuX = portrait ? 30 : buyX + buySize * 1.18;
-    const menuY = portrait ? barTop + 91 : leftY;
+    const menuX = portrait ? width * 0.136 : buyX + buySize * 1.18;
+    const menuY = portrait ? barTop + barH * 0.54 : leftY;
     this.menuButton.setPosition(menuX, menuY);
-    this.menuButtonBg.setSize(portrait ? 42 : compactLandscape ? 44 : 58, portrait ? 42 : compactLandscape ? 44 : 58).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
+    this.menuButtonBg.setSize(portrait ? 146 : compactLandscape ? 44 : 58, portrait ? 146 : compactLandscape ? 44 : 58).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
 
-    this.balanceText.setPosition(portrait ? width * 0.21 : buyX + buySize * 2.05, portrait ? height - 27 : leftY).setFontSize(portrait ? 10 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
+    this.balanceText.setPosition(portrait ? width * 0.315 : buyX + buySize * 2.05, portrait ? barTop + barH * 0.55 : leftY).setFontSize(portrait ? 10 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
     this.winText.setVisible(false);
   }
 
