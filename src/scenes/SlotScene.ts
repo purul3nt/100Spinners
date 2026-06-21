@@ -206,7 +206,6 @@ export default class SlotScene extends Phaser.Scene {
   private balanceText!: Phaser.GameObjects.Text;
   private betText!: Phaser.GameObjects.Text;
   private winText!: Phaser.GameObjects.Text;
-  private multiplierMeterText!: Phaser.GameObjects.Text;
   private logoImage!: Phaser.GameObjects.Image;
   private clockText!: Phaser.GameObjects.Text;
   private logoGlowLayers: Array<{
@@ -331,7 +330,6 @@ export default class SlotScene extends Phaser.Scene {
     this.balanceText = this.createHudText("BALANCE 0.00");
     this.betText = this.createHudText("BET 1.00");
     this.winText = this.createHudText("WIN 0.00");
-    this.multiplierMeterText = this.createHudText("METER\n0x");
 
     this.betMinusButton = this.add.image(0, 0, "ui_btn_minus").setDepth(68).setInteractive({ useHandCursor: true });
     this.betPlusButton = this.add.image(0, 0, "ui_btn_plus").setDepth(68).setInteractive({ useHandCursor: true });
@@ -619,10 +617,6 @@ export default class SlotScene extends Phaser.Scene {
     this.drawReelBackingTint();
 
     this.layoutBaboonFooter(width, height);
-    this.multiplierMeterText
-      .setPosition(this.frameLeft + this.frameW * 0.83, this.frameTop + this.frameH * 0.03)
-      .setFontSize(height > width * 1.05 ? 15 : 20)
-      .setOrigin(0.5, 0);
     this.layoutBonusCollectDisplay(width, height);
     this.refreshSamuraiLayout();
 
@@ -653,7 +647,7 @@ export default class SlotScene extends Phaser.Scene {
   private layoutBaboonFooter(width: number, height: number) {
     const portrait = height > width;
     const compactLandscape = !portrait && height < 520;
-    const barH = portrait ? Math.max(176, height * 0.22) : compactLandscape ? Math.max(78, height * 0.2) : Math.max(108, height * 0.11);
+    const barH = portrait ? Math.max(170, height * 0.21) : compactLandscape ? Math.max(78, height * 0.2) : Math.max(108, height * 0.11);
     const barTop = height - barH;
     this.uiBar.setPosition(0, barTop).setSize(width, barH).setFillStyle(0x050505, portrait ? 0.58 : 0.76);
 
@@ -664,7 +658,7 @@ export default class SlotScene extends Phaser.Scene {
     const panelY = portrait ? barTop + barH - 62 : barTop + barH * (compactLandscape ? 0.56 : 0.52);
     this.betPanel.setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
-    const spinSize = portrait ? Math.min(78, width * 0.18) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
+    const spinSize = portrait ? Math.min(96, width * 0.22) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
     const spinX = portrait ? width / 2 : panelX + panelW * 0.22;
     const spinY = portrait ? panelY - 3 : panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
@@ -1706,7 +1700,6 @@ export default class SlotScene extends Phaser.Scene {
       .setText(this.bonusTotalSpins > 0 ? `FREE\nSPINS ${this.bonusCurrentSpin}/${this.bonusTotalSpins}` : `BET\n\u20AC${this.bet.toFixed(2)}`)
       .setFontSize(this.bonusTotalSpins > 0 ? 19 : 22);
     this.winText.setText(`WIN ${this.lastWin.toFixed(2)}`);
-    this.multiplierMeterText?.setText(`METER\n${this.currentMultiplierMeter}x`);
     if (this.spinButtonText) {
       const canSlam = this.slamStopAvailable && this.spinning;
       const spinRadius = Math.max(38, this.spinButtonBg.displayWidth / 2);
