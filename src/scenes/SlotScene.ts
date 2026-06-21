@@ -161,7 +161,6 @@ const REEL_START_STAGGER_MS = 42;
 const SLAM_STOP_REEL_STAGGER_MS = 55;
 const SLAM_STOP_MIN_SPIN_MS = 180;
 const STOPPED_SYMBOL_Y_OFFSET = -5;
-const WHEEL_VALUES = [5, 10, 20, 50, 100, 250, 500, 1000];
 const SPIN_SYMBOL_CODES: SymbolCode[] = ["H1", "H2", "H3", "H4", "H5", "L1", "L2", "L3", "L4", "L5", "W1"];
 const SYMBOL_IMAGE_KEYS: Partial<Record<SymbolCode, string>> = {
   H1: "shogun_sym_high_01",
@@ -1742,6 +1741,7 @@ export default class SlotScene extends Phaser.Scene {
 
   private async showWheelSequence(events: WheelEvent[], baseWin: number, totalWin: number, wheelCashWin = 0) {
     if (this.wheelOverlay) this.wheelOverlay.destroy(true);
+    await this.pulseWheelSymbols(events);
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
     const centerX = width / 2;
@@ -1793,9 +1793,9 @@ export default class SlotScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.wheelOverlay = this.add.container(0, 0, [blocker, glow, ring, wheelGroup, pointer, title, resultText, meterText]).setDepth(45).setAlpha(0);
-    this.tweens.add({ targets: this.wheelOverlay, alpha: 1, duration: 180, ease: "Sine.Out" });
-    this.tweens.add({ targets: wheelGroup, alpha: 1, scaleX: 1, scaleY: 1, duration: 260, ease: "Back.Out" });
-    await this.wait(260);
+    this.tweens.add({ targets: this.wheelOverlay, alpha: 1, duration: 260, ease: "Sine.Out" });
+    this.tweens.add({ targets: wheelGroup, alpha: 1, scaleX: 1, scaleY: 1, duration: 520, ease: "Back.Out" });
+    await this.wait(680);
 
     for (let index = 0; index < events.length; index++) {
       const event = events[index];
@@ -1809,7 +1809,7 @@ export default class SlotScene extends Phaser.Scene {
         this.tweens.add({
           targets: wheelGroup,
           angle: wheelGroup.angle + stopAngle,
-          duration: 760,
+          duration: 1550,
           ease: "Cubic.Out",
           onComplete: () => resolve(),
         });
@@ -1818,21 +1818,15 @@ export default class SlotScene extends Phaser.Scene {
       this.updateHud();
       const outcomeCopy = event.outcome.kind === "bonus"
         ? `BONUS SHURIKEN ${index + 1}/${events.length}`
-        : `${outcomeText} => METER ${event.meterAfter}x`;
+        : `WINNING MULTIPLIER ${outcomeText}`;
       resultText.setText(outcomeCopy);
       const wheelCashText = wheelCashWin > 0 ? `CASH ${wheelCashWin.toFixed(2)}` : "";
-      meterText.setText(baseWin > 0 && event.meterAfter > 0
-        ? wheelCashWin > 0
-          ? `LINE ${baseWin.toFixed(2)} x ${event.meterAfter} + ${wheelCashText} = ${totalWin.toFixed(2)}`
-          : `LINE ${baseWin.toFixed(2)} x ${event.meterAfter} = ${totalWin.toFixed(2)}`
-        : wheelCashWin > 0
-          ? `SHURIKEN ${wheelCashText}`
-          : `METER ${event.meterAfter}x`);
+      meterText.setText(wheelCashWin > 0 ? `SHURIKEN ${wheelCashText}` : `METER ${event.meterAfter}x`);
       this.tweens.add({ targets: [resultText, meterText, glow], scaleX: 1.08, scaleY: 1.08, duration: 160, yoyo: true, ease: "Sine.Out" });
-      await this.wait(420);
+      await this.wait(900);
     }
 
-    await this.wait(250);
+    await this.wait(420);
     if (this.wheelOverlay) {
       this.tweens.add({
         targets: this.wheelOverlay,
@@ -1847,187 +1841,36 @@ export default class SlotScene extends Phaser.Scene {
     }
   }
 
-  private async showWheelSpin(value: number, baseWin: number, totalWin: number) {
-    if (this.wheelOverlay) this.wheelOverlay.destroy(true);
-    const width = Number(this.scale.width) || 1280;
-    const height = Number(this.scale.height) || 720;
-    const centerX = width / 2;
-    const centerY = Math.min(height * 0.52, this.frameTop + this.frameH * 0.52);
-    const wheelSize = Math.max(260, Math.min(430, Math.min(width, height) * 0.58));
-    const values = this.createWheelValueSequence(value);
-    const selectedIndex = values.indexOf(value);
-    const labelRadius = wheelSize * 0.28;
-    const labelFont = Math.max(18, Math.min(31, wheelSize * 0.068));
-
-    const blocker = this.add.rectangle(0, 0, width, height, UI_PALETTE.ink, 0.64).setOrigin(0).setInteractive({ useHandCursor: false });
-    const glow = this.add.circle(centerX, centerY, wheelSize * 0.58, UI_PALETTE.bronze, 0.16);
-    const ring = this.add.circle(centerX, centerY, wheelSize * 0.51, UI_PALETTE.darkBrown, 0.84).setStrokeStyle(5, UI_PALETTE.bronze, 0.95);
-    const wheel = this.add.image(0, 0, "shogun_wheel").setDisplaySize(wheelSize, wheelSize);
-    const labels = values.map((multiplier, index) => {
-      const angle = -Math.PI / 2 + (Math.PI * 2 * index) / values.length;
-      const label = this.add.text(Math.cos(angle) * labelRadius, Math.sin(angle) * labelRadius, `${multiplier}x`, {
-        fontFamily: UI_FONT,
-        fontSize: `${labelFont}px`,
-        color: multiplier === value ? UI_HEX.peach : UI_HEX.parchment,
-        stroke: UI_HEX.ink,
-        strokeThickness: Math.max(5, Math.round(labelFont * 0.22)),
-        align: "center",
-      }).setOrigin(0.5);
-      label.setAngle((angle * 180) / Math.PI + 90);
-      return label;
-    });
-    const wheelParts: Phaser.GameObjects.GameObject[] = [wheel as Phaser.GameObjects.GameObject, ...labels];
-    const wheelGroup = this.add.container(centerX, centerY, wheelParts).setScale(0.2).setAlpha(0);
-    const pointerSize = Math.max(44, Math.min(76, wheelSize * 0.16));
-    const pointer = this.add.image(centerX, centerY - wheelSize * 0.55, "shuriken_spin_pin")
-      .setOrigin(0.5)
-      .setDisplaySize(pointerSize, pointerSize);
-    const title = this.add.text(centerX, centerY - wheelSize * 0.7, "SHURIKEN SPINNER", {
-      fontFamily: UI_FONT,
-      fontSize: `${Math.max(34, Math.min(58, width * 0.045))}px`,
-      color: UI_HEX.peach,
-      stroke: UI_HEX.ink,
-      strokeThickness: 8,
-    }).setOrigin(0.5);
-    const resultText = this.add.text(centerX, centerY + wheelSize * 0.66, "SPINNING...", {
-      fontFamily: UI_FONT,
-      fontSize: `${Math.max(26, Math.min(42, width * 0.033))}px`,
-      color: UI_HEX.parchment,
-      stroke: UI_HEX.ink,
-      strokeThickness: 7,
-    }).setOrigin(0.5);
-    const mathText = this.add.text(centerX, centerY + wheelSize * 0.77, `${baseWin.toFixed(2)} x ${value} = ${totalWin.toFixed(2)}`, {
-      fontFamily: BODY_FONT,
-      fontSize: `${Math.max(15, Math.min(22, width * 0.017))}px`,
-      color: UI_HEX.peach,
-      stroke: UI_HEX.ink,
-      strokeThickness: 4,
-    }).setOrigin(0.5).setAlpha(0);
-
-    this.wheelOverlay = this.add.container(0, 0, [blocker, glow, ring, wheelGroup, pointer, title, resultText, mathText]).setDepth(45).setAlpha(0);
-    this.tweens.add({ targets: this.wheelOverlay, alpha: 1, duration: 180, ease: "Sine.Out" });
-    this.tweens.add({ targets: wheelGroup, alpha: 1, scaleX: 1, scaleY: 1, duration: 260, ease: "Back.Out" });
-    this.tweens.add({ targets: glow, alpha: 0.27, scaleX: 1.08, scaleY: 1.08, duration: 340, yoyo: true, repeat: 5, ease: "Sine.InOut" });
-    await this.wait(260);
-
-    const stopAngle = (360 * 5) + ((360 - selectedIndex * (360 / values.length)) % 360);
+  private async pulseWheelSymbols(events: WheelEvent[]) {
+    const targets = events
+      .map((event) => this.symbolViews[event.col]?.[event.row]?.container)
+      .filter((container): container is Phaser.GameObjects.Container => Boolean(container?.active));
+    if (targets.length === 0) return;
     await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: wheelGroup,
-        angle: stopAngle,
-        duration: 1750,
-        ease: "Cubic.Out",
-        onComplete: () => resolve(),
+      let completed = 0;
+      targets.forEach((target, index) => {
+        this.tweens.killTweensOf(target);
+        const baseScale = Number(target.getData("baseScale")) || target.scaleX || 1;
+        target.setScale(baseScale);
+        this.time.delayedCall(index * 120, () => {
+          this.tweens.add({
+            targets: target,
+            scaleX: baseScale * 1.22,
+            scaleY: baseScale * 1.22,
+            duration: 210,
+            yoyo: true,
+            repeat: 2,
+            ease: "Sine.InOut",
+            onComplete: () => {
+              target.setScale(baseScale);
+              completed += 1;
+              if (completed >= targets.length) resolve();
+            },
+          });
+        });
       });
     });
-
-    resultText.setText(`${value}x SHURIKEN BOOST`);
-    await this.animateWheelMultiplierApplication(value, baseWin, totalWin, centerX, centerY, wheelSize, resultText, mathText);
-    await this.wait(460);
-    if (this.wheelOverlay) {
-      this.tweens.add({
-        targets: this.wheelOverlay,
-        alpha: 0,
-        duration: 170,
-        onComplete: () => {
-          if (this.wheelOverlay) this.wheelOverlay.destroy(true);
-          this.wheelOverlay = undefined;
-        },
-      });
-      await this.wait(180);
-    }
-  }
-
-  private createWheelValueSequence(value: number) {
-    const values = WHEEL_VALUES.slice(0);
-    if (values.indexOf(value) === -1) values[3] = value;
-    values.sort((a, b) => a - b);
-    return values;
-  }
-
-  private async animateWheelMultiplierApplication(
-    value: number,
-    baseWin: number,
-    totalWin: number,
-    centerX: number,
-    centerY: number,
-    wheelSize: number,
-    resultText: Phaser.GameObjects.Text,
-    mathText: Phaser.GameObjects.Text,
-  ) {
-    const width = Number(this.scale.width) || 1280;
-    const amountY = centerY + wheelSize * 0.79;
-    const amountFont = Math.max(24, Math.min(42, width * 0.032));
-    const beforeText = this.add.text(centerX - wheelSize * 0.24, amountY, baseWin.toFixed(2), {
-      fontFamily: UI_FONT,
-      fontSize: `${amountFont}px`,
-      color: UI_HEX.beige,
-      stroke: UI_HEX.ink,
-      strokeThickness: 7,
-    }).setOrigin(0.5).setAlpha(0);
-    const arrowText = this.add.text(centerX, amountY, "\u2192", {
-      fontFamily: UI_FONT,
-      fontSize: `${amountFont * 0.9}px`,
-      color: UI_HEX.bronze,
-      stroke: UI_HEX.ink,
-      strokeThickness: 6,
-    }).setOrigin(0.5).setAlpha(0);
-    const afterText = this.add.text(centerX + wheelSize * 0.25, amountY, baseWin.toFixed(2), {
-      fontFamily: UI_FONT,
-      fontSize: `${amountFont}px`,
-      color: UI_HEX.parchment,
-      stroke: UI_HEX.ink,
-      strokeThickness: 8,
-    }).setOrigin(0.5).setAlpha(0);
-    const badge = this.add.text(centerX, centerY - wheelSize * 0.02, `${value}x`, {
-      fontFamily: UI_FONT,
-      fontSize: `${Math.max(30, amountFont * 1.18)}px`,
-      color: UI_HEX.peach,
-      stroke: UI_HEX.ink,
-      strokeThickness: 8,
-    }).setOrigin(0.5).setAlpha(0).setScale(0.55);
-
-    this.wheelOverlay?.add([beforeText, arrowText, afterText, badge]);
-    mathText.setText("BASE WIN");
-    await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: [resultText, mathText, beforeText, arrowText, afterText],
-        alpha: 1,
-        duration: 190,
-        ease: "Sine.Out",
-        onComplete: () => resolve(),
-      });
-    });
-
-    await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: badge,
-        alpha: 1,
-        scaleX: 1,
-        scaleY: 1,
-        duration: 190,
-        ease: "Back.Out",
-        onComplete: () => resolve(),
-      });
-    });
-
-    await new Promise<void>((resolve) => {
-      this.tweens.add({
-        targets: badge,
-        x: afterText.x,
-        y: afterText.y - amountFont * 0.95,
-        duration: 520,
-        ease: "Cubic.InOut",
-        onComplete: () => {
-          afterText.setText(totalWin.toFixed(2)).setColor(UI_HEX.peach);
-          mathText.setText(`${baseWin.toFixed(2)} x ${value} = ${totalWin.toFixed(2)}`);
-          this.tweens.add({ targets: [afterText, mathText], scaleX: 1.12, scaleY: 1.12, duration: 180, yoyo: true, ease: "Sine.Out" });
-          this.tweens.add({ targets: badge, alpha: 0, scaleX: 1.45, scaleY: 1.45, duration: 210, ease: "Sine.In" });
-          resolve();
-        },
-      });
-    });
-    await this.wait(360);
+    await this.wait(160);
   }
 
   private async playFreeSpinSequence(freeSpins: SpinResult[], totalWin: number, titleText: string) {
