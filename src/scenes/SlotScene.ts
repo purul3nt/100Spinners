@@ -1584,20 +1584,21 @@ export default class SlotScene extends Phaser.Scene {
     });
   }
 
-  private async presentWins(wins: LineWin[]) {
+  private async presentWins(wins: LineWin[], presentationMultiplier = 1) {
     if (!wins.length) return;
     const orderedWins = wins.slice().sort((a, b) => a.lineIndex - b.lineIndex);
     const totalWin = this.lastWin;
     const samuraiSlash = this.playSamuraiWinSlash();
     for (let index = 0; index < orderedWins.length; index++) {
       const win = orderedWins[index];
+      const presentationWin = { ...win, amount: this.roundMoney(win.amount * presentationMultiplier) };
       this.renderGrid([win]);
-      this.lastWin = win.amount;
+      this.lastWin = presentationWin.amount;
       this.updateHud();
       await this.animatePaylinesLeftToRight([win]);
       this.drawPaylines([win]);
       this.playWinningSymbolAnimations([win]);
-      await this.showLineWinCallout(win, index + 1, orderedWins.length);
+      await this.showLineWinCallout(presentationWin, index + 1, orderedWins.length);
       await this.wait(160);
     }
     await samuraiSlash;
@@ -1734,6 +1735,10 @@ export default class SlotScene extends Phaser.Scene {
 
   private formatMoney(value: number) {
     return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  private roundMoney(value: number) {
+    return Math.round(value * 100) / 100;
   }
 
   private flashStatus(_text: string) {
@@ -1921,7 +1926,7 @@ export default class SlotScene extends Phaser.Scene {
         this.renderGrid(spin.lineWins);
         this.drawPaylines([]);
         this.updateHud();
-        await this.presentWins(spin.lineWins);
+        await this.presentWins(spin.lineWins, spin.multiplierMeter > 0 ? spin.multiplierMeter : 1);
 
         if (spin.wheelEvents.length > 0) {
           await this.showWheelSequence(spin.wheelEvents, spin.baseWin, spin.totalWin);

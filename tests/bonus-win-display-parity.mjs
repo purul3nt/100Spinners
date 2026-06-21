@@ -78,12 +78,30 @@ function assertBonusDisplayParity(spin, bet = 1, label = "bonus free spin") {
     expectedDisplayedWin,
     `${label}: displayed WIN should equal payline/paytable win after active bonus meter`,
   );
+
+  const animationMultiplier = spin.multiplierMeter > 0 ? spin.multiplierMeter : 1;
+  const animatedWinTotal = spin.lineWins.reduce(
+    (sum, win) => math.roundMoney(sum + math.roundMoney(win.amount * animationMultiplier)),
+    0,
+  );
+  assert.equal(
+    animatedWinTotal,
+    expectedDisplayedWin,
+    `${label}: winning animation callouts should sum to displayed WIN after active bonus meter`,
+  );
 }
 
 assert.ok(
   slotSceneSource.includes("this.lastWin = spin.totalWin;") &&
     slotSceneSource.includes("this.winText.setText(`WIN ${this.lastWin.toFixed(2)}`);"),
   "SlotScene should display each bonus spin's spin.totalWin through the WIN field",
+);
+
+assert.ok(
+  slotSceneSource.includes("private async presentWins(wins: LineWin[], presentationMultiplier = 1)") &&
+    slotSceneSource.includes("amount: this.roundMoney(win.amount * presentationMultiplier)") &&
+    slotSceneSource.includes("await this.presentWins(spin.lineWins, spin.multiplierMeter > 0 ? spin.multiplierMeter : 1);"),
+  "SlotScene should pass the active bonus meter into winning animation callouts",
 );
 
 const noMeterGrid = [
@@ -133,6 +151,7 @@ console.log(JSON.stringify({
     "bonus payline win equals bonus-scaled paytable win",
     "bonus baseWin equals summed paylines",
     "displayed WIN equals bonus payline/paytable win after meter",
+    "winning animation callouts sum to displayed WIN after meter",
     "TOTAL WIN equals summed displayed free-spin wins",
   ],
 }, null, 2));
