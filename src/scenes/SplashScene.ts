@@ -50,7 +50,7 @@ export default class SplashScene extends Phaser.Scene {
     this.content = this.add.container(0, 0).setDepth(5);
 
     const logo = this.add.image(width / 2, height * (portrait ? 0.105 : 0.135), "shogun_logo").setOrigin(0.5);
-    const logoW = Math.min(width * (portrait ? 0.62 : 0.38), portrait ? 310 : 540);
+    const logoW = Math.min(width * (portrait ? 0.5 : 0.36), portrait ? 280 : 520);
     logo.setDisplaySize(logoW, logoW * (logo.height / logo.width));
     this.content.add(logo);
 

@@ -685,7 +685,7 @@ export default class SlotScene extends Phaser.Scene {
     const panelY = portrait ? height - 27 : barTop + barH * (compactLandscape ? 0.56 : 0.52);
     this.betPanel.setVisible(!portrait).setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
-    const spinSize = portrait ? Math.min(120, width * 0.28) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
+    const spinSize = portrait ? Math.min(88, width * 0.22) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
     const spinX = portrait ? width / 2 : panelX + panelW * 0.22;
     const spinY = portrait ? barTop + barH * 0.43 : panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
@@ -721,16 +721,16 @@ export default class SlotScene extends Phaser.Scene {
     const clusterLeft = portrait ? Math.max(26, width * 0.08) : compactLandscape ? Math.max(96, width * 0.27) : Math.max(276, width * 0.152);
     const buyX = clusterLeft + buySize / 2;
     const leftY = portrait ? barTop + Math.max(35, barH * 0.23) : panelY;
-    this.buyButton.setPosition(buyX, leftY).setScale(1);
+    this.buyButton.setPosition(buyX, portrait ? barTop + barH * 0.5 : leftY).setScale(1);
     this.buyButtonBg.setRadius(buySize / 2).setFillStyle(portrait ? 0xfacc15 : 0xf2d7f0, portrait ? 1 : 1).setStrokeStyle(3, 0x111111, 1);
-    this.buyButtonText.setText(portrait ? "BUY\nBONUS" : "BUY").setFontSize(Math.max(9, buySize * 0.17)).setColor("#111111").setRotation(portrait ? -0.55 : 0);
+    this.buyButtonText.setText(portrait ? "BUY\nBONUS" : "BUY").setFontSize(Math.max(10, buySize * 0.18)).setColor("#111111").setRotation(portrait ? -0.55 : 0);
 
-    const menuX = portrait ? buyX : buyX + buySize * 1.18;
-    const menuY = portrait ? barTop + barH * 0.58 : leftY;
+    const menuX = portrait ? buyX + buySize * 1.2 : buyX + buySize * 1.18;
+    const menuY = portrait ? barTop + barH * 0.5 : leftY;
     this.menuButton.setPosition(menuX, menuY);
     this.menuButtonBg.setSize(portrait ? 42 : compactLandscape ? 44 : 58, portrait ? 42 : compactLandscape ? 44 : 58);
 
-    this.balanceText.setPosition(portrait ? width * 0.26 : buyX + buySize * 2.05, portrait ? height - 27 : leftY).setFontSize(portrait ? 11 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
+    this.balanceText.setPosition(portrait ? width * 0.26 : buyX + buySize * 2.05, portrait ? height - 27 : leftY).setFontSize(portrait ? 13 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");
     this.winText.setVisible(false);
   }
 
