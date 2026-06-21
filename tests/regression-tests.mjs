@@ -35,6 +35,7 @@ function loadTsCommonJs(relativePath) {
 
 const math = loadTsCommonJs("src/shogunSpinnersMath.ts");
 const mathSource = fs.readFileSync(path.join(root, "src/shogunSpinnersMath.ts"), "utf8");
+const par = JSON.parse(fs.readFileSync(path.join(root, "par/1000-shogun-spinners-par-latest.json"), "utf8"));
 const slotSceneSource = fs.readFileSync(path.join(root, "src/scenes/SlotScene.ts"), "utf8");
 const splashSceneSource = fs.readFileSync(path.join(root, "src/scenes/SplashScene.ts"), "utf8");
 
@@ -45,9 +46,30 @@ assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x b
 assert.equal(Math.max(...math.BONUS_MULTIPLIERS), 1000, "wheel max multiplier should be 1000x");
 assert.ok(math.BASE_SHURIKEN_CELL_CHANCE > 0, "base Shuriken landing chance should be configured");
 assert.ok(math.BASE_WHEEL_CASH_SCALE > 0, "base Shuriken cash scale should be configured");
-assert.ok(math.BASE_LOW_PAY_ASSIST_CHANCE > 0, "base low-pay assist chance should be configured");
+assert.equal(math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length, 35, "base low-pay lift should come from explicit reel strips");
+assert.equal(math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length, 500, "bonus hit-rate lift should come from explicit bonus reel strips");
+assert.equal(math.REEL_STRIPS[0].length, 111, "base reel 1 should include the low-symbol strip extension");
+assert.equal(math.REEL_STRIPS[1].length, 110, "base reel 2 should include the low-symbol strip extension");
+assert.equal(math.REEL_STRIPS[2].length, 111, "base reel 3 should include the low-symbol strip extension");
+assert.equal(math.BONUS_REEL_STRIPS[0].length, 611, "bonus reel 1 should include the bonus low-symbol strip extension");
+assert.equal(math.BONUS_REEL_STRIPS[1].length, 610, "bonus reel 2 should include the bonus low-symbol strip extension");
+assert.equal(math.BONUS_REEL_STRIPS[2].length, 611, "bonus reel 3 should include the bonus low-symbol strip extension");
+assert.ok(!("BASE_LOW_PAY_ASSIST_CHANCE" in math), "base low-pay lift should not use a losing-spin assist");
+assert.ok(!("BONUS_MODE_HIT_ASSIST_CHANCE" in math), "bonus hit-rate lift should not use a losing-spin assist");
 assert.ok(!("WHEEL_EVENT_CHANCE" in math), "wheel spins should not use a random wheel-event gate");
 assert.ok(math.BONUS_FEATURE_PAY_SCALE > 0, "bonus feature pay scale should be configured");
+assert.equal(par.constants.v1PayScale, math.V1_PAY_SCALE, "PAR v1 pay scale should match live math");
+assert.equal(par.constants.bonusFeaturePayScale, math.BONUS_FEATURE_PAY_SCALE, "PAR bonus feature pay scale should match live math");
+assert.equal(par.constants.baseWheelCashScale, math.BASE_WHEEL_CASH_SCALE, "PAR base wheel cash scale should match live math");
+assert.equal(par.constants.baseLowSymbolStripExtensionLength, math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR base strip extension length should match live math");
+assert.equal(par.constants.bonusLowSymbolStripExtensionLength, math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR bonus strip extension length should match live math");
+assert.equal(par.summary.baseCapAudit.maxBasePart, math.BASE_GAME_MAX_WIN_MULTIPLIER, "PAR base cap audit should match live base max win cap");
+assert.ok(!("bonusModeHitAssistChance" in par.constants), "PAR should not document a removed bonus hit assist");
+assert.ok(
+  par.certReadiness.baseGameStatus.includes("No base losing-spin assist") &&
+    par.certReadiness.bonusGameStatus.includes("No bonus losing-spin assist"),
+  "PAR cert readiness notes should document assist-free base and bonus math",
+);
 
 const grid = [
   [{ code: "H1" }, { code: "L1" }, { code: "L2" }, { code: "L3" }],

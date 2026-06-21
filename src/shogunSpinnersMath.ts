@@ -74,10 +74,8 @@ export const BONUS_TIER_1_BLUE_CELL_CHANCE = 0.011;
 export const BONUS_TIER_1_RED_CELL_CHANCE = 0.006;
 export const BONUS_TIER_2_RED_CELL_CHANCE = 0.018;
 export const BONUS_TIER_3_RED_CELL_CHANCE = 1 / (SHURIKEN_REELS.length * ROWS);
-export const BONUS_MODE_HIT_ASSIST_CHANCE = 0.414;
-export const BASE_LOW_PAY_ASSIST_CHANCE = 0.066;
-export const BONUS_FEATURE_PAY_SCALE = 0.28885;
-export const V1_PAY_SCALE = 3.95;
+export const BONUS_FEATURE_PAY_SCALE = 0.42;
+export const V1_PAY_SCALE = 4.3;
 export const BASE_WHEEL_CASH_SCALE = 0.05;
 
 export const BLUE_WHEEL_ADD_VALUES = [5, 10, 15, 20, 25, 50, 75, 100];
@@ -85,7 +83,7 @@ const BLUE_WHEEL_ADD_WEIGHTS = [28, 24, 18, 13, 8, 4, 1.2, 0.45];
 export const BLUE_WHEEL_MULTIPLY_VALUES = [2, 3, 5, 8, 10];
 const BLUE_WHEEL_MULTIPLY_WEIGHTS = [38, 22, 8, 2, 0.7];
 const BLUE_WHEEL_KIND_VALUES: WheelOutcomeKind[] = ["add", "multiply", "bonus"];
-const BLUE_WHEEL_KIND_WEIGHTS = [72, 18, 10];
+const BLUE_WHEEL_KIND_WEIGHTS = [72, 18, 9.6];
 
 export const RED_WHEEL_ADD_VALUES = [10, 20, 50, 100, 250, 500, 1000];
 const RED_WHEEL_ADD_WEIGHTS = [34, 26, 16, 7, 1.7, 0.32, 0.045];
@@ -136,13 +134,31 @@ export const PAYLINES: number[][] = [
   [3, 2, 3, 2, 3],
 ];
 
-export const REEL_STRIPS: SymbolCode[][] = [
+export const BASE_LOW_SYMBOL_STRIP_EXTENSION: SymbolCode[] = [
+  "L1", "L2", "L3", "L4", "L5",
+  "L1", "L2", "L3", "L4", "L5",
+  "L1", "L2", "L3", "L4", "L5",
+  "L1", "L2", "L3", "L4", "L5",
+  "L1", "L2", "L3", "L4", "L5",
+  "L1", "L2", "L3", "L4", "L5",
+  "L1", "L2", "L3", "L4", "L5",
+];
+export const BONUS_LOW_SYMBOL_STRIP_EXTENSION: SymbolCode[] = repeatLowSymbols(100);
+
+const BASE_REEL_STRIPS: SymbolCode[][] = [
   ["H1", "H2", "H5", "L2", "H5", "L5", "H5", "L1", "H3", "H1", "L2", "L2", "H3", "L3", "L3", "L4", "L4", "L4", "H3", "L3", "L5", "L3", "H5", "L5", "H3", "L2", "L4", "H5", "L4", "H4", "H2", "L5", "L2", "H5", "L2", "H3", "L4", "L3", "L3", "H5", "L1", "H5", "L4", "L5", "L3", "H3", "L4", "H5", "L1", "L5", "L3", "H5", "L3", "H5", "L5", "L5", "L3", "H1", "L5", "L5", "H4", "L5", "L4", "L4", "H5", "L3", "H4", "L1", "L1", "L1", "L3", "L3", "H1", "H1", "H2", "H5"],
   ["H1", "H4", "L2", "H4", "L4", "L3", "H2", "L4", "L3", "H3", "L3", "L4", "H4", "L5", "L4", "L4", "H5", "H4", "L2", "L2", "L3", "L5", "H5", "L5", "H4", "L1", "L1", "L5", "L1", "H1", "H4", "H2", "L4", "L4", "L1", "L1", "L4", "L5", "H5", "L2", "L1", "L4", "H4", "L4", "L4", "L4", "L4", "H2", "L4", "L4", "H2", "L4", "H4", "L5", "H1", "L4", "H2", "L2", "L3", "L3", "H2", "L3", "L1", "H5", "L5", "L5", "H4", "L3", "L1", "L3", "L3", "H3", "H1", "H4", "L2"],
   ["H1", "L5", "L2", "L3", "L4", "H3", "L3", "L5", "L1", "L2", "L2", "H3", "L3", "H3", "L4", "H4", "L5", "L5", "L1", "L1", "L1", "L1", "H3", "L4", "L4", "H4", "L5", "L5", "L2", "H4", "L2", "H4", "L5", "L3", "L5", "H5", "L5", "L5", "H1", "L5", "H4", "L1", "L3", "L2", "H2", "L4", "L3", "H1", "L2", "L1", "H4", "H4", "L5", "H5", "L4", "L3", "H5", "L2", "L5", "H5", "L1", "L2", "L3", "H2", "L4", "H5", "L5", "L5", "H3", "L1", "L3", "L3", "H2", "H1", "L5", "L2"],
   ["H1", "H3", "L2", "L3", "H3", "H3", "H5", "L5", "H3", "L2", "L2", "H3", "H4", "L5", "H5", "H3", "L4", "H3", "L2", "L4", "H1", "L4", "L2", "L3", "H2", "L5", "H4", "H4", "H4", "H4", "L5", "H3", "L4", "H5", "L1", "L1", "L4", "H2", "H2", "L1", "L1", "H3", "H4", "L1", "H3", "L3", "H1", "L1", "H5", "L3", "H4", "L2", "L3", "H5", "L4", "L1", "H2", "L3", "H2", "H3", "L5", "L4", "L1", "H1", "H1", "H1", "H5", "H5", "L3", "L1", "L3", "L3", "H1", "H3", "L2"],
   ["H1", "H3", "L3", "L4", "H3", "L2", "L2", "H3", "L2", "L2", "H4", "H2", "L4", "L5", "L1", "H4", "H4", "L4", "L3", "L1", "L2", "H5", "L3", "L5", "L1", "H2", "L1", "H5", "H5", "L2", "L1", "L2", "H3", "H1", "L4", "L5", "H4", "L1", "H1", "L1", "L1", "L1", "H1", "L5", "H2", "L2", "L3", "H3", "L3", "L3", "L5", "L4", "H3", "H3", "H5", "H5", "L5", "H2", "L2", "L2", "H3", "L1", "L2", "L1", "H1", "H1", "H4", "H4", "H3", "H2", "L2", "L1", "L3", "L3", "H1", "H3", "L3"],
 ];
+
+export const REEL_STRIPS: SymbolCode[][] = BASE_REEL_STRIPS.map((strip, index) =>
+  index < 3 ? strip.concat(BASE_LOW_SYMBOL_STRIP_EXTENSION) : strip.slice(),
+);
+export const BONUS_REEL_STRIPS: SymbolCode[][] = REEL_STRIPS.map((strip, index) =>
+  index < 3 ? strip.concat(BONUS_LOW_SYMBOL_STRIP_EXTENSION) : strip.slice(),
+);
 
 export function weightedPick<T>(items: T[], weights: number[], random = Math.random): T {
   const total = weights.reduce((sum, weight) => sum + weight, 0);
@@ -154,10 +170,17 @@ export function weightedPick<T>(items: T[], weights: number[], random = Math.ran
   return items[items.length - 1];
 }
 
+function repeatLowSymbols(cycles: number): SymbolCode[] {
+  const symbols: SymbolCode[] = [];
+  const lows: SymbolCode[] = ["L1", "L2", "L3", "L4", "L5"];
+  for (let cycle = 0; cycle < cycles; cycle++) symbols.push(...lows);
+  return symbols;
+}
+
 export function createGrid(random = Math.random, bonusTier: BonusTier = 0): CellResult[][] {
   const grid: CellResult[][] = [];
   for (let col = 0; col < COLS; col++) {
-    const strip = REEL_STRIPS[col];
+    const strip = bonusTier > 0 ? BONUS_REEL_STRIPS[col] : REEL_STRIPS[col];
     const stop = Math.floor(random() * strip.length);
     const column: CellResult[] = [];
     for (let row = 0; row < ROWS; row++) {
@@ -294,18 +317,11 @@ export function calculateBaseWheelCashWin(events: WheelEvent[], bet = DEFAULT_BE
 }
 
 export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResult {
-  let grid = createGrid(random, 0);
-  let scored = scoreGrid(grid, bet);
-  let resolved = resolveWheelEvents(grid, 0, BASE_GAME_MAX_WHEEL_METER);
-  let baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
-  let bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
-  if (scored.baseWin <= 0 && baseWheelCashWin <= 0 && bonusTier === 0 && random() < BASE_LOW_PAY_ASSIST_CHANCE) {
-    grid = forceBaseLowPayWin(grid, random);
-    scored = scoreGrid(grid, bet);
-    resolved = resolveWheelEvents(grid, 0, BASE_GAME_MAX_WHEEL_METER);
-    baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
-    bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
-  }
+  const grid = createGrid(random, 0);
+  const scored = scoreGrid(grid, bet);
+  const resolved = resolveWheelEvents(grid, 0, BASE_GAME_MAX_WHEEL_METER);
+  const baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
+  const bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
   const lineWinWithMeter = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : scored.baseWin;
   const uncappedPaidSpinWin = roundMoney(lineWinWithMeter + baseWheelCashWin);
   const paidSpinWin = roundMoney(Math.min(uncappedPaidSpinWin, bet * BASE_GAME_MAX_WIN_MULTIPLIER));
@@ -337,12 +353,8 @@ export function playBonusFeature(random = Math.random, bet = DEFAULT_BET, tier: 
   let totalWin = 0;
   let meter = 0;
   for (let i = 0; i < FREE_SPINS; i++) {
-    let grid = createGrid(random, tier);
-    let scored = scoreGrid(grid, bet);
-    if (scored.baseWin <= 0 && random() < BONUS_MODE_HIT_ASSIST_CHANCE) {
-      grid = forceSmallBonusWin(grid);
-      scored = scoreGrid(grid, bet);
-    }
+    const grid = createGrid(random, tier);
+    const scored = scoreGrid(grid, bet);
     const resolved = resolveWheelEvents(grid, meter);
     meter = resolved.meter;
     const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * BONUS_FEATURE_PAY_SCALE) }));
@@ -378,49 +390,4 @@ export function buyBonus(random = Math.random, bet = DEFAULT_BET, tier: BonusTie
 
 export function roundMoney(value: number) {
   return Math.round(value * 100) / 100;
-}
-
-function forceSmallBonusWin(grid: CellResult[][]): CellResult[][] {
-  const next: CellResult[][] = grid.map((column) => column.map((cell) => ({
-    code: cell.code,
-    shuriken: cell.shuriken,
-    wheelColor: cell.wheelColor,
-    wheelOutcome: cell.wheelOutcome ? { ...cell.wheelOutcome } : undefined,
-  })));
-  const symbol: SymbolCode = "L3";
-  for (let col = 0; col < 3; col++) next[col][1] = { code: symbol };
-  return next;
-}
-
-function forceBaseLowPayWin(grid: CellResult[][], random: () => number): CellResult[][] {
-  const next = cloneGrid(grid);
-  const candidateLines = PAYLINES
-    .map((rows, lineIndex) => ({ rows, lineIndex }))
-    .filter(({ rows }) => {
-      for (let col = 0; col < 3; col++) {
-        if (next[col][rows[col]].shuriken) return false;
-      }
-      return true;
-    });
-  if (!candidateLines.length) return next;
-  const picked = candidateLines[Math.floor(random() * candidateLines.length)].rows;
-  const lowSymbols: SymbolCode[] = ["L1", "L2", "L3", "L4", "L5"];
-  const symbol = lowSymbols[Math.floor(random() * lowSymbols.length)];
-  for (let col = 0; col < 3; col++) next[col][picked[col]] = { code: symbol };
-  for (let col = 3; col < COLS; col++) {
-    const row = picked[col];
-    if (next[col][row].code === symbol && !next[col][row].shuriken) {
-      next[col][row] = { code: lowSymbols[(lowSymbols.indexOf(symbol) + col) % lowSymbols.length] };
-    }
-  }
-  return next;
-}
-
-function cloneGrid(grid: CellResult[][]): CellResult[][] {
-  return grid.map((column) => column.map((cell) => ({
-    code: cell.code,
-    shuriken: cell.shuriken,
-    wheelColor: cell.wheelColor,
-    wheelOutcome: cell.wheelOutcome ? { ...cell.wheelOutcome } : undefined,
-  })));
 }
