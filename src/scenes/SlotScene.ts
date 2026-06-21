@@ -201,7 +201,6 @@ export default class SlotScene extends Phaser.Scene {
   private reelMasks: Phaser.Display.Masks.GeometryMask[] = [];
   private lineGraphics!: Phaser.GameObjects.Graphics;
   private reelFrameBorder!: Phaser.GameObjects.Graphics;
-  private reelBackingTint!: Phaser.GameObjects.Graphics;
   private titleText!: Phaser.GameObjects.Text;
   private balanceText!: Phaser.GameObjects.Text;
   private betText!: Phaser.GameObjects.Text;
@@ -444,7 +443,6 @@ export default class SlotScene extends Phaser.Scene {
     // Baboon Bonanza reference style. Sits at the same depth band as the
     // previous boardFrame so reels/UI ordering is unchanged.
     this.reelFrameBorder = this.add.graphics().setDepth(7);
-    this.reelBackingTint = this.add.graphics().setDepth(7.35);
     this.lineGraphics = this.add.graphics().setDepth(12);
   }
 
@@ -507,7 +505,7 @@ export default class SlotScene extends Phaser.Scene {
       : (availableRight > 120 ? boardRight + Math.max(availableRight * 0.38, this.frameW * 0.055) : this.frameLeft + this.frameW * 0.92);
     const y = portrait
       ? Math.min(footerTop - targetHeight * 0.04, boardBottom + targetHeight * 0.08)
-      : Math.min(footerTop + targetHeight * 0.18, boardBottom + targetHeight * 0.18);
+      : Math.min(footerTop + targetHeight * 0.32, boardBottom + targetHeight * 0.32);
     this.samuraiFx
       .setVisible(true)
       .setAlpha(portrait ? 0.78 : 0.86)
@@ -613,7 +611,6 @@ export default class SlotScene extends Phaser.Scene {
     this.scaleBackground(width, height);
     this.layoutCherryBlossomParticles(width, height);
     this.drawReelFrameBorder(this.getReelContentBounds());
-    this.drawReelBackingTint();
 
     this.layoutBaboonFooter(width, height);
     this.layoutBonusCollectDisplay(width, height);
@@ -675,7 +672,7 @@ export default class SlotScene extends Phaser.Scene {
     const panelY = portrait ? barTop + barH - 62 : barTop + barH * (compactLandscape ? 0.56 : 0.52);
     this.betPanel.setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
-    const spinSize = portrait ? Math.min(96, width * 0.22) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
+    const spinSize = portrait ? Math.min(120, width * 0.28) : compactLandscape ? Math.min(72, Math.max(62, height * 0.16)) : Math.min(94, Math.max(82, height * 0.086));
     const spinX = portrait ? width / 2 : panelX + panelW * 0.22;
     const spinY = portrait ? panelY - 3 : panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
@@ -687,22 +684,27 @@ export default class SlotScene extends Phaser.Scene {
     const betTextX = portrait ? spinX - panelW * 0.18 : panelX - panelW * 0.37;
     const betTextY = portrait ? spinY - spinSize * 0.72 : panelY;
     this.betText.setPosition(portrait ? spinX : betTextX, betTextY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 11 : compactLandscape ? 14 : 19) : (portrait ? 13 : compactLandscape ? 16 : 22)).setOrigin(portrait ? 0.5 : 0, 0.5);
-    const arrowX = portrait ? spinX + spinSize * 0.52 : panelX - panelW * 0.03;
+    // On portrait, place +/- arrows to the LEFT of the spin button so they
+    // never collide with the larger spin circle.
+    const arrowX = portrait ? spinX - spinSize * 0.62 : panelX - panelW * 0.03;
     this.betUpText.setPosition(arrowX, betTextY - (portrait ? 10 : panelH * 0.22)).setFontSize(portrait ? 17 : compactLandscape ? 20 : 28);
     this.betDownText.setPosition(arrowX, betTextY + (portrait ? 10 : panelH * 0.22)).setFontSize(portrait ? 17 : compactLandscape ? 20 : 28);
 
-    const autoSize = spinSize * 0.58;
-    this.autoButtonShell.setPosition(portrait ? spinX + spinSize * 0.62 : panelX + panelW * 0.43, spinY).setScale(1);
+    // Autoplay sits to the right of the spin on portrait with an explicit
+    // gap so it never overlaps the now-larger spin button.
+    const autoSize = portrait ? spinSize * 0.42 : spinSize * 0.58;
+    const autoGap = portrait ? 12 : 4;
+    this.autoButtonShell.setPosition(portrait ? spinX + spinSize / 2 + autoGap + autoSize / 2 : panelX + panelW * 0.43, spinY).setScale(1);
     this.autoButtonBg.setRadius(autoSize / 2).setFillStyle(0x242424, 0.98);
     this.autoButtonText.setFontSize(Math.max(23, autoSize * 0.6));
 
-    const buySize = portrait ? Math.min(48, width * 0.115) : compactLandscape ? Math.min(48, height * 0.12) : Math.min(68, height * 0.064);
+    const buySize = portrait ? Math.min(78, width * 0.18) : compactLandscape ? Math.min(48, height * 0.12) : Math.min(68, height * 0.064);
     const clusterLeft = portrait ? Math.max(26, width * 0.08) : compactLandscape ? Math.max(96, width * 0.27) : Math.max(276, width * 0.152);
     const buyX = clusterLeft + buySize / 2;
     const leftY = portrait ? barTop + Math.max(44, barH * 0.26) : panelY;
     this.buyButton.setPosition(buyX, leftY).setScale(1);
-    this.buyButtonBg.setRadius(buySize / 2).setFillStyle(0xf2d7f0, 1).setStrokeStyle(3, 0x111111, 1);
-    this.buyButtonText.setFontSize(Math.max(11, buySize * 0.19));
+    this.buyButtonBg.setRadius(buySize / 2).setFillStyle(portrait ? 0xfacc15 : 0xf2d7f0, portrait ? 1 : 1).setStrokeStyle(3, 0x111111, 1);
+    this.buyButtonText.setFontSize(Math.max(11, buySize * 0.19)).setColor(portrait ? "#111111" : "#111111");
 
     const menuX = portrait ? buyX : buyX + buySize * 1.18;
     const menuY = portrait ? leftY + buySize * 1.18 : leftY;
@@ -732,24 +734,10 @@ export default class SlotScene extends Phaser.Scene {
     g.strokeRoundedRect(bounds.left - halo, bounds.top - halo, bounds.width + halo * 2, bounds.height + halo * 2, radius + halo);
     g.lineStyle(core, 0xffffff, 0.85);
     g.strokeRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, radius);
-  }
-
-  private drawReelBackingTint() {
-    if (!this.reelBackingTint) return;
-    const bounds = this.getReelContentBounds();
-    const left = bounds.left;
-    const top = bounds.top;
-    const width = bounds.width;
-    const height = bounds.height;
-    this.reelBackingTint.clear();
-    this.reelBackingTint.fillStyle(0x2c2f35, 0.18);
-    this.reelBackingTint.fillRoundedRect(left, top, width, height, Math.max(10, 16 * this.scaleFactor));
-    this.reelBackingTint.fillStyle(0xaab0b4, 0.07);
-    this.reelBackingTint.fillRoundedRect(left + 3 * this.scaleFactor, top + 3 * this.scaleFactor, width - 6 * this.scaleFactor, height - 6 * this.scaleFactor, Math.max(8, 13 * this.scaleFactor));
-    this.reelBackingTint.lineStyle(Math.max(1, 2 * this.scaleFactor), 0x1f2329, 0.16);
+    g.lineStyle(Math.max(1, 2 * this.scaleFactor), 0x1f2329, 0.22);
     for (let col = 1; col < COLS; col++) {
       const x = Phaser.Math.Linear(this.cellX(col - 1), this.cellX(col), 0.5);
-      this.reelBackingTint.lineBetween(x, top + height * 0.02, x, top + height * 0.98);
+      g.lineBetween(x, bounds.top + bounds.height * 0.02, x, bounds.top + bounds.height * 0.98);
     }
   }
 
