@@ -753,7 +753,6 @@ export default class SlotScene extends Phaser.Scene {
     this.grid = result.grid;
     const paidSpinWin = Math.max(0, result.totalWin - result.bonusWin);
     this.lastWin = paidSpinWin;
-    this.balance += paidSpinWin;
     this.renderGrid(result.lineWins);
     this.drawPaylines([]);
     this.updateHud();
@@ -762,6 +761,7 @@ export default class SlotScene extends Phaser.Scene {
     if (result.wheelEvents.length > 0) {
       await this.showWheelSequence(result.wheelEvents, result.baseWin, paidSpinWin, result.baseWheelCashWin);
     }
+    this.balance += paidSpinWin;
     this.currentMultiplierMeter = result.multiplierMeter;
     this.updateHud();
 
