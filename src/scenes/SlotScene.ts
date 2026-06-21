@@ -136,8 +136,8 @@ const SAMURAI_SLASH_FRAME_IDS = [
   "030",
 ];
 const SAMURAI_MOOD_BASE_HEIGHT: Record<SamuraiMood, number> = {
-  idle: 768,
-  slash: 1440,
+  idle: 640,
+  slash: 960,
 };
 const SAMURAI_MOOD_SCALE: Record<SamuraiMood, number> = {
   idle: 1,
@@ -230,11 +230,9 @@ export default class SlotScene extends Phaser.Scene {
   private betDownText!: Phaser.GameObjects.Text;
   private betMinusButton!: Phaser.GameObjects.Image;
   private betPlusButton!: Phaser.GameObjects.Image;
-  private autoButton!: Phaser.GameObjects.Image;
   private autoButtonBg!: Phaser.GameObjects.Arc;
   private autoButtonText!: Phaser.GameObjects.Text;
   private autoButtonShell!: Phaser.GameObjects.Container;
-  private maxBetButton!: Phaser.GameObjects.Image;
   private bonusPanel?: Phaser.GameObjects.Container;
   private bonusCollectDisplay?: Phaser.GameObjects.Container;
   private bonusCollectPanel?: Phaser.GameObjects.Rectangle;
@@ -359,13 +357,6 @@ export default class SlotScene extends Phaser.Scene {
     this.betUpText.on("pointerdown", () => this.adjustBet(1));
     this.betDownText.on("pointerdown", () => this.adjustBet(-1));
 
-    this.autoButton = this.add.image(0, 0, "ui_btn_auto").setDepth(66).setInteractive({ useHandCursor: true });
-    this.maxBetButton = this.add.image(0, 0, "ui_btn_max").setDepth(66).setInteractive({ useHandCursor: true });
-    this.autoButton.on("pointerdown", () => this.spin());
-    this.maxBetButton.on("pointerdown", () => this.setMaxBet());
-    this.autoButton.setVisible(false);
-    this.maxBetButton.setVisible(false);
-
     this.autoButtonBg = this.add.circle(0, 0, 28, 0x242424, 0.98)
       .setInteractive({ useHandCursor: true });
     this.autoButtonText = this.add.text(0, -1, "\u21BB", {
@@ -379,9 +370,9 @@ export default class SlotScene extends Phaser.Scene {
     this.autoButtonBg.on("pointerout", () => this.autoButtonShell.setScale(1));
 
     this.buyButtonBg = this.add.circle(0, 0, 34, 0xf2d7f0, 1).setStrokeStyle(3, 0x111111, 1);
-    this.buyButtonText = this.add.text(0, 0, "BUY\nBONUS", {
+    this.buyButtonText = this.add.text(0, 0, "BUY", {
       fontFamily: "Arial Black, Arial, sans-serif",
-      fontSize: "13px",
+      fontSize: "15px",
       color: "#111111",
       align: "center",
       stroke: "#ffffff",
@@ -581,7 +572,10 @@ export default class SlotScene extends Phaser.Scene {
   private layoutScene() {
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
-    this.scaleFactor = Math.min(1, (width * 0.94) / REEL_FRAME_BASE_W, (height * 0.62) / REEL_FRAME_BASE_H);
+    const portrait = height > width * 1.05;
+    const machineWidthBudget = portrait ? width * 0.98 : width * 0.94;
+    const frameWidthScale = machineWidthBudget / (REEL_FRAME_BASE_W * MACHINE_IMAGE_SCALE);
+    this.scaleFactor = Math.min(1, frameWidthScale, (height * 0.62) / REEL_FRAME_BASE_H);
     this.frameW = REEL_FRAME_BASE_W * this.scaleFactor;
     this.frameH = REEL_FRAME_BASE_H * this.scaleFactor;
     this.frameLeft = width / 2 - this.frameW / 2;
@@ -611,14 +605,15 @@ export default class SlotScene extends Phaser.Scene {
     if (this.clockText) {
       this.clockText.setPosition(5, 3).setFontSize(height > width ? 10 : 13);
     }
+    const machineBounds = this.getMachineFrameBounds(width);
     this.boardFrame
-      .setPosition(this.frameLeft + this.frameW * 0.035, this.frameTop + this.frameH * 0.05)
-      .setSize(this.frameW * 0.93, this.frameH * 0.88);
+      .setPosition(machineBounds.left, machineBounds.top)
+      .setSize(machineBounds.width, machineBounds.height);
     this.scaleBackground(width, height);
     this.layoutCherryBlossomParticles(width, height);
     this.reelFrame
-      .setPosition(width / 2, this.frameTop + this.frameH / 2)
-      .setDisplaySize(this.frameW * MACHINE_IMAGE_SCALE, this.frameH * MACHINE_IMAGE_SCALE);
+      .setPosition(machineBounds.centerX, machineBounds.centerY)
+      .setDisplaySize(machineBounds.width, machineBounds.height);
     this.drawReelBackingTint();
 
     this.layoutBaboonFooter(width, height);
@@ -633,21 +628,36 @@ export default class SlotScene extends Phaser.Scene {
     this.drawPaylines([]);
   }
 
+  private getMachineFrameBounds(width: number) {
+    const scaledW = this.frameW * MACHINE_IMAGE_SCALE;
+    const scaledH = this.frameH * MACHINE_IMAGE_SCALE;
+    const centerX = width / 2;
+    const centerY = this.frameTop + this.frameH / 2;
+    return {
+      left: centerX - scaledW / 2,
+      top: centerY - scaledH / 2,
+      width: scaledW,
+      height: scaledH,
+      centerX,
+      centerY,
+    };
+  }
+
   private layoutBaboonFooter(width: number, height: number) {
     const portrait = height > width;
-    const barH = portrait ? Math.max(142, height * 0.18) : Math.max(108, height * 0.11);
+    const barH = portrait ? Math.max(176, height * 0.22) : Math.max(108, height * 0.11);
     const barTop = height - barH;
     this.uiBar.setPosition(0, barTop).setSize(width, barH).setFillStyle(0x050505, portrait ? 0.58 : 0.76);
 
-    const panelW = portrait ? Math.min(width * 0.72, 390) : Math.min(410, width * 0.235);
-    const panelH = portrait ? 70 : Math.min(86, Math.max(76, height * 0.078));
+    const panelW = portrait ? Math.min(width * 0.9, 430) : Math.min(410, width * 0.235);
+    const panelH = portrait ? 68 : Math.min(86, Math.max(76, height * 0.078));
     const panelRight = portrait ? width * 0.04 : Math.max(90, width * 0.052);
     const panelX = portrait ? width / 2 : width - panelRight - panelW / 2;
-    const panelY = barTop + barH * 0.52;
+    const panelY = portrait ? barTop + barH - 90 : barTop + barH * 0.52;
     this.betPanel.setPosition(panelX, panelY).setSize(panelW, panelH).setFillStyle(0x111111, 0.96).setStrokeStyle(3, 0x030303, 1);
 
-    const spinSize = portrait ? Math.min(104, width * 0.2) : Math.min(94, Math.max(82, height * 0.086));
-    const spinX = portrait ? panelX + panelW * 0.22 : panelX + panelW * 0.22;
+    const spinSize = portrait ? Math.min(90, width * 0.19) : Math.min(94, Math.max(82, height * 0.086));
+    const spinX = portrait ? panelX + panelW * 0.28 : panelX + panelW * 0.22;
     const spinY = panelY;
     this.spinButton.setPosition(spinX, spinY).setScale(1);
     this.spinButtonBg.setRadius(spinSize / 2).setFillStyle(0x242424, 0.98).setStrokeStyle(Math.max(7, spinSize * 0.085), 0xffffff, 1);
@@ -655,31 +665,29 @@ export default class SlotScene extends Phaser.Scene {
     this.spinHitZone.setPosition(spinX - spinSize / 2, spinY - spinSize / 2).setSize(spinSize, spinSize);
     this.spinHitZone.setInteractive(new Phaser.Geom.Rectangle(0, 0, spinSize, spinSize), Phaser.Geom.Rectangle.Contains);
 
-    const betTextX = panelX - panelW * 0.37;
-    this.betText.setPosition(betTextX, panelY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 14 : 19) : (portrait ? 18 : 22)).setOrigin(0, 0.5);
-    const arrowX = panelX - panelW * 0.03;
+    const betTextX = panelX - panelW * (portrait ? 0.42 : 0.37);
+    this.betText.setPosition(betTextX, panelY).setFontSize(this.bonusTotalSpins > 0 ? (portrait ? 13 : 19) : (portrait ? 16 : 22)).setOrigin(0, 0.5);
+    const arrowX = panelX - panelW * (portrait ? 0.08 : 0.03);
     this.betUpText.setPosition(arrowX, panelY - panelH * 0.24).setFontSize(portrait ? 24 : 28);
     this.betDownText.setPosition(arrowX, panelY + panelH * 0.24).setFontSize(portrait ? 24 : 28);
 
     const autoSize = spinSize * 0.58;
-    this.autoButton.setPosition(panelX + panelW * 0.42, panelY).setScale(portrait ? 0.45 : 0.52);
-    this.autoButtonShell.setPosition(panelX + panelW * 0.43, panelY).setScale(1);
+    this.autoButtonShell.setPosition(panelX + panelW * (portrait ? 0.44 : 0.43), panelY).setScale(1);
     this.autoButtonBg.setRadius(autoSize / 2).setFillStyle(0x242424, 0.98);
     this.autoButtonText.setFontSize(Math.max(23, autoSize * 0.6));
-    this.maxBetButton.setPosition(panelX + panelW * 0.42, panelY).setScale(portrait ? 0.45 : 0.52);
 
-    const buySize = portrait ? Math.min(62, width * 0.13) : Math.min(68, height * 0.064);
+    const buySize = portrait ? Math.min(54, width * 0.12) : Math.min(68, height * 0.064);
     const clusterLeft = portrait ? Math.max(24, width * 0.08) : Math.max(276, width * 0.152);
     const buyX = clusterLeft + buySize / 2;
-    const leftY = panelY;
+    const leftY = portrait ? barTop + Math.max(42, barH * 0.25) : panelY;
     this.buyButton.setPosition(buyX, leftY).setScale(1);
     this.buyButtonBg.setRadius(buySize / 2).setFillStyle(0xf2d7f0, 1).setStrokeStyle(3, 0x111111, 1);
     this.buyButtonText.setFontSize(Math.max(11, buySize * 0.19));
 
     this.menuButton.setPosition(buyX + buySize * 1.22, leftY);
-    this.menuButtonBg.setSize(portrait ? 50 : 58, portrait ? 50 : 58);
+    this.menuButtonBg.setSize(portrait ? 46 : 58, portrait ? 46 : 58);
 
-    this.balanceText.setPosition(buyX + buySize * 2.15, leftY).setFontSize(portrait ? 17 : 24).setOrigin(0, 0.5);
+    this.balanceText.setPosition(buyX + buySize * 2.15, leftY).setFontSize(portrait ? 16 : 24).setOrigin(0, 0.5);
     this.winText.setVisible(false);
   }
 
@@ -692,10 +700,11 @@ export default class SlotScene extends Phaser.Scene {
 
   private drawReelBackingTint() {
     if (!this.reelBackingTint) return;
-    const left = this.frameLeft + this.frameW * 0.035;
-    const top = this.frameTop + this.frameH * 0.05;
-    const width = this.frameW * 0.93;
-    const height = this.frameH * 0.88;
+    const bounds = this.getMachineFrameBounds(Number(this.scale.width) || 1280);
+    const left = bounds.left;
+    const top = bounds.top;
+    const width = bounds.width;
+    const height = bounds.height;
     this.reelBackingTint.clear();
     this.reelBackingTint.fillStyle(0x2c2f35, 0.34);
     this.reelBackingTint.fillRoundedRect(left, top, width, height, Math.max(18, 26 * this.scaleFactor));
@@ -738,7 +747,7 @@ export default class SlotScene extends Phaser.Scene {
     this.updateHud();
 
     if (result.bonusTriggered && result.freeSpins) {
-      await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, `TIER ${result.bonusTier} SHURIKEN BONUS`);
+      await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, `SHURIKEN BONUS`);
     } else if (paidSpinWin > 0) {
       this.flashStatus(result.baseWheelCashWin > 0 ? `Shuriken cash ${result.baseWheelCashWin.toFixed(2)}x` : result.multiplierMeter > 0 ? `Meter ${result.multiplierMeter}x` : `${result.lineWins.length} line win(s)`);
     } else {
@@ -792,7 +801,7 @@ export default class SlotScene extends Phaser.Scene {
     this.updateHud();
     this.flashStatus("Buying bonus...");
     const result = buyBonus(() => Math.random(), this.bet);
-    await this.playFreeSpinSequence(result.freeSpins, result.totalWin, `BUY BONUS - TIER ${result.bonusTier}`);
+    await this.playFreeSpinSequence(result.freeSpins, result.totalWin, `BUY BONUS`);
     this.spinning = false;
     this.updateHud();
   }
@@ -900,7 +909,7 @@ export default class SlotScene extends Phaser.Scene {
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "Shurikens can land on reels 1, 3, and 5. Each Shuriken activates a Wicked Wheel at that position, resolving left to right.\n\n" +
       "Blue Wicked Wheels appear in the base game. Red Wicked Wheels appear in free spins. Base-game non-bonus Shuriken outcomes can award cash and can add to or multiply the multiplier meter.\n\n" +
-      `Bonus Shuriken outcomes from Blue Wheels award stronger free-spin tiers: 1, 2, or 3 outcomes trigger Tier 1, 2, or 3 with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
+      `Bonus Shuriken outcomes from Blue Wheels award stronger free-spin tiers: 1, 2, or 3 outcomes trigger free-spin levels with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
       "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
@@ -2175,7 +2184,7 @@ export default class SlotScene extends Phaser.Scene {
       stroke: UI_HEX.peach,
       strokeThickness: 6,
     }).setOrigin(0.5);
-    const auto = this.add.text(width / 2, height / 2 + 74, "AUTO PLAY", {
+    const prompt = this.add.text(width / 2, height / 2 + 74, "FREE SPINS STARTING", {
       fontFamily: BODY_FONT,
       fontSize: `${Math.max(16, Math.min(24, width * 0.018))}px`,
       color: UI_HEX.ink,
@@ -2183,7 +2192,7 @@ export default class SlotScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0.5);
 
-    const overlay = this.add.container(0, 0, [...parts, glow, title, spinCount, auto]).setDepth(50).setAlpha(0);
+    const overlay = this.add.container(0, 0, [...parts, glow, title, spinCount, prompt]).setDepth(50).setAlpha(0);
     this.tweens.add({ targets: overlay, alpha: 1, duration: 220, ease: "Sine.Out" });
     this.tweens.add({ targets: [glow, title, spinCount], scaleX: 1.04, scaleY: 1.04, duration: 360, yoyo: true, repeat: 1, ease: "Sine.InOut" });
     await this.wait(1120);
