@@ -610,10 +610,9 @@ export default class SlotScene extends Phaser.Scene {
     if (this.clockText) {
       this.clockText.setPosition(5, 3).setFontSize(height > width ? 10 : 13);
     }
-    const machineBounds = this.getMachineFrameBounds(width);
     this.scaleBackground(width, height);
     this.layoutCherryBlossomParticles(width, height);
-    this.drawReelFrameBorder(machineBounds);
+    this.drawReelFrameBorder(this.getReelContentBounds());
     this.drawReelBackingTint();
 
     this.layoutBaboonFooter(width, height);
@@ -641,6 +640,24 @@ export default class SlotScene extends Phaser.Scene {
       height: scaledH,
       centerX,
       centerY,
+    };
+  }
+
+  private getReelContentBounds() {
+    const firstGap = REEL_CENTER_X[1] - REEL_CENTER_X[0];
+    const lastGap = REEL_CENTER_X[COLS - 1] - REEL_CENTER_X[COLS - 2];
+    const rowGap = ROW_CENTER_Y[1] - ROW_CENTER_Y[0];
+    const left = this.frameLeft + (REEL_CENTER_X[0] - firstGap * 0.5) * this.frameW;
+    const right = this.frameLeft + (REEL_CENTER_X[COLS - 1] + lastGap * 0.5) * this.frameW;
+    const top = this.frameTop + (ROW_CENTER_Y[0] - rowGap * 0.5) * this.frameH + STOPPED_SYMBOL_Y_OFFSET;
+    const bottom = this.frameTop + (ROW_CENTER_Y[ROWS - 1] + rowGap * 0.5) * this.frameH + STOPPED_SYMBOL_Y_OFFSET;
+    const padX = Math.max(4, this.frameW * 0.006);
+    const padY = Math.max(4, this.frameH * 0.012);
+    return {
+      left: left - padX,
+      top: top - padY,
+      width: right - left + padX * 2,
+      height: bottom - top + padY * 2,
     };
   }
 
@@ -719,20 +736,20 @@ export default class SlotScene extends Phaser.Scene {
 
   private drawReelBackingTint() {
     if (!this.reelBackingTint) return;
-    const bounds = this.getMachineFrameBounds(Number(this.scale.width) || 1280);
+    const bounds = this.getReelContentBounds();
     const left = bounds.left;
     const top = bounds.top;
     const width = bounds.width;
     const height = bounds.height;
     this.reelBackingTint.clear();
-    this.reelBackingTint.fillStyle(0x2c2f35, 0.34);
-    this.reelBackingTint.fillRoundedRect(left, top, width, height, Math.max(18, 26 * this.scaleFactor));
-    this.reelBackingTint.fillStyle(0xaab0b4, 0.16);
-    this.reelBackingTint.fillRoundedRect(left + 5 * this.scaleFactor, top + 5 * this.scaleFactor, width - 10 * this.scaleFactor, height - 10 * this.scaleFactor, Math.max(14, 22 * this.scaleFactor));
-    this.reelBackingTint.lineStyle(Math.max(2, 3 * this.scaleFactor), 0x1f2329, 0.18);
+    this.reelBackingTint.fillStyle(0x2c2f35, 0.18);
+    this.reelBackingTint.fillRoundedRect(left, top, width, height, Math.max(10, 16 * this.scaleFactor));
+    this.reelBackingTint.fillStyle(0xaab0b4, 0.07);
+    this.reelBackingTint.fillRoundedRect(left + 3 * this.scaleFactor, top + 3 * this.scaleFactor, width - 6 * this.scaleFactor, height - 6 * this.scaleFactor, Math.max(8, 13 * this.scaleFactor));
+    this.reelBackingTint.lineStyle(Math.max(1, 2 * this.scaleFactor), 0x1f2329, 0.16);
     for (let col = 1; col < COLS; col++) {
       const x = Phaser.Math.Linear(this.cellX(col - 1), this.cellX(col), 0.5);
-      this.reelBackingTint.lineBetween(x, top + height * 0.035, x, top + height * 0.965);
+      this.reelBackingTint.lineBetween(x, top + height * 0.02, x, top + height * 0.98);
     }
   }
 
