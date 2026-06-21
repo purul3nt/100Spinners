@@ -505,14 +505,14 @@ export default class SlotScene extends Phaser.Scene {
       : Math.min(this.frameH * 1.06, height * 0.72, Math.max(360, availableRight * 1.55));
     const scale = (targetHeight / SAMURAI_MOOD_BASE_HEIGHT[this.samuraiMood]) * SAMURAI_MOOD_SCALE[this.samuraiMood];
     const x = portrait
-      ? this.frameLeft + this.frameW * 0.94
+      ? width / 2
       : (availableRight > 120 ? boardRight + Math.max(availableRight * 0.38, this.frameW * 0.055) : this.frameLeft + this.frameW * 0.92);
     const y = portrait
       ? Math.min(footerTop - targetHeight * 0.04, boardBottom + targetHeight * 0.08)
       : Math.min(footerTop + targetHeight * 0.18, boardBottom + targetHeight * 0.18);
     this.samuraiFx
       .setVisible(true)
-      .setAlpha(portrait ? 0.92 : 0.86)
+      .setAlpha(portrait ? 0.78 : 0.86)
       .setPosition(
         x + this.frameW * 0.035 * SAMURAI_MOOD_X_OFFSET[this.samuraiMood],
         y + this.frameH * 0.035 * SAMURAI_MOOD_Y_OFFSET[this.samuraiMood],
@@ -575,15 +575,15 @@ export default class SlotScene extends Phaser.Scene {
     const portrait = height > width * 1.05;
     const compactLandscape = !portrait && height < 520;
     const machineScale = this.getMachineImageScale(width, height);
-    const machineWidthBudget = portrait ? width * 0.98 : width * 0.94;
+    const machineWidthBudget = portrait ? width * 0.96 : width * 0.94;
     const frameWidthScale = machineWidthBudget / (REEL_FRAME_BASE_W * machineScale);
-    const frameHeightBudget = height * (compactLandscape ? 0.52 : 0.62);
+    const frameHeightBudget = height * (portrait ? 0.42 : compactLandscape ? 0.52 : 0.62);
     this.scaleFactor = Math.min(1, frameWidthScale, frameHeightBudget / REEL_FRAME_BASE_H);
     this.frameW = REEL_FRAME_BASE_W * this.scaleFactor;
     this.frameH = REEL_FRAME_BASE_H * this.scaleFactor;
     this.frameLeft = width / 2 - this.frameW / 2;
     const firstRowY = portrait
-      ? Math.min(height * 0.39, Math.max(height * 0.35, 278))
+      ? Math.min(height * 0.36, Math.max(height * 0.33, 278))
       : compactLandscape
         ? Math.max(height * 0.36, 136)
         : Math.max(height * 0.28, Math.max(166, height * 0.075 + 112));
