@@ -50,6 +50,7 @@ export type SpinResult = {
   grid: CellResult[][];
   lineWins: LineWin[];
   baseWin: number;
+  baseWheelCashWin: number;
   wheelMultiplier: number;
   multiplierMeter: number;
   wheelEvents: WheelEvent[];
@@ -66,21 +67,25 @@ export const DEFAULT_BET = 1;
 export const FREE_SPINS = 10;
 export const BUY_BONUS_PRICE_MULTIPLIER = 100;
 export const SHURIKEN_REELS = [0, 2, 4];
-export const BASE_SHURIKEN_CELL_CHANCE = 0.00625;
+export const BASE_GAME_MAX_WHEEL_METER = 100;
+export const BASE_GAME_MAX_WIN_MULTIPLIER = 500;
+export const BASE_SHURIKEN_CELL_CHANCE = 0.0029;
 export const BONUS_TIER_1_BLUE_CELL_CHANCE = 0.011;
 export const BONUS_TIER_1_RED_CELL_CHANCE = 0.006;
 export const BONUS_TIER_2_RED_CELL_CHANCE = 0.018;
 export const BONUS_TIER_3_RED_CELL_CHANCE = 1 / (SHURIKEN_REELS.length * ROWS);
 export const BONUS_MODE_HIT_ASSIST_CHANCE = 0.414;
-export const BONUS_FEATURE_PAY_SCALE = 0.215;
-export const V1_PAY_SCALE = 5.4;
+export const BASE_LOW_PAY_ASSIST_CHANCE = 0.066;
+export const BONUS_FEATURE_PAY_SCALE = 0.28885;
+export const V1_PAY_SCALE = 3.95;
+export const BASE_WHEEL_CASH_SCALE = 0.05;
 
 export const BLUE_WHEEL_ADD_VALUES = [5, 10, 15, 20, 25, 50, 75, 100];
 const BLUE_WHEEL_ADD_WEIGHTS = [28, 24, 18, 13, 8, 4, 1.2, 0.45];
 export const BLUE_WHEEL_MULTIPLY_VALUES = [2, 3, 5, 8, 10];
 const BLUE_WHEEL_MULTIPLY_WEIGHTS = [38, 22, 8, 2, 0.7];
 const BLUE_WHEEL_KIND_VALUES: WheelOutcomeKind[] = ["add", "multiply", "bonus"];
-const BLUE_WHEEL_KIND_WEIGHTS = [74, 19, 7];
+const BLUE_WHEEL_KIND_WEIGHTS = [72, 18, 10];
 
 export const RED_WHEEL_ADD_VALUES = [10, 20, 50, 100, 250, 500, 1000];
 const RED_WHEEL_ADD_WEIGHTS = [34, 26, 16, 7, 1.7, 0.32, 0.045];
@@ -236,7 +241,7 @@ export function scoreGrid(grid: CellResult[][], bet = DEFAULT_BET): { lineWins: 
   return { lineWins, baseWin };
 }
 
-export function resolveWheelEvents(grid: CellResult[][], startingMeter = 0): { meter: number; events: WheelEvent[]; bonusShurikens: number } {
+export function resolveWheelEvents(grid: CellResult[][], startingMeter = 0, maxMeter = Infinity): { meter: number; events: WheelEvent[]; bonusShurikens: number } {
   let meter = startingMeter;
   let bonusShurikens = 0;
   const events: WheelEvent[] = [];
@@ -262,7 +267,7 @@ export function resolveWheelEvents(grid: CellResult[][], startingMeter = 0): { m
       bonusShurikens++;
       applied = true;
     }
-    meter = Math.max(0, Math.round(meter * 10000) / 10000);
+    meter = Math.min(maxMeter, Math.max(0, Math.round(meter * 10000) / 10000));
     events.push({
       col,
       row,
@@ -280,12 +285,30 @@ export function countBonusShurikenOutcomes(grid: CellResult[][]): number {
   return resolveWheelEvents(grid, 0).bonusShurikens;
 }
 
+export function calculateBaseWheelCashWin(events: WheelEvent[], bet = DEFAULT_BET): number {
+  const rawCash = events.reduce((sum, event) => {
+    if (event.outcome.kind === "bonus") return sum;
+    return sum + (event.outcome.value || 0);
+  }, 0);
+  return roundMoney(rawCash * BASE_WHEEL_CASH_SCALE * bet);
+}
+
 export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResult {
-  const grid = createGrid(random, 0);
-  const scored = scoreGrid(grid, bet);
-  const resolved = resolveWheelEvents(grid, 0);
-  const paidSpinWin = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : scored.baseWin;
-  const bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
+  let grid = createGrid(random, 0);
+  let scored = scoreGrid(grid, bet);
+  let resolved = resolveWheelEvents(grid, 0, BASE_GAME_MAX_WHEEL_METER);
+  let baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
+  let bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
+  if (scored.baseWin <= 0 && baseWheelCashWin <= 0 && bonusTier === 0 && random() < BASE_LOW_PAY_ASSIST_CHANCE) {
+    grid = forceBaseLowPayWin(grid, random);
+    scored = scoreGrid(grid, bet);
+    resolved = resolveWheelEvents(grid, 0, BASE_GAME_MAX_WHEEL_METER);
+    baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
+    bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
+  }
+  const lineWinWithMeter = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : scored.baseWin;
+  const uncappedPaidSpinWin = roundMoney(lineWinWithMeter + baseWheelCashWin);
+  const paidSpinWin = roundMoney(Math.min(uncappedPaidSpinWin, bet * BASE_GAME_MAX_WIN_MULTIPLIER));
   let bonusWin = 0;
   let freeSpins: SpinResult[] | undefined;
   if (bonusTier > 0) {
@@ -297,6 +320,7 @@ export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResul
     grid,
     lineWins: scored.lineWins,
     baseWin: scored.baseWin,
+    baseWheelCashWin,
     wheelMultiplier: resolved.meter,
     multiplierMeter: resolved.meter,
     wheelEvents: resolved.events,
@@ -329,6 +353,7 @@ export function playBonusFeature(random = Math.random, bet = DEFAULT_BET, tier: 
       grid,
       lineWins: scaledLineWins,
       baseWin: bonusBaseWin,
+      baseWheelCashWin: 0,
       wheelMultiplier: meter,
       multiplierMeter: meter,
       wheelEvents: resolved.events,
@@ -365,4 +390,37 @@ function forceSmallBonusWin(grid: CellResult[][]): CellResult[][] {
   const symbol: SymbolCode = "L3";
   for (let col = 0; col < 3; col++) next[col][1] = { code: symbol };
   return next;
+}
+
+function forceBaseLowPayWin(grid: CellResult[][], random: () => number): CellResult[][] {
+  const next = cloneGrid(grid);
+  const candidateLines = PAYLINES
+    .map((rows, lineIndex) => ({ rows, lineIndex }))
+    .filter(({ rows }) => {
+      for (let col = 0; col < 3; col++) {
+        if (next[col][rows[col]].shuriken) return false;
+      }
+      return true;
+    });
+  if (!candidateLines.length) return next;
+  const picked = candidateLines[Math.floor(random() * candidateLines.length)].rows;
+  const lowSymbols: SymbolCode[] = ["L1", "L2", "L3", "L4", "L5"];
+  const symbol = lowSymbols[Math.floor(random() * lowSymbols.length)];
+  for (let col = 0; col < 3; col++) next[col][picked[col]] = { code: symbol };
+  for (let col = 3; col < COLS; col++) {
+    const row = picked[col];
+    if (next[col][row].code === symbol && !next[col][row].shuriken) {
+      next[col][row] = { code: lowSymbols[(lowSymbols.indexOf(symbol) + col) % lowSymbols.length] };
+    }
+  }
+  return next;
+}
+
+function cloneGrid(grid: CellResult[][]): CellResult[][] {
+  return grid.map((column) => column.map((cell) => ({
+    code: cell.code,
+    shuriken: cell.shuriken,
+    wheelColor: cell.wheelColor,
+    wheelOutcome: cell.wheelOutcome ? { ...cell.wheelOutcome } : undefined,
+  })));
 }

@@ -731,7 +731,7 @@ export default class SlotScene extends Phaser.Scene {
     await this.presentWins(result.lineWins);
 
     if (result.wheelEvents.length > 0) {
-      await this.showWheelSequence(result.wheelEvents, result.baseWin, paidSpinWin);
+      await this.showWheelSequence(result.wheelEvents, result.baseWin, paidSpinWin, result.baseWheelCashWin);
     }
     this.currentMultiplierMeter = result.multiplierMeter;
     this.updateHud();
@@ -739,7 +739,7 @@ export default class SlotScene extends Phaser.Scene {
     if (result.bonusTriggered && result.freeSpins) {
       await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, `TIER ${result.bonusTier} SHURIKEN BONUS`);
     } else if (paidSpinWin > 0) {
-      this.flashStatus(result.multiplierMeter > 0 ? `Meter ${result.multiplierMeter}x` : `${result.lineWins.length} line win(s)`);
+      this.flashStatus(result.baseWheelCashWin > 0 ? `Shuriken cash ${result.baseWheelCashWin.toFixed(2)}x` : result.multiplierMeter > 0 ? `Meter ${result.multiplierMeter}x` : `${result.lineWins.length} line win(s)`);
     } else {
       this.flashStatus("No win");
     }
@@ -898,7 +898,7 @@ export default class SlotScene extends Phaser.Scene {
       "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "Shurikens can land on reels 1, 3, and 5. Each Shuriken activates a Wicked Wheel at that position, resolving left to right.\n\n" +
-      "Blue Wicked Wheels appear in the base game. Red Wicked Wheels appear in free spins. Wheels can add to or multiply the persistent multiplier meter.\n\n" +
+      "Blue Wicked Wheels appear in the base game. Red Wicked Wheels appear in free spins. Base-game non-bonus Shuriken outcomes can award cash and can add to or multiply the multiplier meter.\n\n" +
       `Bonus Shuriken outcomes from Blue Wheels award stronger free-spin tiers: 1, 2, or 3 outcomes trigger Tier 1, 2, or 3 with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
       "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
@@ -1707,7 +1707,7 @@ export default class SlotScene extends Phaser.Scene {
     this.updateHud();
   }
 
-  private async showWheelSequence(events: WheelEvent[], baseWin: number, totalWin: number) {
+  private async showWheelSequence(events: WheelEvent[], baseWin: number, totalWin: number, wheelCashWin = 0) {
     if (this.wheelOverlay) this.wheelOverlay.destroy(true);
     const width = Number(this.scale.width) || 1280;
     const height = Number(this.scale.height) || 720;
@@ -1787,9 +1787,14 @@ export default class SlotScene extends Phaser.Scene {
         ? `BONUS SHURIKEN ${index + 1}/${events.length}`
         : `${outcomeText} => METER ${event.meterAfter}x`;
       resultText.setText(outcomeCopy);
+      const wheelCashText = wheelCashWin > 0 ? `CASH ${wheelCashWin.toFixed(2)}` : "";
       meterText.setText(baseWin > 0 && event.meterAfter > 0
-        ? `LINE ${baseWin.toFixed(2)} x ${event.meterAfter} = ${totalWin.toFixed(2)}`
-        : `METER ${event.meterAfter}x`);
+        ? wheelCashWin > 0
+          ? `LINE ${baseWin.toFixed(2)} x ${event.meterAfter} + ${wheelCashText} = ${totalWin.toFixed(2)}`
+          : `LINE ${baseWin.toFixed(2)} x ${event.meterAfter} = ${totalWin.toFixed(2)}`
+        : wheelCashWin > 0
+          ? `SHURIKEN ${wheelCashText}`
+          : `METER ${event.meterAfter}x`);
       this.tweens.add({ targets: [resultText, meterText, glow], scaleX: 1.08, scaleY: 1.08, duration: 160, yoyo: true, ease: "Sine.Out" });
       await this.wait(420);
     }

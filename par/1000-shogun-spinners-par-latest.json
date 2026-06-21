@@ -1,243 +1,318 @@
 {
   "meta": {
     "game": "1000 Shogun Spinners",
-    "generatedAt": "2026-06-20T18:21:09.966Z",
-    "repo": "/home/llama-claw/Repos/100Spinners",
+    "generatedAt": "2026-06-21T12:00:00.000Z",
+    "repo": "C:\\Users\\hanna\\Documents\\GitHub\\100Spinners",
     "mathSource": "src/shogunSpinnersMath.ts",
     "paidSpins": 1000000,
     "paidSeed": 268443686,
     "buyRounds": 100000,
     "buySeed": 268480519,
-    "note": "Simulated v1 playable math after bonus rebalance. Shuriken/spinner multiplier symbols enhance paying line wins only; no standalone direct multiplier awards. Bonus free-spin line wins use a bonus-only pay scale before wheel multipliers."
+    "note": "Simulated after option 1 rebalance: base-game non-bonus Shuriken outcomes now award standalone cash while also feeding the base multiplier meter. Base Shuriken/wheel frequency remains tuned close to raw SixSixSix wheel HF; base wheel meter is capped at 100x and base paid-spin win is capped at 500x bet. Bonus/free-spin meter and 1000x red outcomes remain uncapped by the base-game guardrail. Tier 1 is the only frontend buy-bonus option."
+  },
+  "referenceCalibration": {
+    "source": "C:/Users/hanna/Documents/Codex/baboonbonanza/using-a-similar-method-we-have/work/outputs/sixsixsix_base_wheel_analysis.json",
+    "rawSixSixSix": {
+      "baseSpins": 10947,
+      "wheelEvents": 395,
+      "wheelEventRate": 0.03608294509911391,
+      "wheelEventFrequency": "1 in 27.72",
+      "wheelSpinRate": 0.03389056362473737,
+      "wheelSpinFrequency": "1 in 29.51"
+    }
   },
   "summary": {
-    "totalRtp": 0.946799,
-    "baseRtp": 0.596947,
-    "featureRtp": 0.349852,
-    "totalHitRate": 0.136603,
-    "totalHitFrequency": "1 in 7.3205",
-    "baseHitRate": 0.133435,
-    "baseHitFrequency": "1 in 7.4943",
-    "bonusTriggerRate": 0.003571,
-    "bonusTriggerFrequency": "1 in 280.0336",
-    "featureWinRate": 0.003567,
-    "featureWinFrequency": "1 in 280.3476",
-    "visibleShurikenRate": 0.081614,
-    "visibleShurikenFrequency": "1 in 12.2528",
-    "wheelFeatureRate": 0.000717,
-    "wheelFeatureFrequency": "1 in 1394.7001",
-    "avgFeatureContributionPerPaidSpin": 0.349852,
-    "maxWin": 2345,
+    "totalRtp": 0.972401,
+    "baseRtp": 0.652004,
+    "featureRtp": 0.320396,
+    "totalHitRate": 0.164865,
+    "totalHitFrequency": "1 in 6.0656",
+    "baseHitRate": 0.161951,
+    "baseHitFrequency": "1 in 6.1747",
+    "bonusTriggerRate": 0.003399,
+    "bonusTriggerFrequency": "1 in 294.2042",
+    "featureWinRate": 0.003395,
+    "featureWinFrequency": "1 in 294.5508",
+    "visibleShurikenRate": 0.03433,
+    "visibleShurikenFrequency": "1 in 29.129",
+    "wheelEventRate": 0.034855,
+    "wheelEventFrequency": "1 in 28.6903",
+    "wheelCashHitRate": 0.031019,
+    "wheelCashFrequency": "1 in 32.2383",
+    "wheelCashRtp": 0.01955,
+    "avgFeatureContributionPerPaidSpin": 0.320396,
+    "maxWin": 11957.82,
     "maxWinCount": 1,
     "maxWinFrequency": "1 in 1000000",
-    "variance": 96.9279,
-    "stdDev": 9.8452
+    "variance": 378.2234,
+    "stdDev": 19.448,
+    "baseCapAudit": {
+      "maxBasePart": 500,
+      "maxBaseMeter": 100,
+      "baseOver500Count": 0,
+      "over1000Count": 39,
+      "baseOnlyOver1000Count": 0,
+      "bonusOnlyOver1000Count": 35,
+      "mixedOver1000Count": 4
+    },
+    "bonusTiers": [
+      {
+        "tier": 1,
+        "count": 3396,
+        "frequency": "1 in 294.4641",
+        "averageFeatureWin": 94.0573
+      },
+      {
+        "tier": 2,
+        "count": 3,
+        "frequency": "1 in 333333.3333",
+        "averageFeatureWin": 325.97
+      },
+      {
+        "tier": 3,
+        "count": 0,
+        "frequency": "not observed",
+        "averageFeatureWin": 0
+      }
+    ]
   },
   "buyBonus": {
     "priceXBet": 100,
     "rounds": 100000,
-    "avgWinXBet": 96.70106,
-    "rtpVsBuyPrice": 0.967011,
-    "hitRate": 0.99869,
+    "avgWinXBet": 96.0193,
+    "rtpVsBuyPrice": 0.960193,
+    "hitRate": 0.99867,
     "hitFrequency": "1 in 1.0013",
-    "maxWin": 20370.25,
-    "variance": 17436.6605,
-    "stdDev": 132.0479
+    "maxWin": 74789.49,
+    "variance": 208869.6644,
+    "stdDev": 457.0226
   },
   "winDistribution": [
     {
       "band": "0-1x",
-      "count": 0,
-      "totalWin": 0,
-      "frequency": "not observed",
-      "rtpContribution": 0,
-      "shareOfRtp": 0
+      "count": 24246,
+      "totalWin": 11129.13,
+      "frequency": "1 in 41.2439",
+      "rtpContribution": 0.011129,
+      "shareOfRtp": 0.011445
     },
     {
       "band": "1-2x",
-      "count": 78398,
-      "totalWin": 127004.76,
-      "frequency": "1 in 12.7554",
-      "rtpContribution": 0.127005,
-      "shareOfRtp": 0.134141
+      "count": 79680,
+      "totalWin": 109027.04,
+      "frequency": "1 in 12.5502",
+      "rtpContribution": 0.109027,
+      "shareOfRtp": 0.112119
     },
     {
       "band": "2-3x",
-      "count": 0,
-      "totalWin": 0,
-      "frequency": "not observed",
-      "rtpContribution": 0,
-      "shareOfRtp": 0
+      "count": 19017,
+      "totalWin": 51824.25,
+      "frequency": "1 in 52.5845",
+      "rtpContribution": 0.051824,
+      "shareOfRtp": 0.053293
     },
     {
       "band": "3-5x",
-      "count": 21390,
-      "totalWin": 74432.52,
-      "frequency": "1 in 46.7508",
-      "rtpContribution": 0.074433,
-      "shareOfRtp": 0.078615
+      "count": 3822,
+      "totalWin": 15610.83,
+      "frequency": "1 in 261.6431",
+      "rtpContribution": 0.015611,
+      "shareOfRtp": 0.016053
     },
     {
-      "band": "5-10x",
-      "count": 22079,
-      "totalWin": 151632.12,
-      "frequency": "1 in 45.2919",
-      "rtpContribution": 0.151632,
-      "shareOfRtp": 0.160152
+      "band": "5-6x",
+      "count": 17553,
+      "totalWin": 95857.88,
+      "frequency": "1 in 56.9703",
+      "rtpContribution": 0.095858,
+      "shareOfRtp": 0.098575
+    },
+    {
+      "band": "6-7x",
+      "count": 3672,
+      "totalWin": 25046.76,
+      "frequency": "1 in 272.3312",
+      "rtpContribution": 0.025047,
+      "shareOfRtp": 0.025757
+    },
+    {
+      "band": "7-8x",
+      "count": 556,
+      "totalWin": 3980.83,
+      "frequency": "1 in 1798.5612",
+      "rtpContribution": 0.003981,
+      "shareOfRtp": 0.004094
+    },
+    {
+      "band": "8-9x",
+      "count": 836,
+      "totalWin": 6876.54,
+      "frequency": "1 in 1196.1722",
+      "rtpContribution": 0.006877,
+      "shareOfRtp": 0.007072
+    },
+    {
+      "band": "9-10x",
+      "count": 150,
+      "totalWin": 1432.85,
+      "frequency": "1 in 6666.6667",
+      "rtpContribution": 0.001433,
+      "shareOfRtp": 0.001474
     },
     {
       "band": "10-20x",
-      "count": 7629,
-      "totalWin": 108523.87,
-      "frequency": "1 in 131.0788",
-      "rtpContribution": 0.108524,
-      "shareOfRtp": 0.114622
+      "count": 8202,
+      "totalWin": 101857.44,
+      "frequency": "1 in 121.9215",
+      "rtpContribution": 0.101857,
+      "shareOfRtp": 0.104745
     },
     {
       "band": "20-50x",
-      "count": 4262,
-      "totalWin": 131274.75,
-      "frequency": "1 in 234.6316",
-      "rtpContribution": 0.131275,
-      "shareOfRtp": 0.138651
+      "count": 4816,
+      "totalWin": 130589.86,
+      "frequency": "1 in 207.6412",
+      "rtpContribution": 0.13059,
+      "shareOfRtp": 0.134292
     },
     {
       "band": "50-100x",
-      "count": 1630,
-      "totalWin": 118841.48,
-      "frequency": "1 in 613.4969",
-      "rtpContribution": 0.118841,
-      "shareOfRtp": 0.125519
+      "count": 1191,
+      "totalWin": 83744.85,
+      "frequency": "1 in 839.6306",
+      "rtpContribution": 0.083745,
+      "shareOfRtp": 0.086119
     },
     {
       "band": "100-200x",
-      "count": 904,
-      "totalWin": 121563.99,
-      "frequency": "1 in 1106.1947",
-      "rtpContribution": 0.121564,
-      "shareOfRtp": 0.128395
+      "count": 612,
+      "totalWin": 83146.1,
+      "frequency": "1 in 1633.9869",
+      "rtpContribution": 0.083146,
+      "shareOfRtp": 0.085503
     },
     {
       "band": "200-500x",
-      "count": 267,
-      "totalWin": 75928.69,
-      "frequency": "1 in 3745.3184",
-      "rtpContribution": 0.075929,
-      "shareOfRtp": 0.080195
+      "count": 397,
+      "totalWin": 123191.82,
+      "frequency": "1 in 2518.8917",
+      "rtpContribution": 0.123192,
+      "shareOfRtp": 0.126685
     },
     {
       "band": "500-1000x",
-      "count": 34,
-      "totalWin": 21617.43,
-      "frequency": "1 in 29411.7647",
-      "rtpContribution": 0.021617,
-      "shareOfRtp": 0.022832
+      "count": 76,
+      "totalWin": 50158.95,
+      "frequency": "1 in 13157.8947",
+      "rtpContribution": 0.050159,
+      "shareOfRtp": 0.051582
     },
     {
       "band": ">1000x",
-      "count": 10,
-      "totalWin": 15979.45,
-      "frequency": "1 in 100000",
-      "rtpContribution": 0.015979,
-      "shareOfRtp": 0.016877
+      "count": 39,
+      "totalWin": 78924.05,
+      "frequency": "1 in 25641.0256",
+      "rtpContribution": 0.078924,
+      "shareOfRtp": 0.081162
     }
   ],
   "buyDistribution": [
     {
       "band": "0-1x",
-      "count": 0,
-      "totalWin": 0,
-      "frequency": "not observed",
-      "avgContributionPerBuy": 0,
-      "shareOfBuyWin": 0
+      "count": 1064,
+      "totalWin": 604.62,
+      "frequency": "1 in 93.985",
+      "avgContributionPerBuy": 0.006046,
+      "shareOfBuyWin": 0.000063
     },
     {
       "band": "1-2x",
-      "count": 0,
-      "totalWin": 0,
-      "frequency": "not observed",
-      "avgContributionPerBuy": 0,
-      "shareOfBuyWin": 0
+      "count": 4997,
+      "totalWin": 7124.21,
+      "frequency": "1 in 20.012",
+      "avgContributionPerBuy": 0.071242,
+      "shareOfBuyWin": 0.000742
     },
     {
       "band": "2-3x",
-      "count": 0,
-      "totalWin": 0,
-      "frequency": "not observed",
-      "avgContributionPerBuy": 0,
-      "shareOfBuyWin": 0
+      "count": 6768,
+      "totalWin": 16200.14,
+      "frequency": "1 in 14.7754",
+      "avgContributionPerBuy": 0.162001,
+      "shareOfBuyWin": 0.001687
     },
     {
       "band": "3-5x",
-      "count": 0,
-      "totalWin": 0,
-      "frequency": "not observed",
-      "avgContributionPerBuy": 0,
-      "shareOfBuyWin": 0
+      "count": 10061,
+      "totalWin": 38474.09,
+      "frequency": "1 in 9.9394",
+      "avgContributionPerBuy": 0.384741,
+      "shareOfBuyWin": 0.004007
     },
     {
       "band": "5-10x",
-      "count": 553,
-      "totalWin": 2930.9,
-      "frequency": "1 in 180.8318",
-      "avgContributionPerBuy": 0.029309,
-      "shareOfBuyWin": 0.000303
+      "count": 10429,
+      "totalWin": 73830.41,
+      "frequency": "1 in 9.5886",
+      "avgContributionPerBuy": 0.738304,
+      "shareOfBuyWin": 0.007689
     },
     {
       "band": "10-20x",
-      "count": 3813,
-      "totalWin": 53315.61,
-      "frequency": "1 in 26.2261",
-      "avgContributionPerBuy": 0.533156,
-      "shareOfBuyWin": 0.005513
+      "count": 10445,
+      "totalWin": 151566.48,
+      "frequency": "1 in 9.574",
+      "avgContributionPerBuy": 1.515665,
+      "shareOfBuyWin": 0.015785
     },
     {
       "band": "20-50x",
-      "count": 28690,
-      "totalWin": 1021750.51,
-      "frequency": "1 in 3.4855",
-      "avgContributionPerBuy": 10.217505,
-      "shareOfBuyWin": 0.105661
+      "count": 19483,
+      "totalWin": 644240.88,
+      "frequency": "1 in 5.1327",
+      "avgContributionPerBuy": 6.442409,
+      "shareOfBuyWin": 0.067095
     },
     {
       "band": "50-100x",
-      "count": 35449,
-      "totalWin": 2538807.02,
-      "frequency": "1 in 2.821",
-      "avgContributionPerBuy": 25.38807,
-      "shareOfBuyWin": 0.262542
+      "count": 14911,
+      "totalWin": 1062248.03,
+      "frequency": "1 in 6.7065",
+      "avgContributionPerBuy": 10.62248,
+      "shareOfBuyWin": 0.110629
     },
     {
       "band": "100-200x",
-      "count": 23163,
-      "totalWin": 3117652.46,
-      "frequency": "1 in 4.3172",
-      "avgContributionPerBuy": 31.176525,
-      "shareOfBuyWin": 0.322401
+      "count": 11143,
+      "totalWin": 1562276.41,
+      "frequency": "1 in 8.9742",
+      "avgContributionPerBuy": 15.622764,
+      "shareOfBuyWin": 0.162704
     },
     {
       "band": "200-500x",
-      "count": 7126,
-      "totalWin": 2032102.78,
-      "frequency": "1 in 14.0331",
-      "avgContributionPerBuy": 20.321028,
-      "shareOfBuyWin": 0.210143
+      "count": 7488,
+      "totalWin": 2278826,
+      "frequency": "1 in 13.3547",
+      "avgContributionPerBuy": 22.78826,
+      "shareOfBuyWin": 0.23733
     },
     {
       "band": "500-1000x",
-      "count": 850,
-      "totalWin": 551338.97,
-      "frequency": "1 in 117.6471",
-      "avgContributionPerBuy": 5.51339,
-      "shareOfBuyWin": 0.057015
+      "count": 2021,
+      "totalWin": 1382151.15,
+      "frequency": "1 in 49.4805",
+      "avgContributionPerBuy": 13.821511,
+      "shareOfBuyWin": 0.143945
     },
     {
       "band": ">1000x",
-      "count": 225,
-      "totalWin": 352207.72,
-      "frequency": "1 in 444.4444",
-      "avgContributionPerBuy": 3.522077,
-      "shareOfBuyWin": 0.036422
+      "count": 1057,
+      "totalWin": 2384387.55,
+      "frequency": "1 in 94.6074",
+      "avgContributionPerBuy": 23.843875,
+      "shareOfBuyWin": 0.248324
     }
   ],
   "constants": {
@@ -245,11 +320,51 @@
     "rows": 4,
     "defaultBet": 1,
     "freeSpins": 10,
-    "baseBonusChance": 0.00365,
-    "wheelEventChance": 0.084587,
+    "buyBonusPriceMultiplier": 100,
+    "baseGameMaxWheelMeter": 100,
+    "baseGameMaxWinMultiplier": 500,
+    "baseShurikenCellChance": 0.0029,
+    "baseWheelCashScale": 0.05,
+    "bonusTier1BlueCellChance": 0.011,
+    "bonusTier1RedCellChance": 0.006,
+    "bonusTier2RedCellChance": 0.018,
+    "bonusTier3RedCellChance": 0.08333333333333333,
     "bonusModeHitAssistChance": 0.414,
-    "bonusFeaturePayScale": 3.27,
-    "v1PayScale": 5.4
+    "bonusFeaturePayScale": 0.25077,
+    "v1PayScale": 4.55,
+    "blueWheelAddValues": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      50,
+      75,
+      100
+    ],
+    "blueWheelMultiplyValues": [
+      2,
+      3,
+      5,
+      8,
+      10
+    ],
+    "redWheelAddValues": [
+      10,
+      20,
+      50,
+      100,
+      250,
+      500,
+      1000
+    ],
+    "redWheelMultiplyValues": [
+      3,
+      5,
+      10,
+      15,
+      20
+    ]
   },
   "symbols": [
     {
@@ -364,7 +479,7 @@
     },
     {
       "code": "W1",
-      "label": "Wheel",
+      "label": "Shuriken",
       "tier": "special",
       "color": 16777215,
       "stroke": 1120295,

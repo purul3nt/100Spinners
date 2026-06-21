@@ -44,6 +44,8 @@ assert.equal(math.PAYLINES.length, 14, "attached blueprint has 14 paylines");
 assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x bet");
 assert.equal(Math.max(...math.BONUS_MULTIPLIERS), 1000, "wheel max multiplier should be 1000x");
 assert.ok(math.BASE_SHURIKEN_CELL_CHANCE > 0, "base Shuriken landing chance should be configured");
+assert.ok(math.BASE_WHEEL_CASH_SCALE > 0, "base Shuriken cash scale should be configured");
+assert.ok(math.BASE_LOW_PAY_ASSIST_CHANCE > 0, "base low-pay assist chance should be configured");
 assert.ok(!("WHEEL_EVENT_CHANCE" in math), "wheel spins should not use a random wheel-event gate");
 assert.ok(math.BONUS_FEATURE_PAY_SCALE > 0, "bonus feature pay scale should be configured");
 
@@ -58,11 +60,14 @@ const scored = math.scoreGrid(grid, 1);
 const topLine = scored.lineWins.find((win) => win.lineIndex === 0);
 assert.ok(topLine, "top row should score an H1 3OAK line");
 assert.equal(topLine.symbol, "H1", "top line should pay H1");
-assert.equal(topLine.amount, 29.7, "H1 3OAK uses the scaled v1 pay");
 const h1 = math.SYMBOL_BY_CODE.H1;
-assert.equal(math.scaledSymbolPay(h1, 3), 29.7, "paytable helper should expose scaled H1 3OAK");
-assert.equal(math.scaledSymbolPay(h1, 4), 86.4, "paytable helper should expose scaled H1 4OAK");
-assert.equal(math.scaledSymbolPay(h1, 5), 270, "paytable helper should expose scaled H1 5OAK");
+const expectedH1Pay3 = math.roundMoney(h1.pay3 * math.V1_PAY_SCALE);
+const expectedH1Pay4 = math.roundMoney(h1.pay4 * math.V1_PAY_SCALE);
+const expectedH1Pay5 = math.roundMoney(h1.pay5 * math.V1_PAY_SCALE);
+assert.equal(topLine.amount, expectedH1Pay3, "H1 3OAK uses the scaled v1 pay");
+assert.equal(math.scaledSymbolPay(h1, 3), expectedH1Pay3, "paytable helper should expose scaled H1 3OAK");
+assert.equal(math.scaledSymbolPay(h1, 4), expectedH1Pay4, "paytable helper should expose scaled H1 4OAK");
+assert.equal(math.scaledSymbolPay(h1, 5), expectedH1Pay5, "paytable helper should expose scaled H1 5OAK");
 
 let calls = 0;
 const deterministic = () => {
@@ -111,12 +116,29 @@ assert.equal(
   JSON.stringify([0, 2, 4]),
   "multiple activated wheels should resolve left to right",
 );
+assert.equal(
+  math.calculateBaseWheelCashWin(wheelResolved.events, 1),
+  math.roundMoney((10 + 5) * math.BASE_WHEEL_CASH_SCALE),
+  "base non-bonus Shuriken outcomes should award standalone cash",
+);
+const cappedBaseWheel = math.resolveWheelEvents([
+  [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "add", value: 100 } }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
+  [{ code: "L1" }, { code: "L2" }, { code: "L3" }, { code: "L4" }],
+  [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "multiply", value: 10 } }, { code: "L3" }, { code: "L4" }, { code: "L5" }],
+  [{ code: "L5" }, { code: "L4" }, { code: "L3" }, { code: "L2" }],
+  [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "add", value: 100 } }, { code: "L5" }, { code: "L2" }, { code: "L1" }],
+], 0, math.BASE_GAME_MAX_WHEEL_METER);
+assert.equal(cappedBaseWheel.meter, 100, "base wheel meter should cap at 100x");
 assert.ok(!mathSource.includes("WHEEL_EVENT_CHANCE"), "wheel spins should not use the removed random gate");
 assert.ok(
-  slotSceneSource.includes("Blue Wicked Wheels appear in the base game") &&
+    slotSceneSource.includes("Blue Wicked Wheels appear in the base game") &&
     slotSceneSource.includes("Red Wicked Wheels appear in free spins") &&
-    slotSceneSource.includes("persistent multiplier meter"),
-  "rules should describe Blue/Red Wicked Wheels and the persistent multiplier meter",
+    slotSceneSource.includes("Base-game non-bonus Shuriken outcomes can award cash"),
+  "rules should describe Blue/Red Wicked Wheels and base Shuriken cash",
+);
+assert.ok(
+  slotSceneSource.includes("SHURIKEN ${wheelCashText}"),
+  "wheel sequence should present standalone Shuriken cash hits",
 );
 
 assert.ok(!slotSceneSource.includes("this.balance += spin.totalWin"), "bonus wins should not credit balance per free spin");
