@@ -446,8 +446,8 @@ export default class SlotScene extends Phaser.Scene {
   }
 
   private createBoard() {
-    this.machinePanel = this.add.graphics().setDepth(1.2);
-    this.machineFrameImage = this.add.image(0, 0, "shogun_reel_frame").setOrigin(0.5).setDepth(1.35);
+    this.machineFrameImage = this.add.image(0, 0, "shogun_reel_frame").setOrigin(0.5).setDepth(1.1);
+    this.machinePanel = this.add.graphics().setDepth(2);
     // Thin glowing white border around the reel area, matching the
     // Baboon Bonanza reference style. Sits at the same depth band as the
     // previous boardFrame so reels/UI ordering is unchanged.
@@ -743,32 +743,10 @@ export default class SlotScene extends Phaser.Scene {
 
   private drawMachinePanel(bounds: { left: number; top: number; width: number; height: number }) {
     if (!this.machinePanel) return;
-    const heightPx = Number(this.scale.height) || 720;
-    const widthPx = Number(this.scale.width) || 1280;
-    const portrait = heightPx > widthPx * 1.05;
-    const footerTop = portrait ? heightPx - Math.max(170, heightPx * 0.21) : (this.uiBar ? this.uiBar.y : heightPx);
-    const padX = Math.max(8, bounds.width * (portrait ? 0.035 : 0.025));
-    const padTop = Math.max(8, bounds.height * (portrait ? 0.16 : 0.08));
-    const padBottom = portrait ? Math.max(bounds.height * 0.18, footerTop - (bounds.top + bounds.height) - Math.max(8, heightPx * 0.01)) : Math.max(10, bounds.height * 0.1);
-    const left = bounds.left - padX;
-    const top = bounds.top - padTop;
-    const width = bounds.width + padX * 2;
-    const height = bounds.height + padTop + padBottom;
-    const radius = Math.max(10, Math.min(22, width * 0.035));
-
     this.machinePanel.clear();
-    this.machinePanel.fillStyle(0x07070d, 0.72);
-    this.machinePanel.fillRoundedRect(left, top, width, height, radius);
-    this.machinePanel.lineStyle(Math.max(3, width * 0.01), 0xf6b832, 0.88);
-    this.machinePanel.strokeRoundedRect(left, top, width, height, radius);
-    this.machinePanel.lineStyle(Math.max(1, width * 0.004), 0xffffff, 0.5);
-    this.machinePanel.strokeRoundedRect(left + 4, top + 4, width - 8, height - 8, Math.max(6, radius - 4));
-    this.machinePanel.fillStyle(0x111827, 0.54);
-    this.machinePanel.fillRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, Math.max(8, radius - 6));
-    this.machinePanel.fillStyle(0xfacc15, 0.92);
-    this.machinePanel.fillRect(left + width * 0.08, top + Math.max(7, height * 0.035), width * 0.84, Math.max(3, height * 0.012));
-    this.machinePanel.fillStyle(0x38bdf8, 0.72);
-    this.machinePanel.fillRect(left + width * 0.08, top + height - Math.max(10, height * 0.05), width * 0.84, Math.max(3, height * 0.012));
+    const radius = Math.max(8, 14 * this.scaleFactor);
+    this.machinePanel.fillStyle(0x2d3138, 0.18);
+    this.machinePanel.fillRoundedRect(bounds.left, bounds.top, bounds.width, bounds.height, radius);
   }
 
   private drawReelFrameBorder(bounds: { left: number; top: number; width: number; height: number }) {
@@ -822,7 +800,7 @@ export default class SlotScene extends Phaser.Scene {
     if (result.bonusTriggered && result.freeSpins) {
       await this.playFreeSpinSequence(result.freeSpins, result.bonusWin, `SHURIKEN BONUS`);
     } else if (paidSpinWin > 0) {
-      this.flashStatus(result.baseWheelCashWin > 0 ? `Shuriken cash ${result.baseWheelCashWin.toFixed(2)}x` : result.multiplierMeter > 0 ? `Meter ${result.multiplierMeter}x` : `${result.lineWins.length} line win(s)`);
+      this.flashStatus(result.baseWheelCashWin > 0 ? `Shuriken cash ${result.baseWheelCashWin.toFixed(2)}x` : `${result.lineWins.length} line win(s)`);
     } else {
       this.flashStatus("No win");
     }
@@ -1834,7 +1812,7 @@ export default class SlotScene extends Phaser.Scene {
       stroke: UI_HEX.ink,
       strokeThickness: 7,
     }).setOrigin(0.5);
-    const meterText = this.add.text(centerX, centerY + wheelSize * 0.79, `METER ${this.currentMultiplierMeter}x`, {
+    const meterText = this.add.text(centerX, centerY + wheelSize * 0.79, `${this.currentMultiplierMeter}x`, {
       fontFamily: BODY_FONT,
       fontSize: `${Math.max(16, Math.min(24, width * 0.018))}px`,
       color: UI_HEX.peach,
@@ -1871,7 +1849,7 @@ export default class SlotScene extends Phaser.Scene {
         : `WINNING MULTIPLIER ${outcomeText}`;
       resultText.setText(outcomeCopy);
       const wheelCashText = wheelCashWin > 0 ? `CASH ${wheelCashWin.toFixed(2)}` : "";
-      meterText.setText(wheelCashWin > 0 ? `SHURIKEN ${wheelCashText}` : `METER ${event.meterAfter}x`);
+      meterText.setText(wheelCashWin > 0 ? `SHURIKEN ${wheelCashText}` : `${event.meterAfter}x`);
       this.tweens.add({ targets: [resultText, meterText, glow], scaleX: 1.08, scaleY: 1.08, duration: 160, yoyo: true, ease: "Sine.Out" });
       await this.wait(900);
     }
