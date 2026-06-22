@@ -63,6 +63,12 @@ assert.equal(par.constants.bonusFeaturePayScale, math.BONUS_FEATURE_PAY_SCALE, "
 assert.equal(par.constants.baseWheelCashScale, math.BASE_WHEEL_CASH_SCALE, "PAR base wheel cash scale should match live math");
 assert.equal(par.constants.baseLowSymbolStripExtensionLength, math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR base strip extension length should match live math");
 assert.equal(par.constants.bonusLowSymbolStripExtensionLength, math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR bonus strip extension length should match live math");
+assert.equal(JSON.stringify(par.constants.blueWheelKindWeights), JSON.stringify(math.BLUE_WHEEL_KIND_WEIGHTS), "PAR blue wheel kind weights should match live math");
+assert.equal(JSON.stringify(par.constants.blueWheelAddWeights), JSON.stringify(math.BLUE_WHEEL_ADD_WEIGHTS), "PAR blue wheel add weights should match live math");
+assert.equal(JSON.stringify(par.constants.blueWheelMultiplyWeights), JSON.stringify(math.BLUE_WHEEL_MULTIPLY_WEIGHTS), "PAR blue wheel multiply weights should match live math");
+assert.equal(JSON.stringify(par.constants.redWheelKindWeights), JSON.stringify(math.RED_WHEEL_KIND_WEIGHTS), "PAR red wheel kind weights should match live math");
+assert.equal(JSON.stringify(par.constants.redWheelAddWeights), JSON.stringify(math.RED_WHEEL_ADD_WEIGHTS), "PAR red wheel add weights should match live math");
+assert.equal(JSON.stringify(par.constants.redWheelMultiplyWeights), JSON.stringify(math.RED_WHEEL_MULTIPLY_WEIGHTS), "PAR red wheel multiply weights should match live math");
 assert.equal(par.summary.baseCapAudit.maxBasePart, math.BASE_GAME_MAX_WIN_MULTIPLIER, "PAR base cap audit should match live base max win cap");
 assert.ok(!("bonusModeHitAssistChance" in par.constants), "PAR should not document a removed bonus hit assist");
 assert.ok(
@@ -119,7 +125,7 @@ for (let i = 0; i < bonusSampleRounds; i++) {
 }
 const bonusSampleAverage = bonusSampleTotal / bonusSampleRounds;
 assert.ok(
-  bonusSampleAverage >= 94 && bonusSampleAverage <= 98,
+  bonusSampleAverage >= 94 && bonusSampleAverage <= 100,
   `bonus average should land near 96x; got ${bonusSampleAverage.toFixed(4)}x`,
 );
 

@@ -395,9 +395,11 @@ export default class SlotScene extends Phaser.Scene {
     this.buyButtonBg.on("pointerout", () => this.buyButton.setScale(1));
 
     this.menuButtonBg = this.add.rectangle(0, 0, 58, 58, 0x151515, 0.92)
+      .setOrigin(0.5)
       .setStrokeStyle(0, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
-    const menuBars = [-20, 0, 20].map((y) => this.add.rectangle(0, y, 73, 13, 0xffffff, 1).setOrigin(0.5));
+    const barSizeRatio = 0.88; 
+    const menuBars = [-20, 0, 20].map((y) => this.add.rectangle(0, y, 58 * barSizeRatio, 13 * barSizeRatio, 0xffffff, 1).setOrigin(0.5));
     this.menuButton = this.add.container(0, 0, [this.menuButtonBg, ...menuBars]).setDepth(70);
     this.menuButtonBg.on("pointerdown", () => this.showRulesMenu());
     this.menuButtonBg.on("pointerover", () => this.menuButton.setScale(1.05));
@@ -736,14 +738,14 @@ export default class SlotScene extends Phaser.Scene {
     const menuY = portrait ? barTop + barH * 0.595 : leftY;
     const menuSize = portrait ? 130 : compactLandscape ? 31 : 41;
     this.menuButton.setPosition(menuX, menuY);
-    this.menuButtonBg.setPosition(-menuSize / 2, -menuSize / 2);
-    this.menuButtonBg.setSize(menuSize, menuSize).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
+this.menuButtonBg.setPosition(0, 0);
+this.menuButtonBg.setSize(menuSize, menuSize).setFillStyle(portrait ? 0x5e5968 : 0x151515, portrait ? 0.94 : 0.92);
+    const barW = Math.max(8, menuSize * 0.9);
     this.menuButton.list.slice(1).forEach((bar, index) => {
       const rect = bar as Phaser.GameObjects.Rectangle;
       rect
         .setPosition(0, (index - 1) * menuSize * 0.19)
-        .setSize(menuSize * 0.56, Math.max(4, menuSize * 0.1))
-        .setOrigin(0.5);
+        .setSize(barW, Math.max(4, menuSize * 0.1));
     });
 
     this.balanceText.setPosition(portrait ? width * 0.255 : buyX + buySize * 2.05, portrait ? height - 42 : leftY).setFontSize(portrait ? 26 : compactLandscape ? 16 : 24).setOrigin(portrait ? 0.5 : 0, 0.5).setAlign(portrait ? "center" : "left");

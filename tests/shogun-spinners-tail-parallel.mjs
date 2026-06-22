@@ -10,6 +10,24 @@ import ts from "typescript";
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const tailThresholds = [100, 200, 500, 1000, 2000, 5000, 10000];
+const winBands = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 5],
+  [5, 6],
+  [6, 7],
+  [7, 8],
+  [8, 9],
+  [9, 10],
+  [10, 20],
+  [20, 50],
+  [50, 100],
+  [100, 200],
+  [200, 500],
+  [500, 1000],
+  [1000, Infinity],
+];
 
 function loadTsCommonJs(relativePath) {
   const filename = path.join(root, relativePath);
@@ -58,6 +76,10 @@ function createEmptyCounters() {
     tailCounts: Object.fromEntries(tailThresholds.map((threshold) => [threshold, 0])),
     baseTailCounts: Object.fromEntries(tailThresholds.map((threshold) => [threshold, 0])),
     featureTailCounts: Object.fromEntries(tailThresholds.map((threshold) => [threshold, 0])),
+    winBandCounts: winBands.map(() => 0),
+    winBandTotals: winBands.map(() => 0),
+    baseWinBandCounts: winBands.map(() => 0),
+    baseWinBandTotals: winBands.map(() => 0),
     bonusTierCounts: [0, 0, 0, 0],
     bonusTierTotals: [0, 0, 0, 0],
   };
@@ -112,6 +134,8 @@ function runChunk(spins, seedInput) {
       if (paidBaseWin > threshold) counters.baseTailCounts[threshold]++;
       if (result.bonusWin > threshold) counters.featureTailCounts[threshold]++;
     }
+    recordBand(counters.winBandCounts, counters.winBandTotals, result.totalWin);
+    recordBand(counters.baseWinBandCounts, counters.baseWinBandTotals, paidBaseWin);
   }
 
   return {
@@ -160,6 +184,12 @@ function mergeCounters(target, source) {
     target.tailCounts[threshold] += source.tailCounts[threshold];
     target.baseTailCounts[threshold] += source.baseTailCounts[threshold];
     target.featureTailCounts[threshold] += source.featureTailCounts[threshold];
+  }
+  for (let index = 0; index < winBands.length; index++) {
+    target.winBandCounts[index] += source.winBandCounts[index];
+    target.winBandTotals[index] += source.winBandTotals[index];
+    target.baseWinBandCounts[index] += source.baseWinBandCounts[index];
+    target.baseWinBandTotals[index] += source.baseWinBandTotals[index];
   }
   for (let tier = 0; tier < target.bonusTierCounts.length; tier++) {
     target.bonusTierCounts[tier] += source.bonusTierCounts[tier];
@@ -212,6 +242,8 @@ function summarize(spins, seedInput, workers, workerResults, counters, constants
       featureCount: counters.featureTailCounts[threshold],
       featureFrequency: frequency(spins, counters.featureTailCounts[threshold]),
     })),
+    winDistribution: describeBands(spins, counters.winBandCounts, counters.winBandTotals, counters.totalWin, "rtpContribution"),
+    baseWinDistribution: describeBands(spins, counters.baseWinBandCounts, counters.baseWinBandTotals, counters.baseWin, "baseRtpContribution"),
     bonusTiers: [1, 2, 3].map((tier) => ({
       tier,
       count: counters.bonusTierCounts[tier],
@@ -228,6 +260,31 @@ function frequency(sampleSize, count) {
 
 function round(value) {
   return Math.round(value * 10000) / 10000;
+}
+
+function recordBand(counts, totals, win) {
+  for (let index = 0; index < winBands.length; index++) {
+    const [low, high] = winBands[index];
+    if (win > low && win <= high) {
+      counts[index]++;
+      totals[index] += win;
+      return;
+    }
+  }
+}
+
+function describeBands(spins, counts, totals, totalWin, contributionKey) {
+  return winBands.map(([low, high], index) => {
+    const total = totals[index];
+    return {
+      band: high === Infinity ? `>${low}x` : `${low}-${high}x`,
+      count: counts[index],
+      totalWin: round(total),
+      frequency: frequency(spins, counts[index]),
+      [contributionKey]: round(total / spins),
+      shareOfRtp: totalWin ? round(total / totalWin) : 0,
+    };
+  });
 }
 
 if (!isMainThread) {

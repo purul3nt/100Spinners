@@ -75,23 +75,23 @@ export const BONUS_TIER_1_BLUE_CELL_CHANCE = 0.011;
 export const BONUS_TIER_1_RED_CELL_CHANCE = 0.006;
 export const BONUS_TIER_2_RED_CELL_CHANCE = 0.018;
 export const BONUS_TIER_3_RED_CELL_CHANCE = 1 / (SHURIKEN_REELS.length * ROWS);
-export const BONUS_FEATURE_PAY_SCALE = 2.77;
-export const V1_PAY_SCALE = 4.3;
+export const BONUS_FEATURE_PAY_SCALE = 2.91;
+export const V1_PAY_SCALE = 4.21;
 export const BASE_WHEEL_CASH_SCALE = 0.05;
 
 export const BLUE_WHEEL_ADD_VALUES = [5, 10, 15, 20, 25, 50, 75, 100];
-const BLUE_WHEEL_ADD_WEIGHTS = [28, 24, 18, 13, 8, 4, 1.2, 0.45];
+export const BLUE_WHEEL_ADD_WEIGHTS = [28, 24, 18, 13, 8, 4, 1.2, 0.45];
 export const BLUE_WHEEL_MULTIPLY_VALUES = [2, 3, 5, 8, 10];
-const BLUE_WHEEL_MULTIPLY_WEIGHTS = [38, 22, 8, 2, 0.7];
+export const BLUE_WHEEL_MULTIPLY_WEIGHTS = [38, 22, 8, 2, 0.7];
 const BLUE_WHEEL_KIND_VALUES: WheelOutcomeKind[] = ["add", "multiply", "bonus"];
-const BLUE_WHEEL_KIND_WEIGHTS = [72, 18, 9.6];
+export const BLUE_WHEEL_KIND_WEIGHTS = [72, 18, 9.6];
 
 export const RED_WHEEL_ADD_VALUES = [10, 20, 50, 100, 250, 500, 1000];
-const RED_WHEEL_ADD_WEIGHTS = [34, 26, 16, 7, 1.7, 0.32, 0.045];
+export const RED_WHEEL_ADD_WEIGHTS = [34, 26, 16, 7, 1.7, 0.32, 0.045];
 export const RED_WHEEL_MULTIPLY_VALUES = [3, 5, 10, 15, 20];
-const RED_WHEEL_MULTIPLY_WEIGHTS = [35, 16, 4, 0.8, 0.18];
+export const RED_WHEEL_MULTIPLY_WEIGHTS = [35, 16, 4, 0.8, 0.18];
 const RED_WHEEL_KIND_VALUES: WheelOutcomeKind[] = ["add", "multiply"];
-const RED_WHEEL_KIND_WEIGHTS = [78, 22];
+export const RED_WHEEL_KIND_WEIGHTS = [78, 22];
 export const BONUS_MULTIPLIERS = RED_WHEEL_ADD_VALUES;
 
 export const SYMBOLS: SymbolDefinition[] = [

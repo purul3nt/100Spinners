@@ -62,9 +62,11 @@ function assertBonusDisplayParity(spin, bet = 1, label = "bonus free spin") {
       expectedFromPaytable,
       `${label}: line ${win.lineIndex} ${win.symbol} ${win.count}OAK should equal bonus-scaled paytable win`,
     );
-    paylineTotal = math.roundMoney(paylineTotal + win.amount);
-    paytableTotal = math.roundMoney(paytableTotal + expectedFromPaytable);
+    paylineTotal += win.amount;
+    paytableTotal += expectedFromPaytable;
   }
+  paylineTotal = math.roundMoney(paylineTotal);
+  paytableTotal = math.roundMoney(paytableTotal);
 
   assert.equal(spin.baseWin, paylineTotal, `${label}: baseWin should equal summed payline wins`);
   assert.equal(spin.baseWin, paytableTotal, `${label}: baseWin should equal summed paytable wins`);
@@ -125,12 +127,14 @@ const noMeterGrid = [
   [{ code: "L4" }, { code: "L5" }, { code: "L2" }, { code: "L1" }],
 ];
 const noMeterScore = math.scoreGrid(noMeterGrid, 1);
+const noMeterLineWins = noMeterScore.lineWins.map((win) => ({ ...win, amount: math.roundMoney(win.amount * math.BONUS_FEATURE_PAY_SCALE) }));
+const noMeterBaseWin = math.roundMoney(noMeterLineWins.reduce((sum, win) => sum + win.amount, 0));
 assertBonusDisplayParity({
-  lineWins: noMeterScore.lineWins.map((win) => ({ ...win, amount: math.roundMoney(win.amount * math.BONUS_FEATURE_PAY_SCALE) })),
-  baseWin: math.roundMoney(noMeterScore.baseWin * math.BONUS_FEATURE_PAY_SCALE),
+  lineWins: noMeterLineWins,
+  baseWin: noMeterBaseWin,
   shurikenWin: 0,
   multiplierMeter: 0,
-  totalWin: math.roundMoney(noMeterScore.baseWin * math.BONUS_FEATURE_PAY_SCALE),
+  totalWin: noMeterBaseWin,
 }, 1, "hand-authored no-meter bonus spin");
 
 const sampledFeatures = 250;
