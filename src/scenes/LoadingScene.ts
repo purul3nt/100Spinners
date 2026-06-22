@@ -170,10 +170,13 @@ export default class LoadingScene extends Phaser.Scene {
       const frame = file.match(/(\d+)\.png$/)?.[1] || file;
       this.load.image(`samurai_slash_${frame}`, `${SAMURAI_SLASH_FRAME_PATH}/${file}?v=samurai-slash-1`);
     });
-    const uiBase = "src/assets/game";
-    this.load.image("ui_btn_spin", `${uiBase}/buttonspin.png`);
-    this.load.image("ui_btn_plus", `${uiBase}/buttonplus.png`);
-    this.load.image("ui_btn_minus", `${uiBase}/buttonminus.png`);
+    const uiBase = "src/assets/ui";
+    this.load.image("ui_btn_spin", `${uiBase}/hud_btn_spin_normal.png?v=hud-ui-1`);
+    this.load.image("ui_icon_spin_stop", `${uiBase}/hud_icon_spin_stop_normal.png?v=hud-ui-1`);
+    this.load.image("ui_btn_autospin", `${uiBase}/hud_btn_autospin_normal.png?v=hud-ui-1`);
+    this.load.image("ui_btn_settings", `${uiBase}/hud_btn_settings_normal.png?v=hud-ui-1`);
+    this.load.image("ui_arrow_up", `${uiBase}/arrow_up.png?v=hud-ui-1`);
+    this.load.image("ui_arrow_down", `${uiBase}/arrow_down.png?v=hud-ui-1`);
   }
 
   create() {

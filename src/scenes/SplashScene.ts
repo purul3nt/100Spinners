@@ -59,7 +59,7 @@ export default class SplashScene extends Phaser.Scene {
     this.content = this.add.container(0, 0).setDepth(5);
 
     const logo = this.add.image(width / 2, height * (portrait ? 0.105 : 0.135), "shogun_logo").setOrigin(0.5);
-    const logoW = Math.min(width * (portrait ? 0.5 : 0.36), portrait ? 280 : 520);
+    const logoW = Math.min(width * (portrait ? 0.5 : 0.36), portrait ? 280 : 520) * 0.9;
     logo.setDisplaySize(logoW, logoW * (logo.height / logo.width));
     this.content.add(logo);
 
@@ -116,9 +116,9 @@ export default class SplashScene extends Phaser.Scene {
     const componentScale = 1.5;
     const visualSize = Math.min(width * (portrait ? 0.24 : 0.42), height * (portrait ? 0.32 : 0.38)) * componentScale;
     const visualY = y - height * (portrait ? 0.27 : 0.26);
-    const accent = type === "wheel"
-      ? this.add.image(x, visualY - visualSize * 0.48, "shuriken_spin_pin").setDisplaySize(visualSize * 0.28, visualSize * 0.28).setOrigin(0.5)
-      : this.add.rectangle(x, visualY, visualSize * 0.82, visualSize * 0.82, SPLASH_COLORS.bg, 0.18).setStrokeStyle(3, SPLASH_COLORS.trim, 0.72).setAngle(45);
+    const accent = type === "buy"
+      ? this.add.rectangle(x, visualY, visualSize * 0.82, visualSize * 0.82, SPLASH_COLORS.bg, 0.18).setStrokeStyle(3, SPLASH_COLORS.trim, 0.72).setAngle(45)
+      : undefined;
     const visual = type === "wheel"
       ? this.add.image(x, visualY, "shogun_wheel").setDisplaySize(visualSize, visualSize)
       : this.add.image(x, visualY, "splash_bonus_symbol").setDisplaySize(visualSize, visualSize);
@@ -142,7 +142,9 @@ export default class SplashScene extends Phaser.Scene {
     const isHighlight = titleText === "MAX WIN";
     const body = this.add.text(x, y + height * (isHighlight ? (portrait ? 0.25 : 0.3) : (portrait ? 0.24 : 0.31)), bodyText, {
       fontFamily: isHighlight ? UI_FONT : BODY_FONT,
-      fontSize: isHighlight ? Math.max(portrait ? 40 : 52, Math.min(portrait ? 58 : 76, width * (portrait ? 0.132 : 0.158))) * componentScale + "px" : Math.max(portrait ? 13 : 16, Math.min(portrait ? 18 : 24, width * (portrait ? 0.038 : 0.048))) * componentScale + "px",
+      fontSize: isHighlight
+        ? Math.max(portrait ? 40 : 52, Math.min(portrait ? 58 : 76, width * (portrait ? 0.132 : 0.158))) * componentScale + "px"
+        : Math.max(10, Math.max(portrait ? 13 : 16, Math.min(portrait ? 18 : 24, width * (portrait ? 0.038 : 0.048))) * componentScale - (type === "wheel" ? 5 : 0)) + "px",
       color: isHighlight ? SPLASH_COLORS.text : SPLASH_COLORS.body,
       stroke: "#000000",
       strokeThickness: isHighlight ? (portrait ? 7 : 9) : 3,
@@ -150,7 +152,9 @@ export default class SplashScene extends Phaser.Scene {
       wordWrap: { width: width * 0.76 },
       lineSpacing: 3,
     }).setOrigin(0.5, isHighlight ? 0.5 : 0).setShadow(3, 4, "#000000", 3, true, true);
-    const parts: Phaser.GameObjects.GameObject[] = [shadow, panel, topTrim, bottomTrim, accent, visual, title, body];
+    const parts: Phaser.GameObjects.GameObject[] = accent
+      ? [shadow, panel, topTrim, bottomTrim, accent, visual, title, body]
+      : [shadow, panel, topTrim, bottomTrim, visual, title, body];
     if (badge) parts.push(badge);
     container.add(parts);
     return container;
