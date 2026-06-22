@@ -29,7 +29,7 @@ export type WheelEvent = {
   applied: boolean;
 };
 
-export type BonusTier = 0 | 1 | 2 | 3;
+export type SpinMode = "base" | "bonus";
 
 export type CellResult = {
   code: SymbolCode;
@@ -55,7 +55,6 @@ export type SpinResult = {
   wheelMultiplier: number;
   multiplierMeter: number;
   wheelEvents: WheelEvent[];
-  bonusTier: BonusTier;
   totalWin: number;
   bonusTriggered: boolean;
   bonusWin: number;
@@ -70,13 +69,10 @@ export const BUY_BONUS_PRICE_MULTIPLIER = 100;
 export const SHURIKEN_REELS = [0, 2, 4];
 export const BASE_GAME_MAX_WHEEL_METER = 100;
 export const BASE_GAME_MAX_WIN_MULTIPLIER = 500;
-export const BASE_SHURIKEN_CELL_CHANCE = 0.0029;
-export const BONUS_TIER_1_BLUE_CELL_CHANCE = 0.011;
-export const BONUS_TIER_1_RED_CELL_CHANCE = 0.006;
-export const BONUS_TIER_2_RED_CELL_CHANCE = 0.018;
-export const BONUS_TIER_3_RED_CELL_CHANCE = 1 / (SHURIKEN_REELS.length * ROWS);
-export const BONUS_FEATURE_PAY_SCALE = 2.91;
-export const V1_PAY_SCALE = 4.21;
+export const BASE_SHURIKEN_CELL_CHANCE = 0.0032;
+export const BONUS_BLUE_SHURIKEN_CELL_CHANCE = 0.035;
+export const BONUS_RED_SHURIKEN_CELL_CHANCE = 0.02;
+export const V1_PAY_SCALE = 4.0;
 export const BASE_WHEEL_CASH_SCALE = 0.05;
 
 export const BLUE_WHEEL_ADD_VALUES = [5, 10, 15, 20, 25, 50, 75, 100];
@@ -178,43 +174,30 @@ function repeatLowSymbols(cycles: number): SymbolCode[] {
   return symbols;
 }
 
-export function createGrid(random = Math.random, bonusTier: BonusTier = 0): CellResult[][] {
+export function createGrid(random = Math.random, mode: SpinMode = "base"): CellResult[][] {
   const grid: CellResult[][] = [];
   for (let col = 0; col < COLS; col++) {
-    const strip = bonusTier > 0 ? BONUS_REEL_STRIPS[col] : REEL_STRIPS[col];
+    const strip = mode === "bonus" ? BONUS_REEL_STRIPS[col] : REEL_STRIPS[col];
     const stop = Math.floor(random() * strip.length);
     const column: CellResult[] = [];
     for (let row = 0; row < ROWS; row++) {
       const cell: CellResult = { code: strip[(stop + row) % strip.length] };
-      if (SHURIKEN_REELS.includes(col)) maybePlaceShuriken(cell, col, random, bonusTier);
+      if (SHURIKEN_REELS.includes(col)) maybePlaceShuriken(cell, col, random, mode);
       column.push(cell);
     }
     grid.push(column);
   }
-  if (bonusTier === 3 && !grid.some((column) => column.some((cell) => cell.shuriken && cell.wheelColor === "red"))) {
-    const col = SHURIKEN_REELS[Math.floor(random() * SHURIKEN_REELS.length)];
-    const row = Math.floor(random() * ROWS);
-    grid[col][row] = makeWheelCell("red", random, false);
-  }
   return grid;
 }
 
-function maybePlaceShuriken(cell: CellResult, _col: number, random: () => number, bonusTier: BonusTier) {
-  if (bonusTier === 0) {
+function maybePlaceShuriken(cell: CellResult, _col: number, random: () => number, mode: SpinMode) {
+  if (mode === "base") {
     if (random() < BASE_SHURIKEN_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, true));
     return;
   }
-  if (bonusTier === 1) {
-    const roll = random();
-    if (roll < BONUS_TIER_1_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
-    else if (roll < BONUS_TIER_1_RED_CELL_CHANCE + BONUS_TIER_1_BLUE_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, false));
-    return;
-  }
-  if (bonusTier === 2) {
-    if (random() < BONUS_TIER_2_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
-    return;
-  }
-  if (random() < BONUS_TIER_3_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
+  const roll = random();
+  if (roll < BONUS_RED_SHURIKEN_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
+  else if (roll < BONUS_RED_SHURIKEN_CELL_CHANCE + BONUS_BLUE_SHURIKEN_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, false));
 }
 
 function makeWheelCell(color: WheelColor, random: () => number, allowBonus: boolean): CellResult {
@@ -310,27 +293,29 @@ export function countBonusShurikenOutcomes(grid: CellResult[][]): number {
 }
 
 export function calculateBaseWheelCashWin(events: WheelEvent[], bet = DEFAULT_BET): number {
-  const rawCash = events.reduce((sum, event) => {
+  const cashWin = events.reduce((sum, event) => {
     if (event.outcome.kind === "bonus") return sum;
-    return sum + (event.outcome.value || 0);
+    const value = event.outcome.value || 0;
+    if (event.color === "blue" && event.outcome.kind === "multiply" && event.meterBefore <= 0) return sum + value * bet;
+    return sum + value * BASE_WHEEL_CASH_SCALE * bet;
   }, 0);
-  return roundMoney(rawCash * BASE_WHEEL_CASH_SCALE * bet);
+  return roundMoney(cashWin);
 }
 
 export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResult {
-  const grid = createGrid(random, 0);
+  const grid = createGrid(random, "base");
   const scored = scoreGrid(grid, bet);
   const resolved = resolveWheelEvents(grid, 0, BASE_GAME_MAX_WHEEL_METER);
   const baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
-  const bonusTier = Math.min(3, resolved.bonusShurikens) as BonusTier;
+  const bonusTriggered = resolved.bonusShurikens > 0;
   const lineShurikenWin = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : 0;
   const uncappedPaidSpinWin = roundMoney(scored.baseWin + lineShurikenWin + baseWheelCashWin);
   const paidSpinWin = roundMoney(Math.min(uncappedPaidSpinWin, bet * BASE_GAME_MAX_WIN_MULTIPLIER));
   const shurikenWin = roundMoney(Math.max(0, paidSpinWin - scored.baseWin));
   let bonusWin = 0;
   let freeSpins: SpinResult[] | undefined;
-  if (bonusTier > 0) {
-    const feature = playBonusFeature(random, bet, bonusTier);
+  if (bonusTriggered) {
+    const feature = playBonusFeature(random, bet);
     bonusWin = feature.totalWin;
     freeSpins = feature.freeSpins;
   }
@@ -343,51 +328,48 @@ export function playPaidSpin(random = Math.random, bet = DEFAULT_BET): SpinResul
     wheelMultiplier: resolved.meter,
     multiplierMeter: resolved.meter,
     wheelEvents: resolved.events,
-    bonusTier,
     totalWin: roundMoney(paidSpinWin + bonusWin),
-    bonusTriggered: bonusTier > 0,
+    bonusTriggered,
     bonusWin: roundMoney(bonusWin),
     freeSpins,
   };
 }
 
-export function playBonusFeature(random = Math.random, bet = DEFAULT_BET, tier: BonusTier = 1): { totalWin: number; freeSpins: SpinResult[]; bonusTier: BonusTier } {
+export function playBonusFeature(random = Math.random, bet = DEFAULT_BET): { totalWin: number; freeSpins: SpinResult[] } {
   const freeSpins: SpinResult[] = [];
   let totalWin = 0;
   for (let i = 0; i < FREE_SPINS; i++) {
-    const grid = createGrid(random, tier);
+    const grid = createGrid(random, "bonus");
     const scored = scoreGrid(grid, bet);
     const resolved = resolveWheelEvents(grid, 0);
-    const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * BONUS_FEATURE_PAY_SCALE) }));
-    const bonusBaseWin = roundMoney(scaledLineWins.reduce((sum, win) => sum + win.amount, 0));
+    const wheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
+    const bonusBaseWin = scored.baseWin;
     const shurikenWin = bonusBaseWin > 0 && resolved.meter > 0 ? roundMoney(bonusBaseWin * resolved.meter) : 0;
-    const spinTotal = roundMoney(bonusBaseWin + shurikenWin);
+    const spinTotal = roundMoney(bonusBaseWin + shurikenWin + wheelCashWin);
     totalWin = roundMoney(totalWin + spinTotal);
     freeSpins.push({
       grid,
-      lineWins: scaledLineWins,
+      lineWins: scored.lineWins,
       baseWin: bonusBaseWin,
-      baseWheelCashWin: 0,
+      baseWheelCashWin: wheelCashWin,
       shurikenWin,
       wheelMultiplier: resolved.meter,
       multiplierMeter: resolved.meter,
       wheelEvents: resolved.events,
-      bonusTier: tier,
       totalWin: spinTotal,
       bonusTriggered: false,
       bonusWin: 0,
     });
   }
-  return { totalWin, freeSpins, bonusTier: tier };
+  return { totalWin, freeSpins };
 }
 
-export function buyBonus(random = Math.random, bet = DEFAULT_BET, tier: BonusTier = 1): { cost: number; totalWin: number; freeSpins: SpinResult[]; bonusTier: BonusTier } {
-  const feature = playBonusFeature(random, bet, tier);
+export function buyBonus(random = Math.random, bet = DEFAULT_BET): { cost: number; totalWin: number; freeSpins: SpinResult[] } {
+  const feature = playBonusFeature(random, bet);
   return {
     cost: roundMoney(bet * BUY_BONUS_PRICE_MULTIPLIER),
     totalWin: feature.totalWin,
     freeSpins: feature.freeSpins,
-    bonusTier: feature.bonusTier,
   };
 }
 

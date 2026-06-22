@@ -80,8 +80,7 @@ function createEmptyCounters() {
     winBandTotals: winBands.map(() => 0),
     baseWinBandCounts: winBands.map(() => 0),
     baseWinBandTotals: winBands.map(() => 0),
-    bonusTierCounts: [0, 0, 0, 0],
-    bonusTierTotals: [0, 0, 0, 0],
+    bonusFeatureTotal: 0,
   };
 }
 
@@ -108,8 +107,7 @@ function runChunk(spins, seedInput) {
     if (result.bonusWin > 0) counters.featureWins++;
     if (result.bonusTriggered) {
       counters.bonusTriggers++;
-      counters.bonusTierCounts[result.bonusTier]++;
-      counters.bonusTierTotals[result.bonusTier] += result.bonusWin;
+      counters.bonusFeatureTotal += result.bonusWin;
     }
     if (result.wheelEvents.length > 0) {
       counters.wheelSpinCount++;
@@ -148,7 +146,6 @@ function runChunk(spins, seedInput) {
       baseLowSymbolStripExtensionLength: math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length,
       bonusLowSymbolStripExtensionLength: math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length,
       v1PayScale: math.V1_PAY_SCALE,
-      bonusFeaturePayScale: math.BONUS_FEATURE_PAY_SCALE,
     },
   };
 }
@@ -169,6 +166,7 @@ function mergeCounters(target, source) {
     "baseOverCapCount",
     "baseAtCapCount",
     "sumSquares",
+    "bonusFeatureTotal",
   ]) {
     target[key] += source[key];
   }
@@ -190,10 +188,6 @@ function mergeCounters(target, source) {
     target.winBandTotals[index] += source.winBandTotals[index];
     target.baseWinBandCounts[index] += source.baseWinBandCounts[index];
     target.baseWinBandTotals[index] += source.baseWinBandTotals[index];
-  }
-  for (let tier = 0; tier < target.bonusTierCounts.length; tier++) {
-    target.bonusTierCounts[tier] += source.bonusTierCounts[tier];
-    target.bonusTierTotals[tier] += source.bonusTierTotals[tier];
   }
 }
 
@@ -244,12 +238,11 @@ function summarize(spins, seedInput, workers, workerResults, counters, constants
     })),
     winDistribution: describeBands(spins, counters.winBandCounts, counters.winBandTotals, counters.totalWin, "rtpContribution"),
     baseWinDistribution: describeBands(spins, counters.baseWinBandCounts, counters.baseWinBandTotals, counters.baseWin, "baseRtpContribution"),
-    bonusTiers: [1, 2, 3].map((tier) => ({
-      tier,
-      count: counters.bonusTierCounts[tier],
-      frequency: frequency(spins, counters.bonusTierCounts[tier]),
-      averageFeatureWin: counters.bonusTierCounts[tier] ? round(counters.bonusTierTotals[tier] / counters.bonusTierCounts[tier]) : 0,
-    })),
+    bonusFeature: {
+      count: counters.bonusTriggers,
+      frequency: frequency(spins, counters.bonusTriggers),
+      averageFeatureWin: counters.bonusTriggers ? round(counters.bonusFeatureTotal / counters.bonusTriggers) : 0,
+    },
     constants,
   };
 }

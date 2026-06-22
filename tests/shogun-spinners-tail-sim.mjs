@@ -48,8 +48,7 @@ const tailThresholds = [100, 200, 500, 1000, 2000, 5000, 10000];
 const tailCounts = Object.fromEntries(tailThresholds.map((threshold) => [threshold, 0]));
 const baseTailCounts = Object.fromEntries(tailThresholds.map((threshold) => [threshold, 0]));
 const featureTailCounts = Object.fromEntries(tailThresholds.map((threshold) => [threshold, 0]));
-const bonusTierCounts = [0, 0, 0, 0];
-const bonusTierTotals = [0, 0, 0, 0];
+let bonusFeatureTotal = 0;
 
 let totalWin = 0;
 let baseWin = 0;
@@ -82,8 +81,7 @@ for (let i = 0; i < spins; i++) {
   if (result.bonusWin > 0) featureWins++;
   if (result.bonusTriggered) {
     bonusTriggers++;
-    bonusTierCounts[result.bonusTier]++;
-    bonusTierTotals[result.bonusTier] += result.bonusWin;
+    bonusFeatureTotal += result.bonusWin;
   }
   if (result.wheelEvents.length > 0) {
     wheelSpinCount++;
@@ -152,19 +150,17 @@ const summary = {
     featureCount: featureTailCounts[threshold],
     featureFrequency: frequency(spins, featureTailCounts[threshold]),
   })),
-  bonusTiers: [1, 2, 3].map((tier) => ({
-    tier,
-    count: bonusTierCounts[tier],
-    frequency: frequency(spins, bonusTierCounts[tier]),
-    averageFeatureWin: bonusTierCounts[tier] ? round(bonusTierTotals[tier] / bonusTierCounts[tier]) : 0,
-  })),
+  bonusFeature: {
+    count: bonusTriggers,
+    frequency: frequency(spins, bonusTriggers),
+    averageFeatureWin: bonusTriggers ? round(bonusFeatureTotal / bonusTriggers) : 0,
+  },
   constants: {
     baseGameMaxWinMultiplier: math.BASE_GAME_MAX_WIN_MULTIPLIER,
     baseGameMaxWheelMeter: math.BASE_GAME_MAX_WHEEL_METER,
     baseLowSymbolStripExtensionLength: math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length,
     bonusLowSymbolStripExtensionLength: math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length,
     v1PayScale: math.V1_PAY_SCALE,
-    bonusFeaturePayScale: math.BONUS_FEATURE_PAY_SCALE,
   },
 };
 

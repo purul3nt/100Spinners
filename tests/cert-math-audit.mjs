@@ -48,8 +48,15 @@ for (const pattern of bannedPatterns) {
 }
 
 assert.equal(par.constants.v1PayScale, math.V1_PAY_SCALE, "PAR v1 scale must match live math");
-assert.equal(par.constants.bonusFeaturePayScale, math.BONUS_FEATURE_PAY_SCALE, "PAR bonus scale must match live math");
+assert.ok(!("BONUS_FEATURE_PAY_SCALE" in math), "live math must not expose a separate bonus symbol pay scale");
+assert.ok(!("bonusFeaturePayScale" in par.constants), "PAR constants must not include a separate bonus symbol pay scale");
 assert.equal(par.constants.baseWheelCashScale, math.BASE_WHEEL_CASH_SCALE, "PAR base wheel cash scale must match live math");
+assert.equal(par.constants.bonusBlueShurikenCellChance, math.BONUS_BLUE_SHURIKEN_CELL_CHANCE, "PAR bonus Blue Shuriken chance must match live math");
+assert.equal(par.constants.bonusRedShurikenCellChance, math.BONUS_RED_SHURIKEN_CELL_CHANCE, "PAR bonus Red Shuriken chance must match live math");
+assert.ok(!("BONUS_TIER_1_BLUE_CELL_CHANCE" in math), "live math must not name the single bonus mode as a tier");
+assert.ok(!("BONUS_TIER_1_RED_CELL_CHANCE" in math), "live math must not name the single bonus mode as a tier");
+assert.ok(!("bonusTier1BlueCellChance" in par.constants), "PAR constants must not name the single bonus mode as a tier");
+assert.ok(!("bonusTier1RedCellChance" in par.constants), "PAR constants must not name the single bonus mode as a tier");
 assert.equal(par.constants.baseLowSymbolStripExtensionLength, math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR base strip extension length must match live math");
 assert.equal(par.constants.bonusLowSymbolStripExtensionLength, math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR bonus strip extension length must match live math");
 assert.equal(par.constants.baseGameMaxWheelMeter, math.BASE_GAME_MAX_WHEEL_METER, "PAR base meter cap must match live math");

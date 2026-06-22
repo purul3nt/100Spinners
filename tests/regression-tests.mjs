@@ -45,7 +45,13 @@ assert.equal(math.PAYLINES.length, 14, "attached blueprint has 14 paylines");
 assert.equal(math.BUY_BONUS_PRICE_MULTIPLIER, 100, "bonus buy should cost 100x bet");
 assert.equal(Math.max(...math.BONUS_MULTIPLIERS), 1000, "wheel max multiplier should be 1000x");
 assert.ok(math.BASE_SHURIKEN_CELL_CHANCE > 0, "base Shuriken landing chance should be configured");
+assert.ok(math.BONUS_BLUE_SHURIKEN_CELL_CHANCE > 0, "bonus Blue Shuriken landing chance should be configured");
+assert.ok(math.BONUS_RED_SHURIKEN_CELL_CHANCE > 0, "bonus Red Shuriken landing chance should be configured");
 assert.ok(math.BASE_WHEEL_CASH_SCALE > 0, "base Shuriken cash scale should be configured");
+assert.ok(!("BONUS_TIER_1_BLUE_CELL_CHANCE" in math), "live game should not name the single bonus mode as a tier");
+assert.ok(!("BONUS_TIER_1_RED_CELL_CHANCE" in math), "live game should not name the single bonus mode as a tier");
+assert.ok(!("BONUS_TIER_2_RED_CELL_CHANCE" in math), "live game should not expose a Tier 2 bonus mode");
+assert.ok(!("BONUS_TIER_3_RED_CELL_CHANCE" in math), "live game should not expose a Tier 3 bonus mode");
 assert.equal(math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length, 35, "base low-pay lift should come from explicit reel strips");
 assert.equal(math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length, 500, "bonus hit-rate lift should come from explicit bonus reel strips");
 assert.equal(math.REEL_STRIPS[0].length, 111, "base reel 1 should include the low-symbol strip extension");
@@ -57,10 +63,14 @@ assert.equal(math.BONUS_REEL_STRIPS[2].length, 611, "bonus reel 3 should include
 assert.ok(!("BASE_LOW_PAY_ASSIST_CHANCE" in math), "base low-pay lift should not use a losing-spin assist");
 assert.ok(!("BONUS_MODE_HIT_ASSIST_CHANCE" in math), "bonus hit-rate lift should not use a losing-spin assist");
 assert.ok(!("WHEEL_EVENT_CHANCE" in math), "wheel spins should not use a random wheel-event gate");
-assert.ok(math.BONUS_FEATURE_PAY_SCALE > 0, "bonus feature pay scale should be configured");
+assert.ok(!("BONUS_FEATURE_PAY_SCALE" in math), "bonus symbols should not use a separate feature pay scale");
 assert.equal(par.constants.v1PayScale, math.V1_PAY_SCALE, "PAR v1 pay scale should match live math");
-assert.equal(par.constants.bonusFeaturePayScale, math.BONUS_FEATURE_PAY_SCALE, "PAR bonus feature pay scale should match live math");
+assert.ok(!("bonusFeaturePayScale" in par.constants), "PAR should not document a separate bonus symbol pay scale");
 assert.equal(par.constants.baseWheelCashScale, math.BASE_WHEEL_CASH_SCALE, "PAR base wheel cash scale should match live math");
+assert.equal(par.constants.bonusBlueShurikenCellChance, math.BONUS_BLUE_SHURIKEN_CELL_CHANCE, "PAR bonus Blue Shuriken chance should match live math");
+assert.equal(par.constants.bonusRedShurikenCellChance, math.BONUS_RED_SHURIKEN_CELL_CHANCE, "PAR bonus Red Shuriken chance should match live math");
+assert.ok(!("bonusTier1BlueCellChance" in par.constants), "PAR should not document the single bonus mode as a tier");
+assert.ok(!("bonusTier1RedCellChance" in par.constants), "PAR should not document the single bonus mode as a tier");
 assert.equal(par.constants.baseLowSymbolStripExtensionLength, math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR base strip extension length should match live math");
 assert.equal(par.constants.bonusLowSymbolStripExtensionLength, math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length, "PAR bonus strip extension length should match live math");
 assert.equal(JSON.stringify(par.constants.blueWheelKindWeights), JSON.stringify(math.BLUE_WHEEL_KIND_WEIGHTS), "PAR blue wheel kind weights should match live math");
@@ -109,7 +119,7 @@ assert.equal(spin.grid[0].length, 4, "spin should return four rows per column");
 const buy = math.buyBonus(deterministic, 1);
 assert.equal(buy.cost, 100, "bonus buy cost should be 100x bet");
 assert.equal(buy.freeSpins.length, 10, "bonus buy should resolve 10 free spins");
-assert.equal(buy.bonusTier, 1, "bonus buy should start the Tier 1 feature by default");
+assert.ok(!("bonusTier" in buy), "bonus buy should not expose a tier field");
 
 let bonusSampleSeed = 0x1000b0;
 const bonusSampleRandom = () => {
@@ -125,8 +135,8 @@ for (let i = 0; i < bonusSampleRounds; i++) {
 }
 const bonusSampleAverage = bonusSampleTotal / bonusSampleRounds;
 assert.ok(
-  bonusSampleAverage >= 94 && bonusSampleAverage <= 100,
-  `bonus average should land near 96x; got ${bonusSampleAverage.toFixed(4)}x`,
+  bonusSampleAverage >= 90 && bonusSampleAverage <= 105,
+  `bonus average should land in the tuned range; got ${bonusSampleAverage.toFixed(4)}x`,
 );
 
 const wheelGrid = [
@@ -148,6 +158,20 @@ assert.equal(
   math.calculateBaseWheelCashWin(wheelResolved.events, 1),
   math.roundMoney((10 + 5) * math.BASE_WHEEL_CASH_SCALE),
   "base non-bonus Shuriken outcomes should award standalone cash",
+);
+const loneMultiplyGrid = [
+  [{ code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "multiply", value: 2 } }, { code: "L1" }, { code: "L2" }, { code: "L3" }],
+  [{ code: "L1" }, { code: "L2" }, { code: "L3" }, { code: "L4" }],
+  [{ code: "L2" }, { code: "L3" }, { code: "L4" }, { code: "L5" }],
+  [{ code: "L3" }, { code: "L4" }, { code: "L5" }, { code: "L1" }],
+  [{ code: "L4" }, { code: "L5" }, { code: "L2" }, { code: "L1" }],
+];
+const loneMultiplyResolved = math.resolveWheelEvents(loneMultiplyGrid, 0);
+assert.equal(loneMultiplyResolved.meter, 0, "lone x-bet Shuriken should not seed the multiplier meter");
+assert.equal(
+  math.calculateBaseWheelCashWin(loneMultiplyResolved.events, 1),
+  2,
+  "lone blue x2 Shuriken should pay 2x bet as standalone cash",
 );
 const payingShurikenGrid = [
   [{ code: "H1" }, { code: "W1", shuriken: true, wheelColor: "blue", wheelOutcome: { kind: "add", value: 10 } }, { code: "L2" }, { code: "L3" }],
@@ -179,10 +203,19 @@ const cappedBaseWheel = math.resolveWheelEvents([
 assert.equal(cappedBaseWheel.meter, 100, "base wheel meter should cap at 100x");
 assert.ok(!mathSource.includes("WHEEL_EVENT_CHANCE"), "wheel spins should not use the removed random gate");
 assert.ok(
-    slotSceneSource.includes("Blue Shurikens appear in the base game") &&
+    slotSceneSource.includes("Blue Shurikens appear in the base game and free spins") &&
     slotSceneSource.includes("Red Shurikens appear in free spins") &&
-    slotSceneSource.includes("Base-game non-bonus Shuriken outcomes can award cash"),
-  "rules should describe Blue/Red Shurikens and base Shuriken cash",
+    slotSceneSource.includes("Blue x-bet Shurikens award cash") &&
+    slotSceneSource.includes("Free spins use a separate reel set") &&
+    slotSceneSource.includes("symbol pay values remain the same as the base game") &&
+    slotSceneSource.includes("base-game Shuriken meter is capped at 100x") &&
+    slotSceneSource.includes("paid-spin win before any triggered free spins is capped at 500x bet"),
+  "rules should describe Shuriken behavior, free-spin reel differences, same symbol pays, and caps",
+);
+assert.ok(
+  mathSource.includes("bonusBaseWin + shurikenWin + wheelCashWin") &&
+    mathSource.includes("baseWheelCashWin: wheelCashWin"),
+  "bonus free-spin totals should include wheel cash",
 );
 assert.ok(
   slotSceneSource.includes('resultText.setText("SHURIKEN WIN");'),

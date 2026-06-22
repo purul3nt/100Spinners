@@ -63,8 +63,7 @@ let featureWin = 0;
 let totalWin = 0;
 let hits = 0;
 let bonusTriggers = 0;
-const bonusTierCounts = [0, 0, 0, 0];
-const bonusTierTotals = [0, 0, 0, 0];
+let bonusFeatureTotal = 0;
 let maxWin = 0;
 let sumSquares = 0;
 
@@ -77,8 +76,7 @@ for (let i = 0; i < spins; i++) {
   if (result.totalWin > 0) hits++;
   if (result.bonusTriggered) {
     bonusTriggers++;
-    bonusTierCounts[result.bonusTier]++;
-    bonusTierTotals[result.bonusTier] += result.bonusWin;
+    bonusFeatureTotal += result.bonusWin;
   }
   if (result.totalWin > maxWin) maxWin = result.totalWin;
   for (let j = 0; j < bands.length; j++) {
@@ -102,12 +100,11 @@ const summary = {
   hitFrequency: hits ? `1 in ${round(spins / hits)}` : "not observed",
   bonusTriggerRate: round(bonusTriggers / spins),
   bonusTriggerFrequency: bonusTriggers ? `1 in ${round(spins / bonusTriggers)}` : "not observed",
-  bonusTiers: [1, 2, 3].map((tier) => ({
-    tier,
-    count: bonusTierCounts[tier],
-    frequency: bonusTierCounts[tier] ? `1 in ${round(spins / bonusTierCounts[tier])}` : "not observed",
-    averageFeatureWin: bonusTierCounts[tier] ? round(bonusTierTotals[tier] / bonusTierCounts[tier]) : 0,
-  })),
+  bonusFeature: {
+    count: bonusTriggers,
+    frequency: bonusTriggers ? `1 in ${round(spins / bonusTriggers)}` : "not observed",
+    averageFeatureWin: bonusTriggers ? round(bonusFeatureTotal / bonusTriggers) : 0,
+  },
   maxWin: round(maxWin),
   variance: round(variance),
   stdDev: round(Math.sqrt(Math.max(0, variance))),

@@ -112,31 +112,34 @@ function resolveWheelEventsIndependently(grid, startingMeter = 0, maxMeter = Inf
 }
 
 function baseWheelCashIndependently(events, bet = 1) {
-  const rawCash = events.reduce((sum, event) => {
+  const cashWin = events.reduce((sum, event) => {
     if (event.outcome.kind === "bonus") return sum;
-    return sum + (event.outcome.value || 0);
+    const value = event.outcome.value || 0;
+    if (event.color === "blue" && event.outcome.kind === "multiply" && event.meterBefore <= 0) return sum + value * bet;
+    return sum + value * math.BASE_WHEEL_CASH_SCALE * bet;
   }, 0);
-  return roundMoney(rawCash * math.BASE_WHEEL_CASH_SCALE * bet);
+  return roundMoney(cashWin);
 }
 
-function reconstructBonusFeatureIndependently(freeSpins, bet = 1, tier = 1) {
+function reconstructBonusFeatureIndependently(freeSpins, bet = 1) {
   let totalWin = 0;
   const reconstructedFreeSpins = [];
   for (const freeSpin of freeSpins) {
     const scored = scoreGridIndependently(freeSpin.grid, bet);
     const resolved = resolveWheelEventsIndependently(freeSpin.grid, 0);
-    const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * math.BONUS_FEATURE_PAY_SCALE) }));
-    const bonusBaseWin = roundMoney(scaledLineWins.reduce((sum, win) => sum + win.amount, 0));
+    const wheelCashWin = baseWheelCashIndependently(resolved.events, bet);
+    const bonusBaseWin = scored.baseWin;
     const shurikenWin = bonusBaseWin > 0 && resolved.meter > 0 ? roundMoney(bonusBaseWin * resolved.meter) : 0;
-    const spinTotal = roundMoney(bonusBaseWin + shurikenWin);
+    const spinTotal = roundMoney(bonusBaseWin + shurikenWin + wheelCashWin);
     totalWin = roundMoney(totalWin + spinTotal);
     reconstructedFreeSpins.push({
+      lineWins: scored.lineWins,
       baseWin: bonusBaseWin,
+      baseWheelCashWin: wheelCashWin,
       shurikenWin,
       totalWin: spinTotal,
       multiplierMeter: resolved.meter,
       wheelEvents: resolved.events,
-      bonusTier: tier,
     });
   }
   return { totalWin, freeSpins: reconstructedFreeSpins };
@@ -146,13 +149,13 @@ function reconstructPaidSpinIndependently(result, bet = 1) {
   const scored = scoreGridIndependently(result.grid, bet);
   const resolved = resolveWheelEventsIndependently(result.grid, 0, math.BASE_GAME_MAX_WHEEL_METER);
   const baseWheelCashWin = baseWheelCashIndependently(resolved.events, bet);
-  const bonusTier = Math.min(3, resolved.bonusShurikens);
+  const bonusTriggered = resolved.bonusShurikens > 0;
   const lineShurikenWin = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : 0;
   const uncappedPaidSpinWin = roundMoney(scored.baseWin + lineShurikenWin + baseWheelCashWin);
   const paidSpinWin = roundMoney(Math.min(uncappedPaidSpinWin, bet * math.BASE_GAME_MAX_WIN_MULTIPLIER));
   const shurikenWin = roundMoney(Math.max(0, paidSpinWin - scored.baseWin));
-  const bonus = bonusTier > 0
-    ? reconstructBonusFeatureIndependently(result.freeSpins || [], bet, bonusTier)
+  const bonus = bonusTriggered
+    ? reconstructBonusFeatureIndependently(result.freeSpins || [], bet)
     : { totalWin: 0, freeSpins: [] };
   return {
     lineWins: scored.lineWins,
@@ -162,9 +165,8 @@ function reconstructPaidSpinIndependently(result, bet = 1) {
     wheelMultiplier: resolved.meter,
     multiplierMeter: resolved.meter,
     wheelEvents: resolved.events,
-    bonusTier,
     totalWin: roundMoney(paidSpinWin + bonus.totalWin),
-    bonusTriggered: bonusTier > 0,
+    bonusTriggered,
     bonusWin: roundMoney(bonus.totalWin),
     freeSpins: bonus.freeSpins,
   };
@@ -209,10 +211,10 @@ function rnd() {
 
 const randomGridChecks = 5000;
 for (let i = 0; i < randomGridChecks; i++) {
-  const tier = i % 11 === 0 ? 1 : 0;
-  const grid = math.createGrid(rnd, tier);
+  const mode = i % 11 === 0 ? "bonus" : "base";
+  const grid = math.createGrid(rnd, mode);
   assertScoreParity(grid);
-  assertWheelParity(grid, 0, tier === 0 ? math.BASE_GAME_MAX_WHEEL_METER : Infinity);
+  assertWheelParity(grid, 0, mode === "base" ? math.BASE_GAME_MAX_WHEEL_METER : Infinity);
 }
 
 const fullPaidSpinChecks = 2500;
@@ -226,7 +228,6 @@ for (let i = 0; i < fullPaidSpinChecks; i++) {
   assert.equal(result.wheelMultiplier, reconstructed.wheelMultiplier, "paid-spin wheel meter must reconstruct from wheel events");
   assert.equal(result.multiplierMeter, reconstructed.multiplierMeter, "paid-spin multiplier meter must reconstruct from wheel events");
   assert.equal(JSON.stringify(result.wheelEvents), JSON.stringify(reconstructed.wheelEvents), "paid-spin wheel events must reconstruct from grid");
-  assert.equal(result.bonusTier, reconstructed.bonusTier, "paid-spin bonus tier must reconstruct from bonus shuriken outcomes");
   assert.equal(result.bonusTriggered, reconstructed.bonusTriggered, "paid-spin bonus trigger must reconstruct from bonus shuriken outcomes");
   assert.equal(result.bonusWin, reconstructed.bonusWin, "paid-spin bonus win must reconstruct from emitted free-spin grids");
   assert.equal(result.totalWin, reconstructed.totalWin, "paid-spin total win must reconstruct from base and feature components");
@@ -247,16 +248,20 @@ for (let i = 0; i < fullPaidSpinChecks; i++) {
 
 const directFeatureChecks = 500;
 for (let i = 0; i < directFeatureChecks; i++) {
-  const tier = (i % 13 === 0 ? 2 : 1);
-  const feature = math.buyBonus(rnd, 1, tier);
-  const reconstructed = reconstructBonusFeatureIndependently(feature.freeSpins, 1, tier);
+  const feature = math.buyBonus(rnd, 1);
+  const reconstructed = reconstructBonusFeatureIndependently(feature.freeSpins, 1);
   assert.equal(feature.cost, math.BUY_BONUS_PRICE_MULTIPLIER, "buy bonus cost must match configured multiplier at 1x bet");
   assert.equal(feature.totalWin, reconstructed.totalWin, "buy-bonus feature total must reconstruct from emitted free-spin grids");
-  assert.equal(feature.bonusTier, tier, "buy-bonus tier must preserve requested tier");
   for (let freeSpinIndex = 0; freeSpinIndex < feature.freeSpins.length; freeSpinIndex++) {
     const actualFreeSpin = feature.freeSpins[freeSpinIndex];
     const expectedFreeSpin = reconstructed.freeSpins[freeSpinIndex];
+    assert.equal(
+      JSON.stringify(actualFreeSpin.lineWins),
+      JSON.stringify(expectedFreeSpin.lineWins),
+      "bonus symbols must use the same line-win amounts as base symbols",
+    );
     assert.equal(actualFreeSpin.baseWin, expectedFreeSpin.baseWin, "buy-bonus free-spin base win must reconstruct from grid");
+    assert.equal(actualFreeSpin.baseWheelCashWin, expectedFreeSpin.baseWheelCashWin, "buy-bonus free-spin wheel cash must reconstruct from grid");
     assert.equal(actualFreeSpin.shurikenWin, expectedFreeSpin.shurikenWin, "buy-bonus free-spin Shuriken win must reconstruct separately from base win");
     assert.equal(actualFreeSpin.totalWin, expectedFreeSpin.totalWin, "buy-bonus free-spin total must reconstruct from grid and meter");
     assert.equal(actualFreeSpin.multiplierMeter, expectedFreeSpin.multiplierMeter, "buy-bonus free-spin meter must reconstruct per spin");

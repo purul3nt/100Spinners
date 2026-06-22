@@ -100,7 +100,9 @@ const REEL_FRAME_BASE_W = REEL_FRAME_BASE_H * REEL_FRAME_ASPECT;
 const MACHINE_IMAGE_SCALE = 1.15;
 const PORTRAIT_MACHINE_IMAGE_SCALE = 1.02;
 const MACHINE_IMAGE_X_SCALE = 0.9;
-const REEL_ART_CENTER_X = [184, 449, 704, 949, 1198];
+// Measured from the painted divider bands in shogun_reel_frame.png so each
+// reel centers inside its visible parchment window rather than using uniform spacing.
+const REEL_ART_CENTER_X = [222, 460, 691, 924, 1156];
 const REEL_CENTER_X = REEL_ART_CENTER_X.map((x) => (REEL_FRAME_W / 2 + (x - REEL_FRAME_W / 2) * MACHINE_IMAGE_X_SCALE) / REEL_FRAME_W);
 const ROW_CENTER_Y = [0.188, 0.396, 0.604, 0.812];
 const CLOUD_DRIFT_PIXELS_PER_SECOND = 9;
@@ -974,8 +976,10 @@ export default class SlotScene extends Phaser.Scene {
       "Wins pay left to right for 3, 4, or 5 matching paying symbols on a payline.\n\n" +
       "Winning symbols stay bright while non-paying symbols dim during the win presentation.\n\n" +
       "Shurikens can land on reels 1, 3, and 5. Each Shuriken activates at that position, resolving left to right.\n\n" +
-      "Blue Shurikens appear in the base game. Red Shurikens appear in free spins. Base-game non-bonus Shuriken outcomes can award cash and can add to or multiply the current spin's Shuriken win.\n\n" +
-      `Bonus Shuriken outcomes from Blue Shurikens award stronger free-spin tiers: 1, 2, or 3 outcomes trigger free-spin levels with ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
+      "Blue Shurikens appear in the base game and free spins. Red Shurikens appear in free spins. Blue x-bet Shurikens award cash when there is no active Shuriken meter, and Shuriken outcomes can add to or multiply the current spin's Shuriken win.\n\n" +
+      `Bonus Shuriken outcomes from Blue Shurikens trigger ${FREE_SPINS} free spins. Buy Bonus costs ${BUY_BONUS_PRICE_MULTIPLIER}x the current bet.\n\n` +
+      "Free spins use a separate reel set and different Shuriken frequencies, while symbol pay values remain the same as the base game.\n\n" +
+      "The base-game Shuriken meter is capped at 100x, and the paid-spin win before any triggered free spins is capped at 500x bet.\n\n" +
       "Wins are displayed as bet multipliers. Bonus wins are collected during free spins, then credited to balance after the TOTAL WIN reveal.";
     const rulesText = this.add.text(rulesLeft, rulesTop + 4, rulesBody, {
       fontFamily: BODY_FONT,
@@ -1888,16 +1892,18 @@ export default class SlotScene extends Phaser.Scene {
       const event = events[index];
       const color = event.color === "red" ? 0xff5b45 : 0x46b9ff;
       const previewValues = this.shurikenBladeSet(event.color, event.outcome);
-      labels.forEach((label, labelIndex) => {
-        const text = previewValues.labels[labelIndex] || "";
-        const angle = -Math.PI / 2 + bladeAngleOffset + (Math.PI * 2 * labelIndex) / SHURIKEN_BLADE_COUNT;
-        label
-          .setText(text)
-          .setVisible(Boolean(text))
-          .setPosition(Math.cos(angle) * wheelSize * 0.29, Math.sin(angle) * wheelSize * 0.29)
-          .setFontSize(Math.max(16, text === "BONUS" ? labelFont * 0.76 : labelFont * 0.9))
-          .setColor(labelIndex === previewValues.selectedIndex ? UI_HEX.parchment : (event.color === "red" ? "#ffb4a2" : "#9ee7ff"));
-      });
+      this.layoutShurikenLabels(labels, wheelGroup.angle, wheelSize, bladeAngleOffset, labelFont, previewValues, event.color);
+      const visibleLabels = labels.filter((label) => Boolean(label.text));
+      visibleLabels.forEach((label) => label.setAlpha(0));
+      if (visibleLabels.length > 0) {
+        this.tweens.add({
+          targets: visibleLabels,
+          alpha: 1,
+          duration: 140,
+          ease: "Sine.Out",
+          stagger: 28,
+        });
+      }
       wheel.setTexture(event.color === "red" ? "shogun_shuriken_red" : "shogun_shuriken_blue");
       wheel.setDisplaySize(wheelSize, wheelSize);
       ring.setStrokeStyle(7, color, 0.95);
@@ -1915,6 +1921,9 @@ export default class SlotScene extends Phaser.Scene {
           angle: wheelGroup.angle + stopAngle,
           duration: 1550,
           ease: "Cubic.Out",
+          onUpdate: () => {
+            this.layoutShurikenLabels(labels, wheelGroup.angle, wheelSize, bladeAngleOffset, labelFont, previewValues, event.color);
+          },
           onComplete: () => resolve(),
         });
       });
@@ -1922,9 +1931,11 @@ export default class SlotScene extends Phaser.Scene {
       this.updateHud();
       const outcomeCopy = event.outcome.kind === "bonus"
         ? `BONUS SHURIKEN ${index + 1}/${events.length}`
+        : event.outcome.kind === "multiply" && event.meterBefore <= 0
+          ? `SHURIKEN CASH ${outcomeText}`
         : `WINNING MULTIPLIER ${outcomeText}`;
       resultText.setText(outcomeCopy);
-      meterText.setText(`${event.meterAfter}x`);
+      meterText.setText(this.formatWheelMeterDisplay(event));
       this.tweens.add({ targets: [resultText, meterText, glow], scaleX: 1.08, scaleY: 1.08, duration: 160, yoyo: true, ease: "Sine.Out" });
       await this.wait(900);
     }
@@ -1949,6 +1960,37 @@ export default class SlotScene extends Phaser.Scene {
       });
       await this.wait(180);
     }
+  }
+
+  private layoutShurikenLabels(
+    labels: Phaser.GameObjects.Text[],
+    wheelAngle: number,
+    wheelSize: number,
+    bladeAngleOffset: number,
+    labelFont: number,
+    previewValues: { labels: string[]; selectedIndex: number },
+    wheelColor: WheelColor,
+  ) {
+    labels.forEach((label, labelIndex) => {
+      const text = previewValues.labels[labelIndex] || "";
+      const angle = -Math.PI / 2 + bladeAngleOffset + (Math.PI * 2 * labelIndex) / SHURIKEN_BLADE_COUNT;
+      const visible = Boolean(text);
+      label
+        .setText(text)
+        .setVisible(visible)
+        .setPosition(Math.cos(angle) * wheelSize * 0.29, Math.sin(angle) * wheelSize * 0.29)
+        .setFontSize(Math.max(16, text === "BONUS" ? labelFont * 0.76 : labelFont * 0.9))
+        .setColor(labelIndex === previewValues.selectedIndex ? UI_HEX.parchment : (wheelColor === "red" ? "#ffb4a2" : "#9ee7ff"))
+        // Counter-rotate against the wheel so multiplier text stays upright.
+        .setAngle(-wheelAngle);
+    });
+  }
+
+  private formatWheelMeterDisplay(event: WheelEvent) {
+    if (event.outcome.kind === "multiply" && event.meterBefore <= 0 && event.outcome.value) {
+      return `${event.outcome.value}x BET`;
+    }
+    return `${event.meterAfter}x`;
   }
 
   private async pulseWheelSymbols(events: WheelEvent[]) {

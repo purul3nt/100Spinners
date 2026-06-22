@@ -49,7 +49,7 @@ function seededRandom(seed) {
 function bonusPaytableAmount(win, bet = 1) {
   const symbol = math.SYMBOL_BY_CODE[win.symbol];
   const paytablePay = math.scaledSymbolPay(symbol, win.count);
-  return math.roundMoney(paytablePay * bet * math.BONUS_FEATURE_PAY_SCALE);
+  return math.roundMoney(paytablePay * bet);
 }
 
 function assertBonusDisplayParity(spin, bet = 1, label = "bonus free spin") {
@@ -60,7 +60,7 @@ function assertBonusDisplayParity(spin, bet = 1, label = "bonus free spin") {
     assert.equal(
       win.amount,
       expectedFromPaytable,
-      `${label}: line ${win.lineIndex} ${win.symbol} ${win.count}OAK should equal bonus-scaled paytable win`,
+      `${label}: line ${win.lineIndex} ${win.symbol} ${win.count}OAK should equal the same paytable win used in base spins`,
     );
     paylineTotal += win.amount;
     paytableTotal += expectedFromPaytable;
@@ -75,7 +75,7 @@ function assertBonusDisplayParity(spin, bet = 1, label = "bonus free spin") {
   const expectedShurikenWin = spin.baseWin > 0 && spin.multiplierMeter > 0
     ? math.roundMoney(spin.baseWin * spin.multiplierMeter)
     : 0;
-  const expectedDisplayedWin = math.roundMoney(spin.baseWin + expectedShurikenWin);
+  const expectedDisplayedWin = math.roundMoney(spin.baseWin + expectedShurikenWin + (spin.baseWheelCashWin || 0));
   assert.equal(
     spin.shurikenWin,
     expectedShurikenWin,
@@ -84,7 +84,7 @@ function assertBonusDisplayParity(spin, bet = 1, label = "bonus free spin") {
   assert.equal(
     displayedWin,
     expectedDisplayedWin,
-    `${label}: displayed WIN should equal base line win plus separate shuriken win`,
+    `${label}: displayed WIN should equal base line win plus separate shuriken win plus wheel cash`,
   );
 
   const animatedWinTotal = spin.lineWins.reduce(
@@ -127,7 +127,7 @@ const noMeterGrid = [
   [{ code: "L4" }, { code: "L5" }, { code: "L2" }, { code: "L1" }],
 ];
 const noMeterScore = math.scoreGrid(noMeterGrid, 1);
-const noMeterLineWins = noMeterScore.lineWins.map((win) => ({ ...win, amount: math.roundMoney(win.amount * math.BONUS_FEATURE_PAY_SCALE) }));
+const noMeterLineWins = noMeterScore.lineWins;
 const noMeterBaseWin = math.roundMoney(noMeterLineWins.reduce((sum, win) => sum + win.amount, 0));
 assertBonusDisplayParity({
   lineWins: noMeterLineWins,
@@ -143,8 +143,7 @@ let sampledPayingFreeSpins = 0;
 let sampledMeteredPayingFreeSpins = 0;
 
 for (let featureIndex = 0; featureIndex < sampledFeatures; featureIndex++) {
-  const tier = featureIndex % 17 === 0 ? 2 : 1;
-  const feature = math.buyBonus(seededRandom(0xb050000 + featureIndex), 1, tier);
+  const feature = math.buyBonus(seededRandom(0xb050000 + featureIndex), 1);
   for (let spinIndex = 0; spinIndex < feature.freeSpins.length; spinIndex++) {
     const spin = feature.freeSpins[spinIndex];
     sampledFreeSpins++;
@@ -171,7 +170,7 @@ console.log(JSON.stringify({
   sampledPayingFreeSpins,
   sampledMeteredPayingFreeSpins,
   checks: [
-    "bonus payline win equals bonus-scaled paytable win",
+    "bonus payline win equals the same paytable win used in base spins",
     "bonus baseWin equals summed paylines",
     "displayed WIN equals base line win plus separate shuriken win",
     "line-winning animation callouts exclude shuriken win",

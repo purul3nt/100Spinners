@@ -84,41 +84,28 @@ function makeWheelCell(color, random, allowBonus) {
   };
 }
 
-function maybePlaceShuriken(cell, col, random, bonusTier) {
+function maybePlaceShuriken(cell, col, random, mode) {
   if (!math.SHURIKEN_REELS.includes(col)) return cell;
-  if (bonusTier === 0) {
+  if (mode === "base") {
     if (random() < math.BASE_SHURIKEN_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, true));
     return cell;
   }
-  if (bonusTier === 1) {
-    const roll = random();
-    if (roll < math.BONUS_TIER_1_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
-    else if (roll < math.BONUS_TIER_1_RED_CELL_CHANCE + math.BONUS_TIER_1_BLUE_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, false));
-    return cell;
-  }
-  if (bonusTier === 2) {
-    if (random() < math.BONUS_TIER_2_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
-    return cell;
-  }
-  if (random() < math.BONUS_TIER_3_RED_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
+  const roll = random();
+  if (roll < math.BONUS_RED_SHURIKEN_CELL_CHANCE) Object.assign(cell, makeWheelCell("red", random, false));
+  else if (roll < math.BONUS_RED_SHURIKEN_CELL_CHANCE + math.BONUS_BLUE_SHURIKEN_CELL_CHANCE) Object.assign(cell, makeWheelCell("blue", random, false));
   return cell;
 }
 
-function createGrid(random, bonusTier = 0) {
+function createGrid(random, mode = "base") {
   const grid = [];
   for (let col = 0; col < math.COLS; col++) {
-    const strip = bonusTier > 0 ? math.BONUS_REEL_STRIPS[col] : math.REEL_STRIPS[col];
+    const strip = mode === "bonus" ? math.BONUS_REEL_STRIPS[col] : math.REEL_STRIPS[col];
     const stop = Math.floor(random() * strip.length);
     const column = [];
     for (let row = 0; row < math.ROWS; row++) {
-      column.push(maybePlaceShuriken({ code: strip[(stop + row) % strip.length] }, col, random, bonusTier));
+      column.push(maybePlaceShuriken({ code: strip[(stop + row) % strip.length] }, col, random, mode));
     }
     grid.push(column);
-  }
-  if (bonusTier === 3 && !grid.some((column) => column.some((cell) => cell.shuriken && cell.wheelColor === "red"))) {
-    const col = math.SHURIKEN_REELS[Math.floor(random() * math.SHURIKEN_REELS.length)];
-    const row = Math.floor(random() * math.ROWS);
-    grid[col][row] = makeWheelCell("red", random, false);
   }
   return grid;
 }
@@ -188,54 +175,58 @@ function resolveWheelEvents(grid, startingMeter = 0, maxMeter = Infinity) {
 }
 
 function calculateBaseWheelCashWin(events, bet = 1) {
-  const rawCash = events.reduce((sum, event) => event.outcome.kind === "bonus" ? sum : sum + (event.outcome.value || 0), 0);
-  return roundMoney(rawCash * math.BASE_WHEEL_CASH_SCALE * bet);
+  const cashWin = events.reduce((sum, event) => {
+    if (event.outcome.kind === "bonus") return sum;
+    const value = event.outcome.value || 0;
+    if (event.color === "blue" && event.outcome.kind === "multiply" && event.meterBefore <= 0) return sum + value * bet;
+    return sum + value * math.BASE_WHEEL_CASH_SCALE * bet;
+  }, 0);
+  return roundMoney(cashWin);
 }
 
-function playBonusFeature(random, bet = 1, tier = 1) {
+function playBonusFeature(random, bet = 1) {
   const freeSpins = [];
   let totalWin = 0;
   for (let i = 0; i < math.FREE_SPINS; i++) {
-    const grid = createGrid(random, tier);
+    const grid = createGrid(random, "bonus");
     const scored = scoreGrid(grid, bet);
     const resolved = resolveWheelEvents(grid, 0);
-    const scaledLineWins = scored.lineWins.map((win) => ({ ...win, amount: roundMoney(win.amount * math.BONUS_FEATURE_PAY_SCALE) }));
-    const bonusBaseWin = roundMoney(scaledLineWins.reduce((sum, win) => sum + win.amount, 0));
+    const wheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
+    const bonusBaseWin = scored.baseWin;
     const shurikenWin = bonusBaseWin > 0 && resolved.meter > 0 ? roundMoney(bonusBaseWin * resolved.meter) : 0;
-    const spinTotal = roundMoney(bonusBaseWin + shurikenWin);
+    const spinTotal = roundMoney(bonusBaseWin + shurikenWin + wheelCashWin);
     totalWin = roundMoney(totalWin + spinTotal);
     freeSpins.push({
       grid,
-      lineWins: scaledLineWins,
+      lineWins: scored.lineWins,
       baseWin: bonusBaseWin,
-      baseWheelCashWin: 0,
+      baseWheelCashWin: wheelCashWin,
       shurikenWin,
       wheelMultiplier: resolved.meter,
       multiplierMeter: resolved.meter,
       wheelEvents: resolved.events,
-      bonusTier: tier,
       totalWin: spinTotal,
       bonusTriggered: false,
       bonusWin: 0,
     });
   }
-  return { totalWin, freeSpins, bonusTier: tier };
+  return { totalWin, freeSpins };
 }
 
 function playPaidSpin(random, bet = 1) {
-  const grid = createGrid(random, 0);
+  const grid = createGrid(random, "base");
   const scored = scoreGrid(grid, bet);
   const resolved = resolveWheelEvents(grid, 0, math.BASE_GAME_MAX_WHEEL_METER);
   const baseWheelCashWin = calculateBaseWheelCashWin(resolved.events, bet);
-  const bonusTier = Math.min(3, resolved.bonusShurikens);
+  const bonusTriggered = resolved.bonusShurikens > 0;
   const lineShurikenWin = scored.baseWin > 0 && resolved.meter > 0 ? roundMoney(scored.baseWin * resolved.meter) : 0;
   const uncappedPaidSpinWin = roundMoney(scored.baseWin + lineShurikenWin + baseWheelCashWin);
   const paidSpinWin = roundMoney(Math.min(uncappedPaidSpinWin, bet * math.BASE_GAME_MAX_WIN_MULTIPLIER));
   const shurikenWin = roundMoney(Math.max(0, paidSpinWin - scored.baseWin));
   let bonusWin = 0;
   let freeSpins;
-  if (bonusTier > 0) {
-    const feature = playBonusFeature(random, bet, bonusTier);
+  if (bonusTriggered) {
+    const feature = playBonusFeature(random, bet);
     bonusWin = feature.totalWin;
     freeSpins = feature.freeSpins;
   }
@@ -248,9 +239,8 @@ function playPaidSpin(random, bet = 1) {
     wheelMultiplier: resolved.meter,
     multiplierMeter: resolved.meter,
     wheelEvents: resolved.events,
-    bonusTier,
     totalWin: roundMoney(paidSpinWin + bonusWin),
-    bonusTriggered: bonusTier > 0,
+    bonusTriggered,
     bonusWin: roundMoney(bonusWin),
     freeSpins,
   };
@@ -345,7 +335,6 @@ function runIndependentTail(spins, seed) {
       baseLowSymbolStripExtensionLength: math.BASE_LOW_SYMBOL_STRIP_EXTENSION.length,
       bonusLowSymbolStripExtensionLength: math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length,
       v1PayScale: math.V1_PAY_SCALE,
-      bonusFeaturePayScale: math.BONUS_FEATURE_PAY_SCALE,
     },
   };
 }
@@ -386,14 +375,12 @@ if (process.argv[2] === "simulate") {
   const independentFeatureRandom = makeRng(seed ^ 0x7f4a7c15);
   let featureTotalWin = 0;
   for (let i = 0; i < featureParityRounds; i++) {
-    const tier = i % 17 === 0 ? 2 : 1;
-    const live = normalize(math.buyBonus(liveFeatureRandom, 1, tier));
-    const independentFeature = playBonusFeature(independentFeatureRandom, 1, tier);
+    const live = normalize(math.buyBonus(liveFeatureRandom, 1));
+    const independentFeature = playBonusFeature(independentFeatureRandom, 1);
     const independent = normalize({
       cost: roundMoney(math.BUY_BONUS_PRICE_MULTIPLIER),
       totalWin: independentFeature.totalWin,
       freeSpins: independentFeature.freeSpins,
-      bonusTier: independentFeature.bonusTier,
     });
     assert.deepEqual(independent, live, `independent simulator diverged on buy feature ${i}`);
     featureTotalWin += live.totalWin;

@@ -9,7 +9,6 @@ const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rounds = Number(process.argv[2] || 100000);
 const seedInput = Number(process.argv[3] || 0x1000b007);
-const tier = Number(process.argv[4] || 1);
 
 const buyBands = [
   [0, 1],
@@ -67,7 +66,7 @@ let maxWin = 0;
 let sumSquares = 0;
 
 for (let i = 0; i < rounds; i++) {
-  const result = math.buyBonus(rnd, 1, tier);
+  const result = math.buyBonus(rnd, 1);
   totalWin += result.totalWin;
   sumSquares += result.totalWin * result.totalWin;
   if (result.totalWin > 0) hits++;
@@ -80,7 +79,6 @@ const variance = sumSquares / rounds - mean * mean;
 const summary = {
   rounds,
   seed: seedInput,
-  tier,
   priceXBet: math.BUY_BONUS_PRICE_MULTIPLIER,
   avgWinXBet: round(totalWin / rounds),
   rtpVsBuyPrice: round(totalWin / rounds / math.BUY_BONUS_PRICE_MULTIPLIER),
@@ -100,7 +98,6 @@ const summary = {
   constants: {
     buyBonusPriceMultiplier: math.BUY_BONUS_PRICE_MULTIPLIER,
     v1PayScale: math.V1_PAY_SCALE,
-    bonusFeaturePayScale: math.BONUS_FEATURE_PAY_SCALE,
     bonusLowSymbolStripExtensionLength: math.BONUS_LOW_SYMBOL_STRIP_EXTENSION.length,
   },
 };
